@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '{\"hookSpecificOutput\": {\"hookEventName\": \"SessionStart\", \"additionalContext\": \"Spec-Kit Project | Constitution: .specify/memory/constitution.md | Branch: '$(git branch --show-current 2>/dev/null || echo 'no-git')' | Agents: solution-architect, backend-developer, frontend-developer, test-engineer, database-architect, security-auditor, code-reviewer\"}}'"
+            "command": "node -e \"const branch = require('child_process').execSync('git branch --show-current 2>nul || echo no-git', {encoding:'utf8'}).trim(); console.log(JSON.stringify({hookSpecificOutput: {hookEventName: 'SessionStart', additionalContext: 'Spec-Kit Project | Constitution: .specify/memory/constitution.md | Branch: ' + branch + ' | Agents: solution-architect (Opus), backend-developer (Sonnet), frontend-developer (Sonnet), test-engineer (Sonnet), database-architect (Sonnet), security-auditor (Haiku), code-reviewer (Haiku) | External Plugins: superpowers, dotnet-claude-code-skills, engineering-workflow-plugin, dev-agent-skills, awesome-claude-skills | TDD Required: Yes (Constitution Article III)'}}));\""
           }
         ]
       }
@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "#!/bin/bash\ninput=$(cat)\nprompt=$(echo \"$input\" | jq -r '.prompt // empty')\n\n# Detect spec-kit commands and inject guidance\nif [[ \"$prompt\" == */speckit.plan* ]]; then\n  echo '{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"PLAN PHASE: Include Claude Code Execution Architecture section. Define agent specializations (solution-architect/Opus, backend-developer/Sonnet, test-engineer/Sonnet, security-auditor/Haiku). Identify parallel execution boundaries. Define context management thresholds. Specify quality gate hooks. Read .claude/skills/dotnet-plan-strategy.md if available.\"}}'\nelif [[ \"$prompt\" == */speckit.tasks* ]]; then\n  echo '{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"TASKS PHASE: Add execution metadata to each task (depends_on, blocks, parallel_group, recommended_agent, model_tier, background_eligible). Organize into execution waves. Mark [P] for parallel tasks. Include dependency graph. Read .claude/skills/dotnet-task-parallelization.md if available.\"}}'\nelif [[ \"$prompt\" == */speckit.implement* ]]; then\n  echo '{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"IMPLEMENT PHASE: Execute wave-by-wave. Spawn parallel sub-agents for [P] tasks using & operator. Use Ctrl+B for background tasks. Create checkpoints at wave boundaries. Enforce test-first. Initialize TodoWrite for progress tracking. Read .claude/skills/dotnet-implementation-execution.md if available.\"}}'\nelif [[ \"$prompt\" == */speckit.analyze* ]]; then\n  echo '{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"ANALYZE PHASE: Run parallel analysis streams. Use solution-architect for constitutional compliance. Use code-reviewer for spec-plan alignment. Use security-auditor for security analysis. Aggregate findings by severity.\"}}'\nelif [[ \"$prompt\" == */speckit.checklist* ]]; then\n  echo '{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"CHECKLIST PHASE: Execute automated gates (dotnet format, dotnet build --warnaserror, code coverage). Use security-auditor and code-reviewer agents for validation. Generate PASS/FAIL report.\"}}'\nfi"
+            "command": "node -e \"const input = require('fs').readFileSync(0, 'utf8'); const data = JSON.parse(input); const prompt = data.prompt || ''; let ctx = ''; if (prompt.includes('/speckit.constitution')) { ctx = 'CONSTITUTION PHASE: Use solution-architect agent (Opus). Establish immutable governance principles. Reference .specify/memory/constitution.md for existing principles. Define articles covering: Architecture, Code Quality, Testing (TDD mandatory), Data Layer, API Design, Security, Error Handling, Frontend, Simplicity, Documentation, Performance, Workflow, Governance. Each principle needs Statement, Rationale, Enforcement Mechanism, Gate Status.'; } else if (prompt.includes('/speckit.specify')) { ctx = 'SPECIFY PHASE: Use solution-architect agent. Technology-agnostic requirements ONLY. Define user stories with acceptance criteria. Output to .specify/ folder. NO implementation details. Focus on WHAT not HOW. Use ubiquitous language from domain experts.'; } else if (prompt.includes('/speckit.clarify')) { ctx = 'CLARIFY PHASE: Use solution-architect agent. Identify ambiguities, missing requirements, edge cases, implicit assumptions. ASK QUESTIONS - do not assume. Document clarifications in .specify/memory/. Refine requirements before proceeding to plan phase.'; } else if (prompt.includes('/speckit.plan')) { ctx = 'PLAN PHASE: Use solution-architect + database-architect agents. Include Claude Code Execution Architecture section. Define agent assignments (solution-architect/Opus for decisions, backend-developer/Sonnet for implementation, test-engineer/Sonnet for tests, security-auditor/Haiku for scanning). Identify parallel execution boundaries. Define context management thresholds (compact at 150k tokens). Specify quality gate hooks. Create checkpoint before starting. Skill: .claude/skills/dotnet-implementation-execution.md'; } else if (prompt.includes('/speckit.tasks')) { ctx = 'TASKS PHASE: Add execution metadata to each task (depends_on, blocks, parallel_group, recommended_agent, model_tier, background_eligible). Organize into execution WAVES. Mark [P] for parallel tasks. Include dependency graph. Wave 1 = Infrastructure (sequential), Wave 2+ = Domain/Application (parallel where possible). Max 5 concurrent background agents.'; } else if (prompt.includes('/speckit.checklist')) { ctx = 'CHECKLIST PHASE: Generate quality gate checklists. Execute automated gates: dotnet format --verify-no-changes, dotnet build --warnaserror, dotnet test with coverage threshold. Use security-auditor agent for vulnerability scan. Use code-reviewer agent for constitution compliance. Generate PASS/FAIL/WARNING report. ALL gates must pass before /speckit.implement.'; } else if (prompt.includes('/speckit.analyze')) { ctx = 'ANALYZE PHASE: READ-ONLY validation. Run parallel analysis: (1) solution-architect for constitutional compliance, (2) code-reviewer for spec-plan-code alignment, (3) security-auditor for security analysis. Aggregate findings by severity (CRITICAL/WARNING/INFO). No file modifications allowed in this phase.'; } else if (prompt.includes('/speckit.implement')) { ctx = 'IMPLEMENT PHASE: Verify checklists passed first. Create checkpoint before each wave. Execute wave-by-wave with parallel sub-agents for [P] tasks using & operator. ENFORCE TEST-FIRST (Constitution Article III): write failing tests → implement → pass tests → refactor. Use Ctrl+B for background tasks >5min. Run /compact between waves if context >150k. Quality gate (code-reviewer + security-auditor) after each wave. Skill: .claude/skills/dotnet-implementation-execution.md'; } if (ctx) { console.log(JSON.stringify({hookSpecificOutput: {hookEventName: 'UserPromptSubmit', additionalContext: ctx}})); }\""
           }
         ]
       }
@@ -26,19 +26,37 @@
         "hooks": [
           {
             "type": "command",
-            "command": "#!/bin/bash\ninput=$(cat)\nfile_path=$(echo \"$input\" | jq -r '.tool_input.file_path // .tool_input.filePath // empty')\n\nif [[ \"$file_path\" =~ \\.(cs|razor)$ ]]; then\n  if command -v dotnet &> /dev/null; then\n    result=$(dotnet format --include \"$file_path\" --verify-no-changes 2>&1) || echo \"{\\\"systemMessage\\\": \\\"Format check: File needs formatting. Run 'dotnet format' to fix.\\\"}\"\n  fi\nfi",
-            "timeout": 15000
+            "command": "node -e \"const input = require('fs').readFileSync(0, 'utf8'); const data = JSON.parse(input); const filePath = data.tool_input?.file_path || data.tool_input?.filePath || ''; if (/\\.(cs|razor)$/.test(filePath)) { try { const result = require('child_process').execSync('dotnet format --include \\\"' + filePath + '\\\" --verify-no-changes 2>&1', {encoding:'utf8', timeout: 20000}); } catch (e) { console.log(JSON.stringify({systemMessage: 'Format check: File may need formatting. Run dotnet format to fix. Constitution II.1 requires consistent code style.'})); } } else if (/\\.(ts|tsx|js|jsx)$/.test(filePath)) { console.log(JSON.stringify({systemMessage: 'Frontend file modified. Ensure npm run lint passes. Constitution VIII requires component-based architecture with TypeScript.'})); }\"",
+            "timeout": 25000
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|Terminal",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const input = require('fs').readFileSync(0, 'utf8'); const data = JSON.parse(input); const cmd = data.tool_input?.command || ''; const output = data.tool_output?.stdout || ''; if (cmd.includes('dotnet test') && output.includes('Failed')) { console.log(JSON.stringify({systemMessage: 'TEST FAILURE DETECTED. Constitution Article III (Test-First) requires all tests to pass. Fix failing tests before proceeding.'})); } else if (cmd.includes('dotnet build') && output.includes('error')) { console.log(JSON.stringify({systemMessage: 'BUILD FAILURE. Fix compilation errors before continuing. Run dotnet build to verify.'})); }\""
           }
         ]
       }
     ],
     "PreToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Bash|Terminal",
         "hooks": [
           {
             "type": "command",
-            "command": "#!/bin/bash\ninput=$(cat)\ncommand=$(echo \"$input\" | jq -r '.tool_input.command // empty')\n\n# Block dangerous commands\nif echo \"$command\" | grep -qE 'rm\\s+-rf\\s+/|rm\\s+-rf\\s+\\.|DROP\\s+DATABASE|TRUNCATE\\s+TABLE|git\\s+push.*--force'; then\n  echo '{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"BLOCKED: Potentially destructive command detected. Please confirm this is intentional.\"}}' >&2\n  exit 2\nfi"
+            "command": "node -e \"const input = require('fs').readFileSync(0, 'utf8'); const data = JSON.parse(input); const cmd = data.tool_input?.command || ''; const dangerous = /(rm\\s+-rf\\s+[\\/\\.]|Remove-Item.*-Recurse.*-Force.*[\\/\\.]|DROP\\s+DATABASE|TRUNCATE\\s+TABLE|DELETE\\s+FROM\\s+\\w+\\s*;?\\s*$|git\\s+push.*--force|git\\s+reset\\s+--hard)/i; if (dangerous.test(cmd)) { console.error(JSON.stringify({hookSpecificOutput: {hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: 'BLOCKED: Potentially destructive command detected. Create a checkpoint first if this is intentional, then retry with explicit confirmation.'}})); process.exit(2); } const migrationDanger = /(ef\\s+database\\s+update|ef\\s+migrations\\s+remove)/i; if (migrationDanger.test(cmd)) { console.log(JSON.stringify({systemMessage: 'Database migration command detected. Ensure you have a backup. Constitution Article IV requires careful data layer governance.'})); }\""
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const input = require('fs').readFileSync(0, 'utf8'); const data = JSON.parse(input); const filePath = data.tool_input?.file_path || data.tool_input?.filePath || ''; if (/constitution\\.md$/i.test(filePath)) { console.log(JSON.stringify({systemMessage: 'CONSTITUTIONAL AMENDMENT: You are modifying the constitution. This requires careful consideration. Document changes in the Amendment Log section.'})); } else if (/\\.csproj$/.test(filePath)) { console.log(JSON.stringify({systemMessage: 'Project file modification. Verify dependency direction (outer layers depend on inner). Constitution Article I.1 mandates Clean Architecture.'})); }\""
           }
         ]
       }
@@ -48,7 +66,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "#!/bin/bash\n# Check if there are uncommitted test files that might indicate incomplete TDD\nif [ -d \"tests\" ] || [ -d \"Tests\" ]; then\n  pending=$(find . -name \"*Tests.cs\" -newer .git/index 2>/dev/null | head -5)\n  if [ -n \"$pending\" ]; then\n    echo '{\"systemMessage\": \"Reminder: New test files detected. Ensure all tests pass before completing this task.\"}'\n  fi\nfi"
+            "command": "node -e \"const fs = require('fs'); const path = require('path'); const cp = require('child_process'); let messages = []; try { const testDirs = ['tests', 'Tests', 'test', 'Test'].filter(d => fs.existsSync(d)); if (testDirs.length > 0) { try { const result = cp.execSync('dotnet test --no-build --list-tests 2>&1', {encoding:'utf8', timeout: 10000}); if (result.includes('Test run')) { messages.push('Tests available. Run dotnet test to verify all pass before commit.'); } } catch (e) { if (e.stdout && e.stdout.includes('Could not find')) { messages.push('Test project exists but may need building first.'); } } } const gitStatus = cp.execSync('git status --porcelain 2>nul || echo none', {encoding:'utf8'}).trim(); if (gitStatus !== 'none' && gitStatus.length > 0) { const modifiedCs = gitStatus.split('\\n').filter(l => l.includes('.cs')).length; if (modifiedCs > 0) { messages.push('Uncommitted .cs files detected (' + modifiedCs + '). Before commit: dotnet build, dotnet test, dotnet format.'); } } } catch (e) {} if (messages.length > 0) { console.log(JSON.stringify({systemMessage: 'Task completion reminders: ' + messages.join(' | ')})); }\""
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const input = require('fs').readFileSync(0, 'utf8'); const data = JSON.parse(input); const agent = data.agent_name || 'unknown'; const agentGuidance = { 'solution-architect': 'READ-ONLY. Architecture decisions, complex refactoring analysis. Cannot modify files.', 'backend-developer': 'C# implementation. Follow TDD (test first). Use async/await, never .Result/.Wait(). Primary constructors for .NET 8+.', 'frontend-developer': 'Blazor/UI. TypeScript required. Component-based. Mobile-first responsive. ARIA accessibility.', 'test-engineer': 'Write tests BEFORE implementation. Unit tests for logic, integration tests for APIs. Arrange-Act-Assert pattern.', 'database-architect': 'EF Core code-first. Repository pattern. Async operations. Index FKs. .AsNoTracking() for reads.', 'security-auditor': 'READ-ONLY. Scan for vulnerabilities, secrets exposure, injection risks. Report only.', 'code-reviewer': 'READ-ONLY. Constitution compliance check. Code quality review. Report only.' }; const guidance = agentGuidance[agent] || 'Follow constitution principles.'; console.log(JSON.stringify({systemMessage: 'Sub-agent ' + agent + ' starting. Guidance: ' + guidance}));\""
           }
         ]
       }
@@ -58,7 +86,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "#!/bin/bash\ninput=$(cat)\nagent=$(echo \"$input\" | jq -r '.agent_name // \"unknown\"')\necho \"{\\\"systemMessage\\\": \\\"Sub-agent '$agent' completed. Review results and update TodoWrite if tracking progress.\\\"}\""
+            "command": "node -e \"const input = require('fs').readFileSync(0, 'utf8'); const data = JSON.parse(input); const agent = data.agent_name || 'unknown'; const success = data.success !== false; const statusMsg = success ? 'completed successfully' : 'completed with issues'; console.log(JSON.stringify({systemMessage: 'Sub-agent \\'' + agent + '\\' ' + statusMsg + '. Review results. Update progress tracking. If implementation agent, verify tests pass. Consider /compact if context is growing large.'}));\""
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const input = require('fs').readFileSync(0, 'utf8'); const data = JSON.parse(input); const msg = data.message || ''; if (msg.toLowerCase().includes('context') && msg.toLowerCase().includes('large')) { console.log(JSON.stringify({systemMessage: 'Context size warning. Consider running /compact to summarize conversation and free up context window.'})); }\""
           }
         ]
       }

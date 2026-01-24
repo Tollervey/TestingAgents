@@ -10,9 +10,14 @@
 3. `/speckit.clarify` → Refine requirements
 4. `/speckit.plan` → Technical architecture + Claude Code execution strategy
 5. `/speckit.tasks` → Task breakdown with dependencies and parallel markers
-6. `/speckit.implement` → Wave-based execution with sub-agents
-7. `/speckit.analyze` → Multi-agent validation
-8. `/speckit.checklist` → Automated verification gates
+6. `/speckit.checklist` → Generate quality gate checklists (OPTIONAL, before implement)
+7. `/speckit.analyze` → Multi-agent validation (read-only consistency check)
+8. `/speckit.implement` → Wave-based execution with sub-agents (validates checklists first)
+
+**Command Handoffs** (automatic transition buttons):
+- `/speckit.plan` → `/speckit.tasks` or `/speckit.checklist`
+- `/speckit.tasks` → `/speckit.analyze` or `/speckit.implement`
+- `/speckit.checklist` gates must pass before `/speckit.implement` proceeds
 
 ---
 
@@ -97,6 +102,31 @@
 | `security-auditor` | Haiku | Security scanning, vulnerability checks |
 | `code-reviewer` | Haiku | Code quality, constitution compliance |
 
+### Agent Tools & Permissions
+
+| Agent | Tools | Can Modify Files? |
+|-------|-------|-------------------|
+| `solution-architect` | Read, Glob, Grep | ❌ Read-only |
+| `backend-developer` | Read, Write, Edit, Bash, Glob, Grep | ✅ Yes |
+| `frontend-developer` | Read, Write, Edit, Bash, Glob, Grep | ✅ Yes |
+| `test-engineer` | Read, Write, Edit, Bash, Glob, Grep | ✅ Yes |
+| `database-architect` | Read, Write, Edit, Bash, Glob, Grep | ✅ Yes |
+| `security-auditor` | Read, Grep, Glob, Bash | ❌ Read-only |
+| `code-reviewer` | Read, Grep, Glob | ❌ Read-only |
+
+### Agent Utilization by Phase
+
+| Phase | Primary Agent(s) | Supporting Agent(s) | Parallel? |
+|-------|-----------------|---------------------|-----------|
+| `/speckit.constitution` | solution-architect | — | No |
+| `/speckit.specify` | solution-architect | — | No |
+| `/speckit.clarify` | solution-architect | — | No |
+| `/speckit.plan` | solution-architect, database-architect | — | No |
+| `/speckit.tasks` | (orchestrator) | — | No |
+| `/speckit.checklist` | (orchestrator) | — | No |
+| `/speckit.analyze` | code-reviewer | — | No |
+| `/speckit.implement` | backend-developer, test-engineer, frontend-developer | security-auditor, code-reviewer | ✅ Yes |
+
 ### Parallel Execution
 Tasks marked `[P]` in tasks.md can run concurrently:
 ```
@@ -122,6 +152,44 @@ Create checkpoints before:
 - Destructive operations
 
 Use `/rewind` for recovery.
+
+**Checkpoint Strategy by Phase**:
+| Phase | Checkpoint When |
+|-------|----------------|
+| `/speckit.plan` | Before starting research phase |
+| `/speckit.implement` | Before each wave starts |
+| `/speckit.analyze` | Not needed (read-only) |
+
+### Wave Execution Strategy
+
+1. **Wave 1 (Infrastructure)**: Execute SEQUENTIALLY, checkpoint after completion
+2. **Wave 2+ (Domain/Application)**: Execute `[P]` marked tasks in PARALLEL
+3. **Quality Gate**: Run `code-reviewer` + `security-auditor` after each wave
+4. **Context Management**: `/compact` between waves if context >150k tokens
+5. **Validation**: Verify all wave tasks complete before proceeding to next wave
+
+**Wave Execution Example**:
+```
+# Wave 1: Infrastructure (sequential)
+Implement T001 → checkpoint → T002 → checkpoint → T003
+
+# Wave 2: Domain Layer (parallel)
+& Use backend-developer to implement T004 (User entity)
+& Use backend-developer to implement T005 (Product entity)
+& Use backend-developer to implement T006 (Order entity)
+/tasks  # Monitor progress
+
+# Quality gate after Wave 2
+& Use code-reviewer to verify Wave 2 code quality
+& Use security-auditor to scan for vulnerabilities
+```
+
+### Automatic Hooks
+
+Claude Code hooks (`.claude/hooks.json`) automatically enforce:
+- Code formatting on every file save
+- Dangerous command blocking
+- Test verification before task completion
 
 ---
 
@@ -155,10 +223,10 @@ Per Constitution Article III:
 
 ## External Plugins
 
-| Plugin | Use For |
-|--------|---------|
-| `superpowers` | TDD workflow, debugging, planning, git worktrees |
-| `dotnet-claude-code-skills` | DDD patterns, EF Core, BDD testing |
-| `engineering-workflow-plugin` | Code review, git workflows |
-| `dev-agent-skills` | Conventional commits, PR creation/review |
-| `awesome-claude-skills` | Software architecture, design patterns |
+| Plugin | Use For | Spec-Kit Phase(s) |
+|--------|---------|-------------------|
+| `superpowers` | TDD workflow, debugging, planning, git worktrees | `/speckit.plan`, `/speckit.implement` |
+| `dotnet-claude-code-skills` | DDD patterns, EF Core, BDD testing | `/speckit.implement` |
+| `engineering-workflow-plugin` | Code review, git workflows | `/speckit.analyze`, post-implement |
+| `dev-agent-skills` | Conventional commits, PR creation/review | Post-implement (PRs, commits) |
+| `awesome-claude-skills` | Software architecture, design patterns | `/speckit.plan`, `/speckit.constitution` |
