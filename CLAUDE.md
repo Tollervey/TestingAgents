@@ -14,6 +14,9 @@
 7. `/speckit.analyze` → Multi-agent validation (read-only consistency check)
 8. `/speckit.implement` → Wave-based execution with sub-agents (validates checklists first)
 
+**Utility Commands**:
+- `/speckit.worktree` → Git worktree management for parallel development
+
 **Command Handoffs** (automatic transition buttons):
 - `/speckit.plan` → `/speckit.tasks` or `/speckit.checklist`
 - `/speckit.tasks` → `/speckit.analyze` or `/speckit.implement`
