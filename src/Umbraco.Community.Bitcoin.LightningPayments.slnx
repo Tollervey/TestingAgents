@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Umbraco.Community.Bitcoin.LightningPayments.Core/Umbraco.Community.Bitcoin.LightningPayments.Core.csproj" />
+  <Project Path="Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests.csproj" />
+</Solution>
