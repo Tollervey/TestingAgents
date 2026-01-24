@@ -1,4 +1,4 @@
-﻿namespace Breez.Sdk.Liquid.Extensions.AspNetCore.Tests;
+namespace Breez.Sdk.Liquid.Extensions.AspNetCore.Tests;
 
 public class UnitTest1
 {

@@ -53,45 +53,45 @@ Based on plan.md structure:
 
 ### Domain Layer (Core Package)
 
-- [ ] T016 [P] Create PaymentStatus enum in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/PaymentStatus.cs`
-- [ ] T017 [P] Create PaymentKind enum in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/PaymentKind.cs`
-- [ ] T018 [P] Create BreezErrorCode enum in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/BreezErrorCode.cs`
-- [ ] T019 [P] Create InvoiceType enum in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/InvoiceType.cs`
-- [ ] T020 [P] Create PaymentState entity in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/PaymentState.cs`
-- [ ] T021 [P] Create Invoice record in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/Invoice.cs`
-- [ ] T022 Create OperationResult<T> and OperationError in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/OperationResult.cs`
+- [x] T016 [P] Create PaymentStatus enum in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/PaymentStatus.cs`
+- [x] T017 [P] Create PaymentKind enum in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/PaymentKind.cs`
+- [x] T018 [P] Create BreezErrorCode enum in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/BreezErrorCode.cs`
+- [x] T019 [P] Create InvoiceType enum in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/InvoiceType.cs`
+- [x] T020 [P] Create PaymentState entity in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/PaymentState.cs`
+- [x] T021 [P] Create Invoice record in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/Invoice.cs`
+- [x] T022 Create OperationResult<T> and OperationError in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/OperationResult.cs`
 
 ### Event Models (Core Package)
 
-- [ ] T023 Create PaymentEvent base record in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/Events/PaymentEvent.cs`
-- [ ] T024 [P] Create InvoiceCreated event in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/Events/InvoiceCreated.cs`
-- [ ] T025 [P] Create PaymentReceived event in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/Events/PaymentReceived.cs`
-- [ ] T026 [P] Create PaymentConfirmed event in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/Events/PaymentConfirmed.cs`
-- [ ] T027 [P] Create PaymentFailed event in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/Events/PaymentFailed.cs`
-- [ ] T028 [P] Create InvoiceExpired event in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/Events/InvoiceExpired.cs`
+- [x] T023 Create PaymentEvent base record in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/Events/PaymentEvent.cs`
+- [x] T024 [P] Create InvoiceCreated event in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/Events/InvoiceCreated.cs`
+- [x] T025 [P] Create PaymentReceived event in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/Events/PaymentReceived.cs`
+- [x] T026 [P] Create PaymentConfirmed event in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/Events/PaymentConfirmed.cs`
+- [x] T027 [P] Create PaymentFailed event in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/Events/PaymentFailed.cs`
+- [x] T028 [P] Create InvoiceExpired event in `src/Breez.Sdk.Liquid.Extensions.Core/Domain/Events/InvoiceExpired.cs`
 
 ### Exception Hierarchy (Core Package)
 
-- [ ] T029 Create BreezSdkException base in `src/Breez.Sdk.Liquid.Extensions.Core/Exceptions/BreezSdkException.cs`
-- [ ] T030 [P] Create ConfigurationException in `src/Breez.Sdk.Liquid.Extensions.Core/Exceptions/ConfigurationException.cs`
-- [ ] T031 [P] Create ConnectionException in `src/Breez.Sdk.Liquid.Extensions.Core/Exceptions/ConnectionException.cs`
-- [ ] T032 [P] Create PaymentException in `src/Breez.Sdk.Liquid.Extensions.Core/Exceptions/PaymentException.cs`
-- [ ] T033 [P] Create TransientException in `src/Breez.Sdk.Liquid.Extensions.Core/Exceptions/TransientException.cs`
+- [x] T029 Create BreezSdkException base in `src/Breez.Sdk.Liquid.Extensions.Core/Exceptions/BreezSdkException.cs`
+- [x] T030 [P] Create ConfigurationException in `src/Breez.Sdk.Liquid.Extensions.Core/Exceptions/ConfigurationException.cs`
+- [x] T031 [P] Create ConnectionException in `src/Breez.Sdk.Liquid.Extensions.Core/Exceptions/ConnectionException.cs`
+- [x] T032 [P] Create PaymentException in `src/Breez.Sdk.Liquid.Extensions.Core/Exceptions/PaymentException.cs`
+- [x] T033 [P] Create TransientException in `src/Breez.Sdk.Liquid.Extensions.Core/Exceptions/TransientException.cs`
 
 ### Abstractions (Core Package)
 
-- [ ] T034 Create IBreezSdkService interface in `src/Breez.Sdk.Liquid.Extensions.Core/Abstractions/IBreezSdkService.cs`
-- [ ] T035 [P] Create IBreezSdkWrapper interface in `src/Breez.Sdk.Liquid.Extensions.Core/Abstractions/IBreezSdkWrapper.cs`
-- [ ] T036 [P] Create IPaymentRepository interface in `src/Breez.Sdk.Liquid.Extensions.Core/Abstractions/IPaymentRepository.cs`
-- [ ] T037 [P] Create IPaymentEventHandler interface in `src/Breez.Sdk.Liquid.Extensions.Core/Abstractions/IPaymentEventHandler.cs`
-- [ ] T038 [P] Create IBreezHealthCheck interface in `src/Breez.Sdk.Liquid.Extensions.Core/Abstractions/IBreezHealthCheck.cs`
+- [x] T034 Create IBreezSdkService interface in `src/Breez.Sdk.Liquid.Extensions.Core/Abstractions/IBreezSdkService.cs`
+- [x] T035 [P] Create IBreezSdkWrapper interface in `src/Breez.Sdk.Liquid.Extensions.Core/Abstractions/IBreezSdkWrapper.cs`
+- [x] T036 [P] Create IPaymentRepository interface in `src/Breez.Sdk.Liquid.Extensions.Core/Abstractions/IPaymentRepository.cs`
+- [x] T037 [P] Create IPaymentEventHandler interface in `src/Breez.Sdk.Liquid.Extensions.Core/Abstractions/IPaymentEventHandler.cs`
+- [x] T038 [P] Create IBreezHealthCheck interface in `src/Breez.Sdk.Liquid.Extensions.Core/Abstractions/IBreezHealthCheck.cs`
 
 ### Test Utilities (Shared)
 
-- [ ] T039 Create MockBreezSdkBuilder in `tests/Breez.Sdk.Liquid.Extensions.TestUtilities/Builders/MockBreezSdkBuilder.cs`
-- [ ] T040 [P] Create FakeBreezSdkWrapper in `tests/Breez.Sdk.Liquid.Extensions.TestUtilities/Fakes/FakeBreezSdkWrapper.cs`
-- [ ] T041 [P] Create TestServiceCollectionExtensions in `tests/Breez.Sdk.Liquid.Extensions.TestUtilities/Extensions/TestServiceCollectionExtensions.cs`
-- [ ] T042 [P] Create PaymentStateBuilder test helper in `tests/Breez.Sdk.Liquid.Extensions.TestUtilities/Builders/PaymentStateBuilder.cs`
+- [x] T039 Create MockBreezSdkBuilder in `tests/Breez.Sdk.Liquid.Extensions.TestUtilities/Builders/MockBreezSdkBuilder.cs`
+- [x] T040 [P] Create FakeBreezSdkWrapper in `tests/Breez.Sdk.Liquid.Extensions.TestUtilities/Fakes/FakeBreezSdkWrapper.cs`
+- [x] T041 [P] Create TestServiceCollectionExtensions in `tests/Breez.Sdk.Liquid.Extensions.TestUtilities/Extensions/TestServiceCollectionExtensions.cs`
+- [x] T042 [P] Create PaymentStateBuilder test helper in `tests/Breez.Sdk.Liquid.Extensions.TestUtilities/Builders/PaymentStateBuilder.cs`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
