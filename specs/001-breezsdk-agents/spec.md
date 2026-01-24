@@ -93,6 +93,14 @@ A test engineer needs to write tests for BreezSDK integration code, including un
 - How does the system handle questions mixing BreezSDK Nodeless (Liquid) with the deprecated Greenlight version? Agents should clarify the distinction and focus on Nodeless/Liquid implementation.
 - What if a user asks about unsupported assets or currencies? Agents should reference the supported asset list and explain configuration requirements for custom assets.
 
+**Edge Case Acceptance Scenarios**:
+
+1. **Given** a user asks about a feature only available in Kotlin/Swift bindings (e.g., a platform-specific API), **When** any BreezSDK agent responds, **Then** it clearly states "This feature is not available in the C# binding" and suggests the closest alternative or workaround if one exists.
+
+2. **Given** a user references "BreezSDK" without specifying Liquid vs Greenlight, **When** any agent responds, **Then** it clarifies: "This guidance applies to BreezSDK Liquid (Nodeless). The Greenlight version uses different APIs and is deprecated."
+
+3. **Given** a user asks about an unsupported asset (e.g., a token not in the default asset list), **When** the breezsdk-developer or breezsdk-architect agent responds, **Then** it explains the asset configuration requirements and references `AssetMetadata` configuration patterns from the knowledge file.
+
 ## Requirements *(mandatory)*
 
 ### Functional Requirements

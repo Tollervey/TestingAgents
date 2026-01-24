@@ -208,6 +208,11 @@ This feature creates documentation artifacts in:
 - [ ] T015 [P] Verify breezsdk-ux agent invocation works via Task tool
 - [ ] T016 [P] Verify breezsdk-test-engineer agent invocation works via Task tool
 - [ ] T017 Verify knowledge file is referenced correctly by agents
+- [ ] T017.1 Validate knowledge file completeness against SDK documentation TOC:
+  - Verify all sections listed in T003 are present and populated
+  - Cross-check against BreezSDK Liquid docs table of contents
+  - Confirm C# code examples exist for: connection, receiving (4 methods), sending (3 methods), on-chain, LNURL (3 types), events, logging, multi-asset, fiat, signing
+  - Document any gaps found with justification (e.g., "feature not available in C# binding")
 
 ---
 
@@ -312,7 +317,7 @@ This feature creates documentation artifacts in:
 
 | Category | Count |
 |----------|-------|
-| Total Tasks | 21 |
+| Total Tasks | 22 |
 | Setup Tasks | 2 |
 | Foundational Tasks | 1 |
 | User Story 1 Tasks | 1 |
@@ -321,7 +326,7 @@ This feature creates documentation artifacts in:
 | User Story 4 Tasks | 1 |
 | User Story 5 Tasks | 1 |
 | Integration Tasks | 3 |
-| Validation Tasks | 6 |
+| Validation Tasks | 7 (includes T017.1 for knowledge file completeness) |
 | Polish Tasks | 4 |
 | Parallel Opportunities | 10 tasks can run in parallel (T004-T008, T012-T016) |
 

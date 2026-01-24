@@ -395,28 +395,33 @@ globs:
 
 ## Implementation Waves
 
-### Wave 1: Foundation (Sequential)
-1. **T001**: Create knowledge reference file (`breezsdk-knowledge.md`)
-   - Comprehensive SDK documentation
-   - All C# code examples
-   - UX guidelines summary
+> **Note**: Task IDs below reference the authoritative `tasks.md`. See tasks.md for full task details and dependencies.
+
+### Wave 1: Setup & Foundation (Sequential)
+- **T001-T002**: Verify directory structure (`.claude/agents/`, `.claude/skills/`)
+- **T003**: Create knowledge reference file (`breezsdk-knowledge.md`)
+  - Comprehensive SDK documentation
+  - All C# code examples
+  - UX guidelines summary
 
 ### Wave 2: Core Agents (Parallel)
-2. **T002**: Create `breezsdk-developer.md` [P]
-3. **T003**: Create `breezsdk-architect.md` [P]
-4. **T004**: Create `breezsdk-reviewer.md` [P]
+- **T004**: Create `breezsdk-developer.md` [P]
+- **T005**: Create `breezsdk-architect.md` [P]
+- **T006**: Create `breezsdk-reviewer.md` [P]
 
 ### Wave 3: Supporting Agents (Parallel)
-5. **T005**: Create `breezsdk-ux.md` [P]
-6. **T006**: Create `breezsdk-test-engineer.md` [P]
+- **T007**: Create `breezsdk-ux.md` [P]
+- **T008**: Create `breezsdk-test-engineer.md` [P]
 
 ### Wave 4: Integration (Sequential)
-7. **T007**: Update CLAUDE.md with all agent registrations
-8. **T008**: Create quickstart.md for this feature
+- **T009-T011**: Update CLAUDE.md tables (agents, permissions, phase mapping)
 
-### Wave 5: Validation
-9. **T009**: Verify agent invocation works
-10. **T010**: Verify knowledge file is referenced correctly
+### Wave 5: Validation (Parallel where marked)
+- **T012-T016**: Verify each agent invocation works [P]
+- **T017**: Verify knowledge file is referenced correctly by agents
+
+### Wave 6: Polish & Verification
+- **T018-T021**: Quickstart validation, success criteria verification (SC-005, SC-006, SC-007)
 
 ---
 
