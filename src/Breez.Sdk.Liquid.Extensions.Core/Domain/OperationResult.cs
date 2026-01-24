@@ -1,3 +1,5 @@
+using Breez.Sdk.Liquid.Extensions.Core.Exceptions;
+
 namespace Breez.Sdk.Liquid.Extensions.Core.Domain;
 
 /// <summary>
@@ -81,6 +83,22 @@ public sealed record OperationError
     /// <param name="ex">The exception to convert.</param>
     /// <param name="isRetryable">Whether the operation can be retried.</param>
     /// <returns>An OperationError instance.</returns>
+    /// <remarks>
+    /// <para>
+    /// <b>Security Warning:</b> Exception messages are NOT automatically sanitized.
+    /// Ensure that outer layers sanitize error messages before returning to clients.
+    /// </para>
+    /// <para>
+    /// Do NOT include in error messages:
+    /// <list type="bullet">
+    ///   <item>Database connection strings or schemas</item>
+    ///   <item>API keys or authentication tokens</item>
+    ///   <item>File system paths or server names</item>
+    ///   <item>User PII or payment details</item>
+    ///   <item>Stack traces (unless in development)</item>
+    /// </list>
+    /// </para>
+    /// </remarks>
     public static OperationError FromException(Exception ex, bool isRetryable = false)
         => new()
         {
@@ -92,8 +110,11 @@ public sealed record OperationError
 
     private static BreezErrorCode MapExceptionToCode(Exception ex) => ex switch
     {
-        // Exception mapping will be updated after custom exception classes are created (T029-T033)
-        // For now, use ServiceUnavailable as fallback
+        ConfigurationException configEx => configEx.ErrorCode,
+        ConnectionException connEx => connEx.ErrorCode,
+        PaymentException payEx => payEx.ErrorCode,
+        TransientException transEx => transEx.ErrorCode,
+        BreezSdkException breezEx => breezEx.ErrorCode,
         _ => BreezErrorCode.ServiceUnavailable
     };
 }

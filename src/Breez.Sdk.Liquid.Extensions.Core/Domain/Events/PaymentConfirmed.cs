@@ -24,6 +24,16 @@ public sealed record PaymentConfirmed : PaymentEvent
     /// A hex-encoded string representing the payment preimage.
     /// This cryptographic proof confirms successful payment settlement.
     /// </value>
+    /// <remarks>
+    /// <para>
+    /// <b>Security Warning:</b> This is a cryptographic secret. Never serialize this event
+    /// to logs, persistent storage, or external systems without proper redaction.
+    /// </para>
+    /// <para>
+    /// The preimage MUST only be used in-memory for immediate payment verification.
+    /// If you need to persist proof of payment, store only the payment hash.
+    /// </para>
+    /// </remarks>
     public required string Preimage { get; init; }
 
     /// <summary>

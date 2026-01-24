@@ -25,5 +25,15 @@ public sealed record PaymentReceived : PaymentEvent
     /// A hex-encoded string representing the payment preimage, or null if not available.
     /// The preimage is the secret value that proves payment was received.
     /// </value>
+    /// <remarks>
+    /// <para>
+    /// <b>Security Warning:</b> This is a cryptographic secret. Never serialize this event
+    /// to logs, persistent storage, or external systems without proper redaction.
+    /// </para>
+    /// <para>
+    /// The preimage MUST only be used in-memory for immediate payment verification.
+    /// If you need to persist proof of payment, store only the payment hash.
+    /// </para>
+    /// </remarks>
     public string? Preimage { get; init; }
 }

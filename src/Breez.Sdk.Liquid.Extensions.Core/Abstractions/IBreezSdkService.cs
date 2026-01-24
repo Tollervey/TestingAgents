@@ -51,18 +51,35 @@ public interface IBreezSdkService
     /// <summary>
     /// Creates a Lightning invoice for receiving payments.
     /// </summary>
-    /// <param name="amountSat">The amount to request in satoshis. Must be greater than 0.</param>
-    /// <param name="description">Optional human-readable description of the payment purpose.</param>
-    /// <param name="expirySec">Optional expiry time in seconds. If not specified, uses SDK default.</param>
+    /// <param name="amountSat">
+    /// The amount to request in satoshis.
+    /// <list type="bullet">
+    ///   <item>Must be greater than 0</item>
+    ///   <item>Must be less than or equal to 2,100,000,000,000,000 satoshis (21 million BTC)</item>
+    ///   <item>Should align with network minimum relay fees (typically 1 sat minimum)</item>
+    /// </list>
+    /// </param>
+    /// <param name="description">
+    /// Optional human-readable description of the payment purpose.
+    /// Maximum 639 bytes (BOLT11 spec limit). Recommended maximum: 500 UTF-8 characters.
+    /// </param>
+    /// <param name="expirySec">Optional expiry time in seconds. If not specified, uses SDK default (typically 3600 seconds / 1 hour).</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>
     /// An <see cref="OperationResult{T}"/> containing the created <see cref="Invoice"/> on success,
     /// or an <see cref="OperationError"/> on failure.
     /// </returns>
     /// <remarks>
+    /// <para>
     /// The created invoice can be shared with payers via QR code, copy/paste, or Lightning address.
     /// The invoice will expire after the specified duration, defaulting to the SDK's configured expiry time.
     /// Payment state will be tracked automatically and events will be raised on status changes.
+    /// </para>
+    /// <para>
+    /// <b>Validation:</b> Implementations MUST validate input parameters and return
+    /// <see cref="OperationResult{T}.Failure(OperationError)"/> with appropriate error codes
+    /// for invalid inputs rather than throwing exceptions.
+    /// </para>
     /// </remarks>
     /// <exception cref="ConnectionException">Thrown when the SDK is not connected.</exception>
     /// <exception cref="PaymentException">Thrown when invoice creation fails due to SDK errors.</exception>

@@ -58,6 +58,13 @@ public class PaymentState
     /// <summary>
     /// Preimage revealed upon successful payment (hex-encoded).
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Security Warning:</b> This is a cryptographic secret. Never log this value
+    /// or expose it in API responses. The preimage proves payment completion and
+    /// should be handled with the same care as authentication credentials.
+    /// </para>
+    /// </remarks>
     public string? Preimage { get; set; }
 
     /// <summary>
@@ -68,6 +75,25 @@ public class PaymentState
     /// <summary>
     /// Custom metadata dictionary for application-specific data.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Security Warning:</b> This dictionary is persisted as-is. Do NOT store:
+    /// </para>
+    /// <list type="bullet">
+    ///   <item>API keys or authentication tokens</item>
+    ///   <item>Passwords or secrets</item>
+    ///   <item>Personally identifiable information (PII)</item>
+    ///   <item>Payment card data</item>
+    /// </list>
+    /// <para>
+    /// Acceptable uses:
+    /// </para>
+    /// <list type="bullet">
+    ///   <item>Order IDs: "orderId" → "ORDER-12345"</item>
+    ///   <item>User references: "userId" → "usr_abc123"</item>
+    ///   <item>Descriptive tags: "source" → "mobile_app"</item>
+    /// </list>
+    /// </remarks>
     public Dictionary<string, string> Metadata { get; init; } = new();
 
     /// <summary>

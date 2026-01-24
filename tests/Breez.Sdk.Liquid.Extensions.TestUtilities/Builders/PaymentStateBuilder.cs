@@ -130,7 +130,7 @@ public class PaymentStateBuilder
     /// <summary>
     /// Sets the payment kind.
     /// </summary>
-    /// <param name="kind">The type of payment (Custom, Receive, Send).</param>
+    /// <param name="kind">The type of payment (Custom, Paywall, TipJar, Purchase, Subscription).</param>
     /// <returns>The current builder instance for method chaining.</returns>
     public PaymentStateBuilder WithKind(PaymentKind kind)
     {
