@@ -1,5 +1,14 @@
 ---
 description: Generate a custom checklist for the current feature based on user requirements.
+handoffs: 
+  - label: Run Consistency Analysis
+    agent: speckit.analyze
+    prompt: Run a consistency check across all artifacts
+    send: true
+  - label: Start Implementation
+    agent: speckit.implement
+    prompt: Begin wave-based implementation (checklists will be validated first)
+    send: true
 ---
 
 ## Checklist Purpose: "Unit Tests for English"

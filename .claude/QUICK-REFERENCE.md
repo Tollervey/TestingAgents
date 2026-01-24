@@ -11,84 +11,84 @@
 | `dotnet ef database update` | Apply migrations |
 | `dotnet format` | Format code |
 
-## Available Skills (invoke with `/skill-name`)
+## Spec-Kit Workflow Commands
 
-### .NET Backend
-| Skill | Description |
-|-------|-------------|
-| `/add-endpoint <desc>` | Add new API endpoint with DTOs, validation |
-| `/add-entity <name>` | Create EF Core entity with configuration |
-| `/add-service <name>` | Create service with interface and DI |
-| `/add-migration <name>` | Create and apply EF Core migration |
-| `/optimize-query <desc>` | Optimize EF Core queries |
+### Governance & Specification
+| Command | Description |
+|---------|-------------|
+| `/speckit.constitution` | Establish/update governance principles |
+| `/speckit.specify <desc>` | Create technology-agnostic feature specification |
+| `/speckit.clarify` | Refine requirements with targeted questions |
 
-### Frontend
-| Skill | Description |
-|-------|-------------|
-| `/add-component <name>` | Create accessible, responsive component |
-| `/fix-ui <issue>` | Fix UI issues with visual comparison |
+### Planning & Tasks
+| Command | Description |
+|---------|-------------|
+| `/speckit.plan` | Generate technical architecture and design artifacts |
+| `/speckit.tasks` | Break plan into dependency-ordered task list |
+| `/speckit.checklist <domain>` | Generate quality gate checklists |
 
-### Full Stack
-| Skill | Description |
-|-------|-------------|
-| `/implement-feature <desc>` | Full-stack feature implementation |
-| `/add-tests <target>` | Add .NET or frontend tests |
-| `/debug <issue>` | Systematic debugging workflow |
-| `/fix-issue <number>` | Fix GitHub issue end-to-end |
-| `/code-review <file>` | Review code for quality |
-| `/refactor <target>` | Refactor with verification |
-| `/create-pr` | Create well-structured PR |
+### Execution & Validation
+| Command | Description |
+|---------|-------------|
+| `/speckit.analyze` | Read-only consistency check across artifacts |
+| `/speckit.implement` | Wave-based execution with sub-agents |
 
-## Available Subagents (invoke with "use a subagent to...")
+## Available Agents (invoke with "Use [agent-name] to...")
 
-### Code Quality
-| Agent | Description |
-|-------|-------------|
-| `code-reviewer` | .NET and frontend code quality |
-| `security-reviewer` | OWASP vulnerabilities, .NET security |
-| `performance-analyzer` | EF Core, async, frontend performance |
-| `architecture-reviewer` | Solution structure, design patterns |
+### Architecture & Review (Read-Only)
+| Agent | Model | Description |
+|-------|-------|-------------|
+| `solution-architect` | Opus | Architecture decisions, complex refactoring analysis |
+| `code-reviewer` | Haiku | Code quality, constitution compliance checks |
+| `security-auditor` | Haiku | OWASP vulnerabilities, secrets detection |
 
-### Specialized
-| Agent | Description |
-|-------|-------------|
-| `database-expert` | EF Core, queries, migrations, indexes |
-| `ui-expert` | Accessibility (WCAG), responsive design |
-| `api-designer` | REST conventions, .NET Web API patterns |
-| `test-writer` | xUnit, integration tests, React Testing Library |
-| `documentation-writer` | Technical documentation |
+### Implementation (Can Modify Files)
+| Agent | Model | Description |
+|-------|-------|-------------|
+| `backend-developer` | Sonnet | C# implementation, APIs, services, business logic |
+| `frontend-developer` | Sonnet | Blazor/Razor components, UI implementation |
+| `test-engineer` | Sonnet | TDD test creation (tests BEFORE implementation) |
+| `database-architect` | Sonnet | EF Core, migrations, schema design, queries |
 
 ## Best Practice Workflows
 
-### New Feature (Full Stack)
+### New Feature (Full Spec-Kit Flow)
 ```
-1. Enter Plan Mode (Shift+Tab)
-2. "/implement-feature user registration"
-3. Follow the checklist through all layers
-4. "use a subagent to review this code for security"
-5. "/create-pr"
+1. /speckit.specify "user registration with email verification"
+2. /speckit.clarify (if ambiguities exist)
+3. /speckit.plan
+4. /speckit.tasks
+5. /speckit.checklist security
+6. /speckit.analyze
+7. /speckit.implement
 ```
 
 ### Database Change
 ```
-1. "/add-entity Order"
-2. "/add-migration CreateOrdersTable"
-3. "use a subagent to review database design"
+1. Use database-architect to design Order entity with relationships
+2. Use database-architect to create migration AddOrdersTable
+3. Use code-reviewer to verify constitution Article IV compliance
 ```
 
-### Performance Investigation
+### TDD Implementation (Constitution Article III)
 ```
-"use a subagent to analyze performance of the orders API"
-"/optimize-query GetOrdersWithItems"
+# Step 1: Create failing tests FIRST
+Use test-engineer to write unit tests for OrderService
+
+# Step 2: Verify RED state
+dotnet test --filter "OrderServiceTests"  # Should FAIL
+
+# Step 3: Implement to GREEN
+Use backend-developer to implement OrderService
+
+# Step 4: Verify GREEN state
+dotnet test --filter "OrderServiceTests"  # Should PASS
 ```
 
-### Comprehensive Code Review
+### Quality Gate (After Each Wave)
 ```
-"use subagents in parallel to review this for:
-- security vulnerabilities
-- performance issues
-- code quality
-- accessibility"
+& Use code-reviewer to verify code quality
+& Use security-auditor to scan for vulnerabilities
 ```
 
 ## Context Management

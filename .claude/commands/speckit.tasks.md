@@ -68,7 +68,7 @@ The tasks.md should be immediately executable - each task must be specific enoug
 
 **CRITICAL**: Tasks MUST be organized by user story to enable independent implementation and testing.
 
-**Tests are OPTIONAL**: Only generate test tasks if explicitly requested in the feature specification or if user requests TDD approach.
+**Tests are MANDATORY**: Per Constitution Article III (Test-First Imperative), test tasks MUST be generated for every user story. Tests must be written BEFORE implementation (Red-Green-Refactor). This is NON-NEGOTIABLE.
 
 ### Checklist Format (REQUIRED)
 
@@ -110,12 +110,12 @@ Every task MUST strictly follow this format:
      - Models needed for that story
      - Services needed for that story
      - Endpoints/UI needed for that story
-     - If tests requested: Tests specific to that story
+     - Tests specific to that story (MANDATORY - must precede implementation)
    - Mark story dependencies (most stories should be independent)
 
 2. **From Contracts**:
    - Map each contract/endpoint → to the user story it serves
-   - If tests requested: Each contract → contract test task [P] before implementation in that story's phase
+   - Each contract → contract test task [P] BEFORE implementation in that story's phase
 
 3. **From Data Model**:
    - Map each entity to the user story(ies) that need it
@@ -132,6 +132,7 @@ Every task MUST strictly follow this format:
 - **Phase 1**: Setup (project initialization)
 - **Phase 2**: Foundational (blocking prerequisites - MUST complete before user stories)
 - **Phase 3+**: User Stories in priority order (P1, P2, P3...)
-  - Within each story: Tests (if requested) → Models → Services → Endpoints → Integration
+  - Within each story: Tests (MANDATORY) → Models → Services → Endpoints → Integration
+  - TDD cycle: RED (failing tests) → GREEN (implementation) → REFACTOR
   - Each phase should be a complete, independently testable increment
 - **Final Phase**: Polish & Cross-Cutting Concerns
