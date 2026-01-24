@@ -103,21 +103,85 @@ You **MUST** consider the user input before proceeding (if not empty).
    - **Task details**: ID, description, file paths, parallel markers [P]
    - **Execution flow**: Order and dependency requirements
 
-6. Execute implementation following the task plan:
+6. **Checkpoint Strategy** (CRITICAL for recovery):
+
+   **When to Create Checkpoints**:
+   - **BEFORE each wave starts**: Create checkpoint with wave identifier
+   - **AFTER completing Setup phase**: Baseline checkpoint before domain work
+   - **Before destructive operations**: Database migrations, file deletions
+   - **When implementation is in known good state**: Tests passing, build succeeding
+
+   **Checkpoint Commands**:
+   ```
+   # Create checkpoint before Wave 2
+   Create a checkpoint - Wave 2 starting, Setup phase complete, all tests passing
+   
+   # Recovery if needed
+   /rewind
+   ```
+
+   **Checkpoint Naming Convention**:
+   - `Wave-N-start`: Before beginning wave N
+   - `Phase-complete-[name]`: After completing a major phase
+   - `Pre-migration-[name]`: Before database migrations
+   - `Known-good-[description]`: Stable state with passing tests
+
+7. **Wave-Based Execution** (from CLAUDE.md):
+
+   **Wave 1 (Infrastructure)**: Execute SEQUENTIALLY
+   ```
+   # Sequential execution with checkpoints
+   Implement T001 → checkpoint → T002 → checkpoint → T003
+   ```
+   - No parallel execution in infrastructure phase
+   - Checkpoint after each critical task
+   - Verify build passes before proceeding
+
+   **Wave 2+ (Domain/Application)**: Execute `[P]` marked tasks in PARALLEL
+   ```
+   # Parallel execution using & operator
+   & Use backend-developer to implement T004 (User entity)
+   & Use backend-developer to implement T005 (Product entity)
+   & Use backend-developer to implement T006 (Order entity)
+   /tasks  # Monitor progress
+   ```
+   - Only parallelize tasks marked with [P]
+   - Respect `depends_on` constraints
+   - Maximum 5 concurrent background agents
+
+   **Quality Gate After Each Wave**:
+   ```
+   # Run after wave completion
+   & Use code-reviewer to verify Wave N code quality
+   & Use security-auditor to scan for vulnerabilities
+   
+   # Verify tests pass
+   dotnet test
+   
+   # Verify build is clean
+   dotnet build --warnaserror
+   ```
+
+   **Context Management Between Waves**:
+   - Run `/compact` if context exceeds 150k tokens
+   - Delegate large tasks (>30k tokens) to sub-agents
+   - Sub-agents return summaries, not full outputs
+
+8. Execute implementation following the task plan:
    - **Phase-by-phase execution**: Complete each phase before moving to the next
    - **Respect dependencies**: Run sequential tasks in order, parallel tasks [P] can run together  
    - **Follow TDD approach**: Execute test tasks before their corresponding implementation tasks
    - **File-based coordination**: Tasks affecting the same files must run sequentially
    - **Validation checkpoints**: Verify each phase completion before proceeding
 
-7. Implementation execution rules:
+9. Implementation execution rules:
    - **Setup first**: Initialize project structure, dependencies, configuration
-   - **Tests before code**: If you need to write tests for contracts, entities, and integration scenarios
+   - **Tests before code**: Write tests for contracts, entities, and integration scenarios FIRST
    - **Core development**: Implement models, services, CLI commands, endpoints
    - **Integration work**: Database connections, middleware, logging, external services
-   - **Polish and validation**: Unit tests, performance optimization, documentation
+   - **Polish and validation**: Additional tests, performance optimization, documentation
 
-8. Progress tracking and error handling:
+10. Progress tracking and error handling:
    - Report progress after each completed task
    - Halt execution if any non-parallel task fails
    - For parallel tasks [P], continue with successful tasks, report failed ones
@@ -125,7 +189,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Suggest next steps if implementation cannot proceed
    - **IMPORTANT** For completed tasks, make sure to mark the task off as [X] in the tasks file.
 
-9. Completion validation:
+11. Completion validation:
    - Verify all required tasks are completed
    - Check that implemented features match the original specification
    - Validate that tests pass and coverage meets requirements

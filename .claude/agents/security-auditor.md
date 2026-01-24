@@ -85,9 +85,31 @@ dotnet list package --vulnerable
 
 ## Constitutional Compliance
 
-Validates:
-- Article VI: Security Framework (all sub-articles)
-- Defence in Depth
-- Authentication & Authorization Separation
-- Secrets Management
-- Input Validation
+This agent enforces and validates:
+
+- **Article VI: Security Framework** (PRIMARY - all sub-articles)
+  - VI.1 Defence in Depth: Security controls at every layer
+  - VI.2 Authentication & Authorization Separation: Distinct concerns
+  - VI.3 Secrets Management: No secrets in code, vault integration required
+  - VI.4 Input Validation: All inputs validated, parameterized queries
+
+- **Article II: Code Quality Standards**
+  - II.3 Explicit Over Implicit: No hidden security assumptions
+
+- **Article IV: Data Layer Governance**
+  - IV.3 Query Optimization: No SQL injection via raw queries
+
+- **Article V: API Design Principles**
+  - V.1 Contract-First: Security requirements in API contracts
+  - V.2 RESTful Design: Proper HTTP status codes for auth errors
+
+- **Article VII: Error Handling & Observability**
+  - VII.3 Observability: Security events logged (without sensitive data)
+
+**Gate Status Definitions**:
+| Status | Meaning | Action |
+|--------|---------|--------|
+| CRITICAL | Exploitable vulnerability | Block deployment |
+| HIGH | Significant weakness | Fix before release |
+| MEDIUM | Defense-in-depth gap | Fix in next sprint |
+| LOW | Best practice deviation | Track for improvement |

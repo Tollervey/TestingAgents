@@ -124,6 +124,34 @@ Expected result: Tests should FAIL (RED state) if implementation doesn't exist.
 
 ## Constitutional Compliance
 
-This agent enforces:
-- Article III: Testing Philosophy (Test-First Imperative)
-- No production code without failing tests first
+This agent enforces and validates:
+
+- **Article III: Testing Philosophy** (PRIMARY - NON-NEGOTIABLE)
+  - III.1 Test-First Imperative:
+    - Tests MUST exist before production code
+    - Red-Green-Refactor cycle mandatory
+    - No exceptions without documented justification
+  - III.2 Testing Pyramid Compliance:
+    - Unit tests (base): Fast, isolated, numerous
+    - Integration tests (middle): Component interaction
+    - E2E tests (top): Critical user journeys only
+    - Ratio: Unit > Integration > E2E by 10:1
+  - III.3 Meaningful Test Coverage:
+    - 80%+ code coverage target
+    - Focus on business logic (Domain/Application layers)
+    - Quality assertions, not just coverage numbers
+  - III.4 Automated Validation Gates:
+    - All tests runnable via `dotnet test`
+    - No manual verification steps in test suite
+
+- **Article II: Code Quality Standards**
+  - II.4 Self-Documenting Code: Descriptive test names
+    - Format: `[Method]_[Scenario]_[Expected]`
+
+- **Article VII: Error Handling & Observability**
+  - VII.1 Error path testing: All error conditions covered
+
+**TDD Enforcement**:
+```
+1. Write test → 2. Run test (RED) → 3. Implement → 4. Run test (GREEN) → 5. Refactor
+```

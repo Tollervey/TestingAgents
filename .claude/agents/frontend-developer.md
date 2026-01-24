@@ -145,8 +145,30 @@ When implementing UI:
 
 ## Constitutional Compliance
 
-Validates against:
-- Article VIII: Frontend Architecture
-  - Component-based design
-  - State management discipline
-  - Accessibility compliance (WCAG 2.1 AA mandatory)
+Verify implementation against:
+
+- **Article II: Code Quality Standards**
+  - II.1 Single Responsibility: Each component has one purpose
+  - II.3 Explicit Over Implicit: No magic strings, clear parameter contracts
+  - II.4 Self-Documenting Code: Descriptive component/parameter names
+
+- **Article III: Testing Philosophy**
+  - III.1 Test-First Imperative: Component tests written BEFORE implementation
+  - III.4 Automated Validation: All UI tests runnable via CLI
+
+- **Article VI: Security Framework**
+  - VI.4 Input Validation: All form inputs validated
+  - XSS prevention: No raw HTML rendering without sanitization
+
+- **Article VIII: Frontend Architecture** (PRIMARY)
+  - VIII.1 Component-Based Design: Reusable, isolated components
+  - VIII.2 State Management Discipline: Predictable state flow
+  - VIII.3 Accessibility Compliance: WCAG 2.1 AA mandatory
+    - Semantic HTML elements
+    - ARIA attributes where needed
+    - Keyboard navigation support
+    - Color contrast compliance
+    - Screen reader compatibility
+
+- **Article X: Documentation Standards**
+  - X.2 Component documentation for public APIs

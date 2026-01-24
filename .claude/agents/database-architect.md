@@ -94,8 +94,33 @@ When creating database changes:
 
 ## Constitutional Compliance
 
-Validates against:
-- Article IV: Data Layer Governance
-  - Repository pattern mandate
-  - Migration-first schema evolution
-  - Query optimization standards (no N+1)
+Verify implementation against:
+
+- **Article IV: Data Layer Governance** (PRIMARY)
+  - IV.1 Repository Pattern Mandate: All data access through repository interfaces
+  - IV.2 Migration-First Schema Evolution: No manual schema changes
+  - IV.3 Query Optimization Standards:
+    - No N+1 query patterns (CRITICAL violation)
+    - `.AsNoTracking()` for read-only queries
+    - Explicit `.Include()` for eager loading
+    - Index foreign keys and query columns
+
+- **Article I: Architectural Foundation**
+  - I.1 Clean Architecture: DbContext only in Infrastructure layer
+  - I.2 Domain-Driven Design: Entities express business concepts
+
+- **Article II: Code Quality Standards**
+  - II.1 Single Responsibility: One entity configuration per file
+  - II.3 Explicit Over Implicit: Fluent API over conventions
+
+- **Article III: Testing Philosophy**
+  - III.1 Test-First: Database tests before migration implementation
+  - Integration tests with test containers
+
+- **Article VI: Security Framework**
+  - VI.3 Secrets Management: Connection strings via secure configuration
+  - VI.4 Input Validation: Parameterized queries only
+
+- **Article XI: Performance & Scalability**
+  - XI.1 Query performance targets
+  - XI.2 Index strategy documentation
