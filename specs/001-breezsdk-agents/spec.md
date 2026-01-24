@@ -109,6 +109,7 @@ A test engineer needs to write tests for BreezSDK integration code, including un
 - **FR-010**: Each agent MUST have clearly defined tool access permissions consistent with their role (read-only for reviewers, write access for developers).
 - **FR-011**: The knowledge reference file MUST include C# code snippets for all major SDK operations: connection, receiving payments, sending payments, LNURL operations, on-chain transactions, event handling, logging, and multi-asset support.
 - **FR-012**: Agents MUST reference the knowledge file for domain-specific guidance while following existing project constitution and code standards.
+- **FR-013**: When an SDK operation is not explicitly covered in the knowledge file, agents MUST indicate the gap to the user and apply general SDK principles (prepare-then-execute pattern, proper error handling, event cleanup) rather than guessing or fabricating patterns.
 
 ### Key Entities
 
@@ -128,6 +129,13 @@ A test engineer needs to write tests for BreezSDK integration code, including un
 - **SC-006**: Developer agent produces working C# code for a basic payment flow that follows SDK patterns (prepare-then-execute, proper error handling, event listener cleanup).
 - **SC-007**: UX agent recommendations align with the 4 core UX principles documented in BreezSDK: simplicity over choice, transparency without jargon, progressive disclosure, and Lightning priority.
 
+## Clarifications
+
+### Session 2026-01-24
+
+- Q: Which BreezSDK documentation source(s) should be used as the authoritative reference for building the knowledge file? → A: Use official BreezSDK GitHub docs (https://github.com/breez/breez-sdk-liquid-docs) pinned to latest stable release.
+- Q: How should knowledge file completeness be validated and how should agents handle SDK operations not explicitly covered? → A: Agents should reference knowledge file first; if operation not found, indicate gap and use general SDK principles.
+
 ## Assumptions
 
 - The BreezSDK NuGet package `Breez.Sdk.Liquid` is the target C# implementation (not the deprecated Greenlight version).
@@ -135,3 +143,4 @@ A test engineer needs to write tests for BreezSDK integration code, including un
 - The project constitution (`.specify/memory/constitution.md`) applies to BreezSDK implementations alongside SDK-specific guidelines.
 - Agent model assignments follow the existing pattern: Opus for architectural decisions, Sonnet for implementation, Haiku for reviews.
 - The knowledge reference file will be maintained alongside SDK documentation updates but is not automatically synchronized.
+- **Documentation Source**: The knowledge reference file MUST be built from the official BreezSDK GitHub documentation repository (https://github.com/breez/breez-sdk-liquid-docs), pinned to the latest stable release at time of implementation.
