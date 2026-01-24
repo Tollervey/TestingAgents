@@ -1,0 +1,67 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"hookSpecificOutput\": {\"hookEventName\": \"SessionStart\", \"additionalContext\": \"Spec-Kit Project | Constitution: .specify/memory/constitution.md | Branch: '$(git branch --show-current 2>/dev/null || echo 'no-git')' | Agents: solution-architect, backend-developer, frontend-developer, test-engineer, database-architect, security-auditor, code-reviewer\"}}'"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "#!/bin/bash\ninput=$(cat)\nprompt=$(echo \"$input\" | jq -r '.prompt // empty')\n\n# Detect spec-kit commands and inject guidance\nif [[ \"$prompt\" == */speckit.plan* ]]; then\n  echo '{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"PLAN PHASE: Include Claude Code Execution Architecture section. Define agent specializations (solution-architect/Opus, backend-developer/Sonnet, test-engineer/Sonnet, security-auditor/Haiku). Identify parallel execution boundaries. Define context management thresholds. Specify quality gate hooks. Read .claude/skills/dotnet-plan-strategy.md if available.\"}}'\nelif [[ \"$prompt\" == */speckit.tasks* ]]; then\n  echo '{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"TASKS PHASE: Add execution metadata to each task (depends_on, blocks, parallel_group, recommended_agent, model_tier, background_eligible). Organize into execution waves. Mark [P] for parallel tasks. Include dependency graph. Read .claude/skills/dotnet-task-parallelization.md if available.\"}}'\nelif [[ \"$prompt\" == */speckit.implement* ]]; then\n  echo '{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"IMPLEMENT PHASE: Execute wave-by-wave. Spawn parallel sub-agents for [P] tasks using & operator. Use Ctrl+B for background tasks. Create checkpoints at wave boundaries. Enforce test-first. Initialize TodoWrite for progress tracking. Read .claude/skills/dotnet-implementation-execution.md if available.\"}}'\nelif [[ \"$prompt\" == */speckit.analyze* ]]; then\n  echo '{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"ANALYZE PHASE: Run parallel analysis streams. Use solution-architect for constitutional compliance. Use code-reviewer for spec-plan alignment. Use security-auditor for security analysis. Aggregate findings by severity.\"}}'\nelif [[ \"$prompt\" == */speckit.checklist* ]]; then\n  echo '{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"CHECKLIST PHASE: Execute automated gates (dotnet format, dotnet build --warnaserror, code coverage). Use security-auditor and code-reviewer agents for validation. Generate PASS/FAIL report.\"}}'\nfi"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "#!/bin/bash\ninput=$(cat)\nfile_path=$(echo \"$input\" | jq -r '.tool_input.file_path // .tool_input.filePath // empty')\n\nif [[ \"$file_path\" =~ \\.(cs|razor)$ ]]; then\n  if command -v dotnet &> /dev/null; then\n    result=$(dotnet format --include \"$file_path\" --verify-no-changes 2>&1) || echo \"{\\\"systemMessage\\\": \\\"Format check: File needs formatting. Run 'dotnet format' to fix.\\\"}\"\n  fi\nfi",
+            "timeout": 15000
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "#!/bin/bash\ninput=$(cat)\ncommand=$(echo \"$input\" | jq -r '.tool_input.command // empty')\n\n# Block dangerous commands\nif echo \"$command\" | grep -qE 'rm\\s+-rf\\s+/|rm\\s+-rf\\s+\\.|DROP\\s+DATABASE|TRUNCATE\\s+TABLE|git\\s+push.*--force'; then\n  echo '{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"BLOCKED: Potentially destructive command detected. Please confirm this is intentional.\"}}' >&2\n  exit 2\nfi"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "#!/bin/bash\n# Check if there are uncommitted test files that might indicate incomplete TDD\nif [ -d \"tests\" ] || [ -d \"Tests\" ]; then\n  pending=$(find . -name \"*Tests.cs\" -newer .git/index 2>/dev/null | head -5)\n  if [ -n \"$pending\" ]; then\n    echo '{\"systemMessage\": \"Reminder: New test files detected. Ensure all tests pass before completing this task.\"}'\n  fi\nfi"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "#!/bin/bash\ninput=$(cat)\nagent=$(echo \"$input\" | jq -r '.agent_name // \"unknown\"')\necho \"{\\\"systemMessage\\\": \\\"Sub-agent '$agent' completed. Review results and update TodoWrite if tracking progress.\\\"}\""
+          }
+        ]
+      }
+    ]
+  }
+}
