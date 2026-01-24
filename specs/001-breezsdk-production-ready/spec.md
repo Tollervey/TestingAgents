@@ -79,7 +79,7 @@ A developer needs to configure the SDK securely, with secrets (mnemonic, API key
 
 ### User Story 4 - Extensible Persistence Layer (Priority: P2)
 
-A developer wants to persist payment state using their preferred database technology (SQL Server, PostgreSQL, MongoDB, or in-memory for testing) rather than being locked to SQLite.
+A developer wants to persist payment state using their preferred database technology (SQL Server, PostgreSQL, SQLite, or in-memory for testing) rather than being locked to a single provider.
 
 **Why this priority**: Production applications have diverse database requirements - enterprise apps may require SQL Server, cloud-native apps may prefer PostgreSQL, and integration tests need in-memory storage.
 
@@ -184,7 +184,7 @@ Developers using specific platforms (ASP.NET Core, Umbraco, or other CMS) want o
 **Invoice and Payment Operations**
 - **FR-006**: System MUST support creating BOLT11 invoices with configurable amount, description, and expiry.
 - **FR-007**: System MUST support parsing and validating BOLT11 invoices and Lightning addresses.
-- **FR-008**: System MUST support sending payments to BOLT11 invoices and Lightning addresses.
+- **FR-008**: System MUST support sending payments to BOLT11 invoices and Lightning addresses. *(Note: v1 focuses on receiving payments; send payment implementation is foundational but secondary priority)*
 - **FR-009**: System MUST provide real-time payment event notifications via .NET events or channels.
 - **FR-010**: System MUST support querying payment history with filtering and pagination.
 
