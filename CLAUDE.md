@@ -106,6 +106,11 @@
 | `database-architect` | Sonnet | Schema design, migrations |
 | `security-auditor` | Haiku | Security scanning, vulnerability checks |
 | `code-reviewer` | Haiku | Code quality, constitution compliance |
+| `breezsdk-developer` | Sonnet | BreezSDK C# implementation, payment flows, event handling |
+| `breezsdk-architect` | Opus | BreezSDK integration architecture, production readiness |
+| `breezsdk-reviewer` | Haiku | BreezSDK code review, SDK pattern compliance |
+| `breezsdk-ux` | Sonnet | BreezSDK UX guidelines, payment flow design |
+| `breezsdk-test-engineer` | Sonnet | BreezSDK testing patterns, mock strategies |
 
 ### Agent Tools & Permissions
 
@@ -118,6 +123,11 @@
 | `database-architect` | Read, Write, Edit, Bash, Glob, Grep | ✅ Yes |
 | `security-auditor` | Read, Grep, Glob, Bash | ❌ Read-only |
 | `code-reviewer` | Read, Grep, Glob | ❌ Read-only |
+| `breezsdk-developer` | Read, Write, Edit, Bash, Glob, Grep | ✅ Yes |
+| `breezsdk-architect` | Read, Glob, Grep | ❌ Read-only |
+| `breezsdk-reviewer` | Read, Grep, Glob | ❌ Read-only |
+| `breezsdk-ux` | Read, Grep, Glob | ❌ Read-only |
+| `breezsdk-test-engineer` | Read, Write, Edit, Bash, Glob, Grep | ✅ Yes |
 
 ### Agent & Plugin Utilization by Phase
 
@@ -128,12 +138,12 @@ This is the **authoritative** mapping of which agents and plugins apply to each 
 | `/speckit.constitution` | solution-architect | — | awesome-claude-skills | No |
 | `/speckit.specify` | solution-architect | — | — | No |
 | `/speckit.clarify` | solution-architect | — | — | No |
-| `/speckit.plan` | solution-architect, database-architect | — | superpowers, awesome-claude-skills | No |
+| `/speckit.plan` | solution-architect, database-architect, breezsdk-architect | — | superpowers, awesome-claude-skills | No |
 | `/speckit.tasks` | (orchestrator) | — | — | No |
 | `/speckit.checklist` | (orchestrator) | — | — | No |
 | `/speckit.analyze` | code-reviewer | — | engineering-workflow-plugin | No |
-| `/speckit.implement` | backend-developer, test-engineer, frontend-developer | security-auditor, code-reviewer | superpowers, dotnet-claude-code-skills | ✅ Yes |
-| Post-implement | — | code-reviewer, security-auditor | dev-agent-skills, engineering-workflow-plugin | ✅ Yes |
+| `/speckit.implement` | backend-developer, test-engineer, frontend-developer, breezsdk-developer, breezsdk-test-engineer | security-auditor, code-reviewer | superpowers, dotnet-claude-code-skills | ✅ Yes |
+| Post-implement | — | code-reviewer, security-auditor, breezsdk-reviewer, breezsdk-ux | dev-agent-skills, engineering-workflow-plugin | ✅ Yes |
 
 ### Parallel Execution
 Tasks marked `[P]` in tasks.md can run concurrently:

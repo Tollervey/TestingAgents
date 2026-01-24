@@ -26,8 +26,8 @@ This feature creates documentation artifacts in:
 
 **Purpose**: Project initialization and ensure directories exist
 
-- [ ] T001 Verify `.claude/agents/` directory exists (create if needed)
-- [ ] T002 Verify `.claude/skills/` directory exists (create if needed)
+- [X] T001 Verify `.claude/agents/` directory exists (create if needed)
+- [X] T002 Verify `.claude/skills/` directory exists (create if needed)
 
 ---
 
@@ -37,7 +37,7 @@ This feature creates documentation artifacts in:
 
 **⚠️ CRITICAL**: No agent work can begin until this phase is complete - all agents reference this file
 
-- [ ] T003 Create comprehensive BreezSDK knowledge reference file in `.claude/skills/breezsdk-knowledge.md` containing:
+- [X] T003 Create comprehensive BreezSDK knowledge reference file in `.claude/skills/breezsdk-knowledge.md` containing:
   - Quick Reference (package, API key, network options)
   - Connection & Configuration (DefaultConfig, Connect, Disconnect, working directory, external signer)
   - Event Handling (EventListener implementation, Add/Remove listener pattern, event types)
@@ -67,7 +67,7 @@ This feature creates documentation artifacts in:
 
 ### Implementation for User Story 1
 
-- [ ] T004 [US1] Create breezsdk-developer agent in `.claude/agents/breezsdk-developer.md` with:
+- [X] T004 [US1] Create breezsdk-developer agent in `.claude/agents/breezsdk-developer.md` with:
   - Frontmatter: name, description, tools (Read, Write, Edit, Bash, Glob, Grep), model (sonnet)
   - Role introduction paragraph
   - Your Expertise section (7 competencies: SDK bindings, two-step patterns, event listeners, configuration, error handling, multi-asset, LNURL)
@@ -89,7 +89,7 @@ This feature creates documentation artifacts in:
 
 ### Implementation for User Story 2
 
-- [ ] T005 [US2] Create breezsdk-architect agent in `.claude/agents/breezsdk-architect.md` with:
+- [X] T005 [US2] Create breezsdk-architect agent in `.claude/agents/breezsdk-architect.md` with:
   - Frontmatter: name, description, tools (Read, Glob, Grep), model (opus)
   - Role introduction paragraph
   - Your Expertise section (6 competencies: Clean Architecture patterns, DI registration, wallet state management, multi-asset architecture, production readiness, offline payment architecture)
@@ -110,7 +110,7 @@ This feature creates documentation artifacts in:
 
 ### Implementation for User Story 3
 
-- [ ] T006 [US3] Create breezsdk-reviewer agent in `.claude/agents/breezsdk-reviewer.md` with:
+- [X] T006 [US3] Create breezsdk-reviewer agent in `.claude/agents/breezsdk-reviewer.md` with:
   - Frontmatter: name, description, tools (Read, Grep, Glob), model (haiku)
   - Role introduction paragraph
   - Your Expertise section (5 competencies: SDK pattern compliance, common integration mistakes, UX guideline violations, security considerations, error handling review)
@@ -131,7 +131,7 @@ This feature creates documentation artifacts in:
 
 ### Implementation for User Story 4
 
-- [ ] T007 [US4] Create breezsdk-ux agent in `.claude/agents/breezsdk-ux.md` with:
+- [X] T007 [US4] Create breezsdk-ux agent in `.claude/agents/breezsdk-ux.md` with:
   - Frontmatter: name, description, tools (Read, Grep, Glob), model (sonnet)
   - Role introduction paragraph
   - Your Expertise section (5 competencies: receive payment UX, send payment UX, payment display UX, seed/key management UX, core UX principles)
@@ -156,7 +156,7 @@ This feature creates documentation artifacts in:
 
 ### Implementation for User Story 5
 
-- [ ] T008 [US5] Create breezsdk-test-engineer agent in `.claude/agents/breezsdk-test-engineer.md` with:
+- [X] T008 [US5] Create breezsdk-test-engineer agent in `.claude/agents/breezsdk-test-engineer.md` with:
   - Frontmatter: name, description, tools (Read, Write, Edit, Bash, Glob, Grep), model (sonnet)
   - Role introduction paragraph
   - Your Expertise section (6 competencies: mocking SDK responses, testing payment preparation, event listener testing, async operation testing, fiat rate mocking, integration test strategies)
@@ -175,21 +175,21 @@ This feature creates documentation artifacts in:
 
 **Dependencies**: All 5 agents must be created first (T004-T008)
 
-- [ ] T009 Update CLAUDE.md Available Agents table to add:
+- [X] T009 Update CLAUDE.md Available Agents table to add:
   - `breezsdk-developer` | Sonnet | BreezSDK C# implementation, payment flows, event handling
   - `breezsdk-architect` | Opus | BreezSDK integration architecture, production readiness
   - `breezsdk-reviewer` | Haiku | BreezSDK code review, SDK pattern compliance
   - `breezsdk-ux` | Sonnet | BreezSDK UX guidelines, payment flow design
   - `breezsdk-test-engineer` | Sonnet | BreezSDK testing patterns, mock strategies
 
-- [ ] T010 Update CLAUDE.md Agent Tools & Permissions table to add:
+- [X] T010 Update CLAUDE.md Agent Tools & Permissions table to add:
   - `breezsdk-developer` | Read, Write, Edit, Bash, Glob, Grep | ✅ Yes
   - `breezsdk-architect` | Read, Glob, Grep | ❌ Read-only
   - `breezsdk-reviewer` | Read, Grep, Glob | ❌ Read-only
   - `breezsdk-ux` | Read, Grep, Glob | ❌ Read-only
   - `breezsdk-test-engineer` | Read, Write, Edit, Bash, Glob, Grep | ✅ Yes
 
-- [ ] T011 Update CLAUDE.md Agent & Plugin Utilization by Phase table to add BreezSDK agent usage:
+- [X] T011 Update CLAUDE.md Agent & Plugin Utilization by Phase table to add BreezSDK agent usage:
   - `/speckit.plan` phase: breezsdk-architect for integration design
   - `/speckit.implement` phase: breezsdk-developer (primary), breezsdk-test-engineer
   - Post-implement: breezsdk-reviewer, breezsdk-ux
@@ -202,13 +202,13 @@ This feature creates documentation artifacts in:
 
 **Purpose**: Verify all agents work correctly
 
-- [ ] T012 [P] Verify breezsdk-developer agent invocation works via Task tool
-- [ ] T013 [P] Verify breezsdk-architect agent invocation works via Task tool
-- [ ] T014 [P] Verify breezsdk-reviewer agent invocation works via Task tool
-- [ ] T015 [P] Verify breezsdk-ux agent invocation works via Task tool
-- [ ] T016 [P] Verify breezsdk-test-engineer agent invocation works via Task tool
-- [ ] T017 Verify knowledge file is referenced correctly by agents
-- [ ] T017.1 Validate knowledge file completeness against SDK documentation TOC:
+- [X] T012 [P] Verify breezsdk-developer agent invocation works via Task tool
+- [X] T013 [P] Verify breezsdk-architect agent invocation works via Task tool
+- [X] T014 [P] Verify breezsdk-reviewer agent invocation works via Task tool
+- [X] T015 [P] Verify breezsdk-ux agent invocation works via Task tool
+- [X] T016 [P] Verify breezsdk-test-engineer agent invocation works via Task tool
+- [X] T017 Verify knowledge file is referenced correctly by agents
+- [X] T017.1 Validate knowledge file completeness against SDK documentation TOC:
   - Verify all sections listed in T003 are present and populated
   - Cross-check against BreezSDK Liquid docs table of contents
   - Confirm C# code examples exist for: connection, receiving (4 methods), sending (3 methods), on-chain, LNURL (3 types), events, logging, multi-asset, fiat, signing
@@ -220,10 +220,10 @@ This feature creates documentation artifacts in:
 
 **Purpose**: Final validation and documentation
 
-- [ ] T018 Run quickstart.md validation - verify all usage examples work
-- [ ] T019 Verify SC-005: breezsdk-reviewer identifies at least 3 common mistakes when given flawed code
-- [ ] T020 Verify SC-006: breezsdk-developer produces working C# code for basic payment flow
-- [ ] T021 Verify SC-007: breezsdk-ux recommendations align with 4 core UX principles
+- [X] T018 Run quickstart.md validation - verify all usage examples work
+- [X] T019 Verify SC-005: breezsdk-reviewer identifies at least 3 common mistakes when given flawed code
+- [X] T020 Verify SC-006: breezsdk-developer produces working C# code for basic payment flow
+- [X] T021 Verify SC-007: breezsdk-ux recommendations align with 4 core UX principles
 
 ---
 
