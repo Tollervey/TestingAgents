@@ -3,11 +3,9 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
-
   <ItemGroup>
     <!-- Core SDK dependency -->
     <PackageVersion Include="Breez.Sdk.Liquid" Version="0.11.9" />
-
     <!-- Microsoft Extensions -->
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.0" />
@@ -23,17 +21,14 @@
     <PackageVersion Include="Microsoft.Extensions.Options.DataAnnotations" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.0.0" />
-
     <!-- Resilience -->
-    <PackageVersion Include="Polly" Version="8.5.0" />
-    <PackageVersion Include="Polly.Core" Version="8.5.0" />
-    <PackageVersion Include="Polly.Extensions" Version="8.5.0" />
-
+    <PackageVersion Include="Polly" Version="8.6.5" />
+    <PackageVersion Include="Polly.Core" Version="8.6.5" />
+    <PackageVersion Include="Polly.Extensions" Version="8.6.5" />
     <!-- Observability -->
     <PackageVersion Include="OpenTelemetry.Api" Version="1.10.0" />
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.10.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.10.1" />
-
     <!-- Entity Framework Core -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Abstractions" Version="9.0.0" />
@@ -43,10 +38,8 @@
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.2" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.0" />
-
     <!-- ASP.NET Core -->
     <PackageVersion Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
-
     <!-- Testing -->
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageVersion Include="xunit" Version="2.9.2" />
@@ -58,7 +51,6 @@
     <PackageVersion Include="Testcontainers" Version="4.1.0" />
     <PackageVersion Include="Testcontainers.PostgreSql" Version="4.1.0" />
     <PackageVersion Include="Testcontainers.MsSql" Version="4.1.0" />
-
     <!-- Analyzers -->
     <PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="9.0.0" />
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.435" />

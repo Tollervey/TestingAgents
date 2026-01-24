@@ -72,7 +72,7 @@ public class FakeBreezSdkWrapper : IBreezSdkWrapper
         }
 
         var paymentHash = GeneratePaymentHash();
-        var invoice = GenerateInvoice(amountHash: paymentHash, amountSat);
+        var invoice = GenerateInvoice(paymentHash: paymentHash, amountSat: amountSat);
         var expiryTimestamp = DateTimeOffset.UtcNow.AddSeconds(expirySec ?? 3600).ToUnixTimeSeconds();
 
         return new SdkReceivePaymentResponse
@@ -157,12 +157,14 @@ public class FakeBreezSdkWrapper : IBreezSdkWrapper
     private string GeneratePaymentHash()
     {
         var counter = Interlocked.Increment(ref _invoiceCounter);
-        return $"fakehash{counter:D8}{Guid.NewGuid():N}"[..64];
+        var hash = $"fakehash{counter:D8}{Guid.NewGuid():N}";
+        return hash.Length >= 64 ? hash[..64] : hash.PadRight(64, '0');
     }
 
-    private static string GenerateInvoice(string amountHash, ulong amountSat)
+    private static string GenerateInvoice(string paymentHash, ulong amountSat)
     {
-        return $"lnbc{amountSat}n1fake{amountHash[..32]}";
+        var hashPart = paymentHash.Length >= 32 ? paymentHash[..32] : paymentHash.PadRight(32, '0');
+        return $"lnbc{amountSat}n1fake{hashPart}";
     }
 
     private static string GeneratePreimage()

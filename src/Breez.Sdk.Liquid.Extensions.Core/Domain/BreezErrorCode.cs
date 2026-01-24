@@ -40,6 +40,11 @@ public enum BreezErrorCode
     // Connection errors (2xxx)
 
     /// <summary>
+    /// General connection error.
+    /// </summary>
+    ConnectionError = 2000,
+
+    /// <summary>
     /// SDK is not connected.
     /// </summary>
     SdkNotConnected = 2001,

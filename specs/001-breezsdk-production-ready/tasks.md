@@ -107,31 +107,31 @@ Based on plan.md structure:
 
 > **TDD REQUIRED: Write tests FIRST, verify they FAIL (RED), then implement until GREEN**
 
-- [ ] T043 [P] [US1] Unit tests for BreezSdkOptions validation in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Configuration/BreezSdkOptionsValidatorTests.cs`
-- [ ] T044 [P] [US1] Unit tests for ServiceCollectionExtensions in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Extensions/ServiceCollectionExtensionsTests.cs`
-- [ ] T045 [P] [US1] Unit tests for BreezSdkService invoice creation in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Services/BreezSdkServiceTests.cs`
-- [ ] T046 [P] [US1] Unit tests for BreezSdkWrapper in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Infrastructure/BreezSdkWrapperTests.cs`
-- [ ] T047 [P] [US1] Unit tests for OfflineBreezSdkService in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Services/OfflineBreezSdkServiceTests.cs`
+- [x] T043 [P] [US1] Unit tests for BreezSdkOptions validation in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Configuration/BreezSdkOptionsValidatorTests.cs`
+- [x] T044 [P] [US1] Unit tests for ServiceCollectionExtensions in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Extensions/ServiceCollectionExtensionsTests.cs`
+- [x] T045 [P] [US1] Unit tests for BreezSdkService invoice creation in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Services/BreezSdkServiceTests.cs`
+- [x] T046 [P] [US1] Unit tests for BreezSdkWrapper in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Infrastructure/BreezSdkWrapperTests.cs`
+- [x] T047 [P] [US1] Unit tests for OfflineBreezSdkService in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Services/OfflineBreezSdkServiceTests.cs`
 
 ### Configuration (Core Package)
 
-- [ ] T048 [US1] Create BreezNetwork enum in `src/Breez.Sdk.Liquid.Extensions.Core/Configuration/BreezNetwork.cs`
-- [ ] T049 [US1] Create BreezSdkOptions in `src/Breez.Sdk.Liquid.Extensions.Core/Configuration/BreezSdkOptions.cs`
-- [ ] T050 [US1] Create CircuitBreakerOptions in `src/Breez.Sdk.Liquid.Extensions.Core/Configuration/CircuitBreakerOptions.cs`
-- [ ] T051 [US1] Create BreezSdkOptionsValidator in `src/Breez.Sdk.Liquid.Extensions.Core/Configuration/BreezSdkOptionsValidator.cs`
-- [ ] T052 [US1] Create ConfigurationConstants in `src/Breez.Sdk.Liquid.Extensions.Core/Configuration/ConfigurationConstants.cs`
+- [x] T048 [US1] Create BreezNetwork enum in `src/Breez.Sdk.Liquid.Extensions.Core/Configuration/BreezNetwork.cs`
+- [x] T049 [US1] Create BreezSdkOptions in `src/Breez.Sdk.Liquid.Extensions.Core/Configuration/BreezSdkOptions.cs`
+- [x] T050 [US1] Create CircuitBreakerOptions in `src/Breez.Sdk.Liquid.Extensions.Core/Configuration/CircuitBreakerOptions.cs`
+- [x] T051 [US1] Create BreezSdkOptionsValidator in `src/Breez.Sdk.Liquid.Extensions.Core/Configuration/BreezSdkOptionsValidator.cs`
+- [x] T052 [US1] Create ConfigurationConstants in `src/Breez.Sdk.Liquid.Extensions.Core/Configuration/ConfigurationConstants.cs`
 
 ### Infrastructure (Core Package)
 
-- [ ] T053 [US1] Create BreezSdkWrapper implementation in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkWrapper.cs`
-- [ ] T054 [US1] Create BreezSdkService implementation in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkService.cs`
-- [ ] T055 [US1] Create OfflineBreezSdkService (mock mode) in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/OfflineBreezSdkService.cs`
-- [ ] T056 [US1] Create ResiliencePolicies with Polly pipelines in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/ResiliencePolicies.cs`
+- [x] T053 [US1] Create BreezSdkWrapper implementation in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkWrapper.cs`
+- [x] T054 [US1] Create BreezSdkService implementation in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkService.cs`
+- [x] T055 [US1] Create OfflineBreezSdkService (mock mode) in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/OfflineBreezSdkService.cs`
+- [x] T056 [US1] Create ResiliencePolicies with Polly pipelines in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/ResiliencePolicies.cs`
 
 ### DI Registration (Core Package)
 
-- [ ] T057 [US1] Create ServiceCollectionExtensions with AddBreezSdk() in `src/Breez.Sdk.Liquid.Extensions.Core/Extensions/ServiceCollectionExtensions.cs`
-- [ ] T058 [US1] Add AddBreezSdkOffline() extension for development mode in `src/Breez.Sdk.Liquid.Extensions.Core/Extensions/ServiceCollectionExtensions.cs`
+- [x] T057 [US1] Create ServiceCollectionExtensions with AddBreezSdk() in `src/Breez.Sdk.Liquid.Extensions.Core/Extensions/ServiceCollectionExtensions.cs`
+- [x] T058 [US1] Add AddBreezSdkOffline() extension for development mode in `src/Breez.Sdk.Liquid.Extensions.Core/Extensions/ServiceCollectionExtensions.cs`
 
 **Checkpoint**: User Story 1 complete - developers can integrate BreezSDK into any .NET 8+ application
 
