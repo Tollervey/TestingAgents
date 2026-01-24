@@ -152,3 +152,13 @@ Per Constitution Article III:
 - **Skills**: `.claude/skills/` — Execution patterns and workflows
 - **Agents**: `.claude/agents/` — Specialized sub-agent definitions
 - **Constitution**: `.specify/memory/constitution.md` — Governance principles
+
+## External Plugins
+
+| Plugin | Use For |
+|--------|---------|
+| `superpowers` | TDD workflow, debugging, planning, git worktrees |
+| `dotnet-claude-code-skills` | DDD patterns, EF Core, BDD testing |
+| `engineering-workflow-plugin` | Code review, git workflows |
+| `dev-agent-skills` | Conventional commits, PR creation/review |
+| `awesome-claude-skills` | Software architecture, design patterns |
