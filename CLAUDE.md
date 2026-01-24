@@ -22,6 +22,8 @@
 - `/speckit.tasks` → `/speckit.analyze` or `/speckit.implement`
 - `/speckit.checklist` gates must pass before `/speckit.implement` proceeds
 
+> **Note**: Handoffs are defined in each command's frontmatter (`handoffs:` section in `.claude/commands/speckit.*.md`). They appear as clickable buttons after command completion.
+
 ---
 
 ## Quick Reference

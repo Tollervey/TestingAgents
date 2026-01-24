@@ -258,3 +258,7 @@ Use security-auditor to scan Wave N implementations for:
 | Security scanning | Haiku | Pattern matching, fast |
 | Test generation | Sonnet | Needs understanding of requirements |
 | Refactoring | Sonnet | Balance of reasoning and speed |
+
+## Related Skills
+
+- See `.claude/skills/external-plugins.md` for TDD plugins (superpowers), DDD patterns (dotnet-claude-code-skills), and PR workflows (dev-agent-skills)

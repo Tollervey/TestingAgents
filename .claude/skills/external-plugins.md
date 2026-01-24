@@ -179,10 +179,14 @@ Before invoking plugins, verify they are installed:
 
 ```bash
 # Check installed plugins
-claude plugins list
+/plugins
 
-# Install a plugin if missing
-claude plugin add <plugin-name>
+# Install a plugin from marketplace
+/plugin marketplace add <owner>/<plugin-name>
+
+# Examples:
+/plugin marketplace add obra/superpowers-marketplace
+/plugin marketplace add anthropics/dotnet-claude-code-skills
 ```
 
 ## Combining Plugins with Agents
@@ -201,7 +205,11 @@ Plugins complement the built-in agents:
 ## Troubleshooting
 
 If a plugin command fails:
-1. Verify plugin is installed: `claude plugins list`
+1. Verify plugin is installed: `/plugins`
 2. Check plugin documentation for correct invocation syntax
 3. Ensure you're in the correct directory context
-4. Try reinstalling: `claude plugin remove <name> && claude plugin add <name>`
+4. Try reinstalling: `/plugin marketplace remove <owner>/<name>` then `/plugin marketplace add <owner>/<name>`
+
+## Related Skills
+
+- See `.claude/skills/dotnet-implementation-execution.md` for wave-based execution patterns, checkpoint strategies, and multi-agent orchestration

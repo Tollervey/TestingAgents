@@ -103,6 +103,21 @@ dotnet test --filter "OrderServiceTests"  # Should PASS
 - `claude --resume` - Pick from recent sessions
 - `/rename` - Name your session for later
 
+## External Plugins
+
+| Plugin | Phase | Use For |
+|--------|-------|--------|
+| `superpowers` | plan, implement | TDD workflow, debugging, git worktrees |
+| `dotnet-claude-code-skills` | implement | DDD patterns, EF Core, BDD testing |
+| `engineering-workflow-plugin` | analyze, post-implement | Code review, git workflows |
+| `dev-agent-skills` | post-implement | Conventional commits, PR creation |
+| `awesome-claude-skills` | constitution, plan | Architecture patterns, design decisions |
+
+**Install**: `/plugin marketplace add <owner>/<plugin-name>`
+**List**: `/plugins`
+
+See `.claude/skills/external-plugins.md` for detailed usage.
+
 ## Tips for .NET Development
 - Always run `dotnet build` after changes to catch errors early
 - Use `dotnet watch run` during development for hot reload
