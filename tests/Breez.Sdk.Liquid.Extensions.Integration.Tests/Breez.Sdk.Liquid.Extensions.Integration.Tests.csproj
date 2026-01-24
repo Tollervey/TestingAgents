@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Moq" />
+    <PackageReference Include="Testcontainers" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
+    <PackageReference Include="Testcontainers.MsSql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Breez.Sdk.Liquid.Extensions.Core\Breez.Sdk.Liquid.Extensions.Core.csproj" />
+    <ProjectReference Include="..\..\src\Breez.Sdk.Liquid.Extensions.AspNetCore\Breez.Sdk.Liquid.Extensions.AspNetCore.csproj" />
+    <ProjectReference Include="..\..\src\Breez.Sdk.Liquid.Extensions.SqlServer\Breez.Sdk.Liquid.Extensions.SqlServer.csproj" />
+    <ProjectReference Include="..\..\src\Breez.Sdk.Liquid.Extensions.PostgreSql\Breez.Sdk.Liquid.Extensions.PostgreSql.csproj" />
+    <ProjectReference Include="..\..\src\Breez.Sdk.Liquid.Extensions.Sqlite\Breez.Sdk.Liquid.Extensions.Sqlite.csproj" />
+  </ItemGroup>
+
+</Project>

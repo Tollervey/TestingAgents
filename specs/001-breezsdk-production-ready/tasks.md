@@ -27,21 +27,21 @@ Based on plan.md structure:
 
 **Purpose**: Solution and project initialization
 
-- [ ] T001 Create solution file `Breez.Sdk.Liquid.Extensions.sln` at repository root
-- [ ] T002 Create Core package project `src/Breez.Sdk.Liquid.Extensions.Core/Breez.Sdk.Liquid.Extensions.Core.csproj` with net8.0;net9.0 targets
-- [ ] T003 [P] Create AspNetCore package project `src/Breez.Sdk.Liquid.Extensions.AspNetCore/Breez.Sdk.Liquid.Extensions.AspNetCore.csproj`
-- [ ] T004 [P] Create SqlServer package project `src/Breez.Sdk.Liquid.Extensions.SqlServer/Breez.Sdk.Liquid.Extensions.SqlServer.csproj`
-- [ ] T005 [P] Create PostgreSql package project `src/Breez.Sdk.Liquid.Extensions.PostgreSql/Breez.Sdk.Liquid.Extensions.PostgreSql.csproj`
-- [ ] T006 [P] Create Sqlite package project `src/Breez.Sdk.Liquid.Extensions.Sqlite/Breez.Sdk.Liquid.Extensions.Sqlite.csproj`
-- [ ] T007 [P] Create Umbraco package project `src/Breez.Sdk.Liquid.Extensions.Umbraco/Breez.Sdk.Liquid.Extensions.Umbraco.csproj`
-- [ ] T008 [P] Create Core.Tests project `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Breez.Sdk.Liquid.Extensions.Core.Tests.csproj`
-- [ ] T009 [P] Create AspNetCore.Tests project `tests/Breez.Sdk.Liquid.Extensions.AspNetCore.Tests/Breez.Sdk.Liquid.Extensions.AspNetCore.Tests.csproj`
-- [ ] T010 [P] Create Integration.Tests project `tests/Breez.Sdk.Liquid.Extensions.Integration.Tests/Breez.Sdk.Liquid.Extensions.Integration.Tests.csproj`
-- [ ] T011 [P] Create TestUtilities project `tests/Breez.Sdk.Liquid.Extensions.TestUtilities/Breez.Sdk.Liquid.Extensions.TestUtilities.csproj`
-- [ ] T012 Configure Directory.Build.props for shared package metadata in repository root
-- [ ] T013 Configure Directory.Packages.props for central package versioning in repository root
-- [ ] T014 [P] Add .editorconfig for code style enforcement in repository root
-- [ ] T015 [P] Configure NuGet package properties in Directory.Build.props (PackageId, Authors, License, etc.)
+- [x] T001 Create solution file `Breez.Sdk.Liquid.Extensions.sln` at repository root
+- [x] T002 Create Core package project `src/Breez.Sdk.Liquid.Extensions.Core/Breez.Sdk.Liquid.Extensions.Core.csproj` with net8.0;net9.0 targets
+- [x] T003 [P] Create AspNetCore package project `src/Breez.Sdk.Liquid.Extensions.AspNetCore/Breez.Sdk.Liquid.Extensions.AspNetCore.csproj`
+- [x] T004 [P] Create SqlServer package project `src/Breez.Sdk.Liquid.Extensions.SqlServer/Breez.Sdk.Liquid.Extensions.SqlServer.csproj`
+- [x] T005 [P] Create PostgreSql package project `src/Breez.Sdk.Liquid.Extensions.PostgreSql/Breez.Sdk.Liquid.Extensions.PostgreSql.csproj`
+- [x] T006 [P] Create Sqlite package project `src/Breez.Sdk.Liquid.Extensions.Sqlite/Breez.Sdk.Liquid.Extensions.Sqlite.csproj`
+- [x] T007 [P] Create Umbraco package project `src/Breez.Sdk.Liquid.Extensions.Umbraco/Breez.Sdk.Liquid.Extensions.Umbraco.csproj`
+- [x] T008 [P] Create Core.Tests project `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Breez.Sdk.Liquid.Extensions.Core.Tests.csproj`
+- [x] T009 [P] Create AspNetCore.Tests project `tests/Breez.Sdk.Liquid.Extensions.AspNetCore.Tests/Breez.Sdk.Liquid.Extensions.AspNetCore.Tests.csproj`
+- [x] T010 [P] Create Integration.Tests project `tests/Breez.Sdk.Liquid.Extensions.Integration.Tests/Breez.Sdk.Liquid.Extensions.Integration.Tests.csproj`
+- [x] T011 [P] Create TestUtilities project `tests/Breez.Sdk.Liquid.Extensions.TestUtilities/Breez.Sdk.Liquid.Extensions.TestUtilities.csproj`
+- [x] T012 Configure Directory.Build.props for shared package metadata in repository root
+- [x] T013 Configure Directory.Packages.props for central package versioning in repository root
+- [x] T014 [P] Add .editorconfig for code style enforcement in repository root
+- [x] T015 [P] Configure NuGet package properties in Directory.Build.props (PackageId, Authors, License, etc.)
 
 ---
 
