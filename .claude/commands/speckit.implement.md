@@ -14,6 +14,22 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 1. Run `.specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks` from repo root and parse FEATURE_DIR and AVAILABLE_DOCS list. All paths must be absolute. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
+1a. **Verify plugin availability** (optional but recommended):
+   - Run `/plugins` to list installed plugins
+   - Check if recommended plugins for implementation are available:
+     - `superpowers` — TDD workflow, debugging
+     - `dotnet-claude-code-skills` — DDD patterns, EF Core (for .NET projects)
+   - If plugins are missing, inform user:
+     ```
+     ⚠️ Recommended plugins not installed:
+     - superpowers: `/plugin marketplace add obra/superpowers-marketplace`
+     - dotnet-claude-code-skills: `/plugin marketplace add anthropics/dotnet-claude-code-skills`
+     
+     Continue without plugins? (yes/no)
+     ```
+   - If user says "no", halt and let them install plugins first
+   - If user says "yes" or plugins are installed, proceed to step 2
+
 2. **Check checklists status** (if FEATURE_DIR/checklists/ exists):
    - Scan all checklist files in the checklists/ directory
    - For each checklist, count:

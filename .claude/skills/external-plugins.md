@@ -212,4 +212,9 @@ If a plugin command fails:
 
 ## Related Skills
 
-- See `.claude/skills/dotnet-implementation-execution.md` for wave-based execution patterns, checkpoint strategies, and multi-agent orchestration
+- See `.claude/skills/dotnet-implementation-execution.md` for:
+  - Wave-based execution patterns (sequential vs parallel)
+  - Checkpoint strategies and recovery
+  - Multi-agent orchestration patterns
+  - Context management (`/compact`, sub-agent delegation)
+  - Quality gate enforcement after each wave

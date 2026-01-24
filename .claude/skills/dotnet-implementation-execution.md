@@ -9,7 +9,28 @@ globs:
 
 # .NET Implementation Execution Skill
 
-This skill provides execution patterns for implementing .NET projects using Claude Code's multi-agent capabilities.
+This skill provides the **canonical** execution patterns for implementing .NET projects using Claude Code's multi-agent capabilities. CLAUDE.md and `/speckit.implement` reference this file as the authoritative source for wave execution strategy.
+
+## Wave Execution Strategy (Canonical Definition)
+
+This is the **authoritative** wave execution strategy. Other files reference this section.
+
+### Principles
+
+1. **Wave 1 (Infrastructure)**: Execute SEQUENTIALLY, checkpoint after completion
+2. **Wave 2+ (Domain/Application)**: Execute `[P]` marked tasks in PARALLEL
+3. **Quality Gate**: Run `code-reviewer` + `security-auditor` after each wave
+4. **Context Management**: `/compact` between waves if context >150k tokens
+5. **Validation**: Verify all wave tasks complete before proceeding to next wave
+6. **Checkpoint Strategy**: Create checkpoints before each wave, after major phases, and before destructive operations
+
+### Rules
+
+- **Sequential tasks**: Execute in dependency order, checkpoint between critical tasks
+- **Parallel tasks `[P]`**: Can run concurrently (max 5 background agents)
+- **Dependencies**: NEVER start a task if `depends_on` tasks are incomplete
+- **File conflicts**: Tasks modifying the same file MUST run sequentially
+- **TDD**: Test tasks MUST complete before their corresponding implementation tasks
 
 ## Execution Patterns
 
@@ -261,4 +282,8 @@ Use security-auditor to scan Wave N implementations for:
 
 ## Related Skills
 
-- See `.claude/skills/external-plugins.md` for TDD plugins (superpowers), DDD patterns (dotnet-claude-code-skills), and PR workflows (dev-agent-skills)
+- See `.claude/skills/external-plugins.md` for:
+  - TDD plugins (`superpowers`) — Use during RED-GREEN-REFACTOR cycles
+  - DDD patterns (`dotnet-claude-code-skills`) — Use for aggregate/entity design
+  - PR workflows (`dev-agent-skills`) — Use after implementation waves complete
+  - Code review (`engineering-workflow-plugin`) — Complements `code-reviewer` agent

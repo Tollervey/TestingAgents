@@ -120,6 +120,40 @@ Documentation
 
 ## Constitutional Compliance
 
-This agent enforces:
-- All constitution articles during code review
-- Quality gates for merge readiness
+This agent enforces and validates:
+
+- **Article I: Architectural Foundation**
+  - I.1 Clean Architecture Mandate: Dependencies flow inward
+  - I.2 Domain-Driven Design Alignment: Core business logic in Domain layer
+  - I.3 Modular Decomposition: Loosely-coupled modules
+
+- **Article II: Code Quality Standards**
+  - II.1 Single Responsibility Enforcement
+  - II.2 Interface Segregation
+  - II.3 Explicit Over Implicit: No magic strings, hidden conventions
+  - II.4 Self-Documenting Code
+
+- **Article III: Testing Philosophy**
+  - III.1 Test-First Imperative: Tests exist for all production code
+  - III.3 Meaningful Test Coverage: 80%+ target
+
+- **Article IV: Data Layer Governance**
+  - IV.1 Repository Pattern Mandate: No direct database access from services
+  - IV.3 Query Optimization Standards: No N+1 patterns
+
+- **Article V: API Design Principles**
+  - V.1 Contract-First Development
+  - V.2 RESTful Resource Design
+  - V.3 Versioning Strategy
+
+- **Article VI: Security Framework**
+  - VI.3 Secrets Management: No secrets in code
+  - VI.4 Input Validation
+
+- **Article VII: Error Handling & Observability**
+  - VII.1 Custom exceptions, no generic catches
+  - VII.2 Structured logging present
+
+- **Article IX: Simplicity & Anti-Complexity Gates**
+  - IX.1 YAGNI followed
+  - IX.2 No premature abstractions

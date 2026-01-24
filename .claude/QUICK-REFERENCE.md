@@ -1,5 +1,7 @@
 # Claude Code Quick Reference - .NET Full Stack
 
+> **Full documentation**: See [CLAUDE.md](../CLAUDE.md) for complete governance, conventions, and agent details.
+
 ## .NET Commands
 | Command | Description |
 |---------|-------------|
@@ -11,116 +13,74 @@
 | `dotnet ef database update` | Apply migrations |
 | `dotnet format` | Format code |
 
-## Spec-Kit Workflow Commands
+## Spec-Kit Workflow (Abbreviated)
 
-### Governance & Specification
-| Command | Description |
-|---------|-------------|
-| `/speckit.constitution` | Establish/update governance principles |
-| `/speckit.specify <desc>` | Create technology-agnostic feature specification |
-| `/speckit.clarify` | Refine requirements with targeted questions |
-
-### Planning & Tasks
-| Command | Description |
-|---------|-------------|
-| `/speckit.plan` | Generate technical architecture and design artifacts |
-| `/speckit.tasks` | Break plan into dependency-ordered task list |
-| `/speckit.checklist <domain>` | Generate quality gate checklists |
-
-### Execution & Validation
-| Command | Description |
-|---------|-------------|
-| `/speckit.analyze` | Read-only consistency check across artifacts |
-| `/speckit.implement` | Wave-based execution with sub-agents |
-
-## Available Agents (invoke with "Use [agent-name] to...")
-
-### Architecture & Review (Read-Only)
-| Agent | Model | Description |
-|-------|-------|-------------|
-| `solution-architect` | Opus | Architecture decisions, complex refactoring analysis |
-| `code-reviewer` | Haiku | Code quality, constitution compliance checks |
-| `security-auditor` | Haiku | OWASP vulnerabilities, secrets detection |
-
-### Implementation (Can Modify Files)
-| Agent | Model | Description |
-|-------|-------|-------------|
-| `backend-developer` | Sonnet | C# implementation, APIs, services, business logic |
-| `frontend-developer` | Sonnet | Blazor/Razor components, UI implementation |
-| `test-engineer` | Sonnet | TDD test creation (tests BEFORE implementation) |
-| `database-architect` | Sonnet | EF Core, migrations, schema design, queries |
-
-## Best Practice Workflows
-
-### New Feature (Full Spec-Kit Flow)
 ```
-1. /speckit.specify "user registration with email verification"
-2. /speckit.clarify (if ambiguities exist)
-3. /speckit.plan
-4. /speckit.tasks
-5. /speckit.checklist security
-6. /speckit.analyze
-7. /speckit.implement
+/speckit.constitution → /speckit.specify → /speckit.clarify → /speckit.plan
+                                                                    ↓
+                        /speckit.implement ← /speckit.analyze ← /speckit.tasks
+                                                                    ↓
+                                                            /speckit.checklist (optional)
 ```
 
-### Database Change
-```
-1. Use database-architect to design Order entity with relationships
-2. Use database-architect to create migration AddOrdersTable
-3. Use code-reviewer to verify constitution Article IV compliance
-```
+| Command | Purpose |
+|---------|---------|
+| `/speckit.constitution` | Establish governance |
+| `/speckit.specify` | Define requirements |
+| `/speckit.plan` | Technical architecture |
+| `/speckit.tasks` | Task breakdown |
+| `/speckit.checklist` | Quality gate checklists |
+| `/speckit.analyze` | Consistency check |
+| `/speckit.implement` | Execute with agents |
 
-### TDD Implementation (Constitution Article III)
-```
-# Step 1: Create failing tests FIRST
-Use test-engineer to write unit tests for OrderService
+## Agents (Quick Lookup)
 
-# Step 2: Verify RED state
-dotnet test --filter "OrderServiceTests"  # Should FAIL
+| Agent | Model | Use For |
+|-------|-------|---------|
+| `solution-architect` | Opus | Architecture decisions (read-only) |
+| `backend-developer` | Sonnet | C# implementation |
+| `frontend-developer` | Sonnet | Blazor/UI |
+| `test-engineer` | Sonnet | TDD tests (write BEFORE code) |
+| `database-architect` | Sonnet | EF Core, migrations |
+| `code-reviewer` | Haiku | Quality checks (read-only) |
+| `security-auditor` | Haiku | Security scans (read-only) |
 
-# Step 3: Implement to GREEN
-Use backend-developer to implement OrderService
+**Invocation**: `Use [agent-name] to [task]`
 
-# Step 4: Verify GREEN state
-dotnet test --filter "OrderServiceTests"  # Should PASS
-```
+## External Plugins (Quick Lookup)
 
-### Quality Gate (After Each Wave)
-```
-& Use code-reviewer to verify code quality
-& Use security-auditor to scan for vulnerabilities
-```
-
-## Context Management
-- `/clear` - Reset between unrelated tasks
-- `/compact` - Compress context when getting full
-- `Esc` - Stop Claude mid-action
-- `Esc Esc` - Open rewind menu
-- `/rewind` - Go back to a previous state
-
-## Session Management
-- `claude --continue` - Resume last session
-- `claude --resume` - Pick from recent sessions
-- `/rename` - Name your session for later
-
-## External Plugins
-
-| Plugin | Phase | Use For |
-|--------|-------|--------|
-| `superpowers` | plan, implement | TDD workflow, debugging, git worktrees |
-| `dotnet-claude-code-skills` | implement | DDD patterns, EF Core, BDD testing |
-| `engineering-workflow-plugin` | analyze, post-implement | Code review, git workflows |
-| `dev-agent-skills` | post-implement | Conventional commits, PR creation |
-| `awesome-claude-skills` | constitution, plan | Architecture patterns, design decisions |
+| Plugin | Use For |
+|--------|---------|
+| `superpowers` | TDD, debugging, worktrees |
+| `dotnet-claude-code-skills` | DDD, EF Core, BDD |
+| `engineering-workflow-plugin` | Code review, git |
+| `dev-agent-skills` | Commits, PRs |
+| `awesome-claude-skills` | Architecture patterns |
 
 **Install**: `/plugin marketplace add <owner>/<plugin-name>`
 **List**: `/plugins`
+**Details**: See `.claude/skills/external-plugins.md`
 
-See `.claude/skills/external-plugins.md` for detailed usage.
+## Context & Session
 
-## Tips for .NET Development
-- Always run `dotnet build` after changes to catch errors early
-- Use `dotnet watch run` during development for hot reload
-- Check EF Core SQL with logging before deploying queries
-- Use subagents for reviews to keep main context clean
-- Run `/clear` frequently between different tasks
+| Command | Purpose |
+|---------|---------|
+| `/compact` | Compress context (use between waves) |
+| `/clear` | Reset context |
+| `/rewind` | Return to checkpoint |
+| `Esc` | Stop current action |
+| `Esc Esc` | Open rewind menu |
+
+## TDD Workflow (Non-Negotiable)
+
+```
+1. Use test-engineer to write tests     → RED (tests fail)
+2. Use backend-developer to implement   → GREEN (tests pass)
+3. Refactor with test safety net        → REFACTOR
+```
+
+## Tips
+- Run `dotnet build` after every change
+- Use `/compact` between implementation waves
+- Delegate large tasks to sub-agents (>30k tokens)
+- Create checkpoints before each wave

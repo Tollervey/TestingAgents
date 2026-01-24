@@ -119,18 +119,21 @@
 | `security-auditor` | Read, Grep, Glob, Bash | ❌ Read-only |
 | `code-reviewer` | Read, Grep, Glob | ❌ Read-only |
 
-### Agent Utilization by Phase
+### Agent & Plugin Utilization by Phase
 
-| Phase | Primary Agent(s) | Supporting Agent(s) | Parallel? |
-|-------|-----------------|---------------------|-----------|
-| `/speckit.constitution` | solution-architect | — | No |
-| `/speckit.specify` | solution-architect | — | No |
-| `/speckit.clarify` | solution-architect | — | No |
-| `/speckit.plan` | solution-architect, database-architect | — | No |
-| `/speckit.tasks` | (orchestrator) | — | No |
-| `/speckit.checklist` | (orchestrator) | — | No |
-| `/speckit.analyze` | code-reviewer | — | No |
-| `/speckit.implement` | backend-developer, test-engineer, frontend-developer | security-auditor, code-reviewer | ✅ Yes |
+This is the **authoritative** mapping of which agents and plugins apply to each Spec-Kit phase.
+
+| Phase | Primary Agent(s) | Supporting Agent(s) | Recommended Plugins | Parallel? |
+|-------|-----------------|---------------------|---------------------|-----------|
+| `/speckit.constitution` | solution-architect | — | awesome-claude-skills | No |
+| `/speckit.specify` | solution-architect | — | — | No |
+| `/speckit.clarify` | solution-architect | — | — | No |
+| `/speckit.plan` | solution-architect, database-architect | — | superpowers, awesome-claude-skills | No |
+| `/speckit.tasks` | (orchestrator) | — | — | No |
+| `/speckit.checklist` | (orchestrator) | — | — | No |
+| `/speckit.analyze` | code-reviewer | — | engineering-workflow-plugin | No |
+| `/speckit.implement` | backend-developer, test-engineer, frontend-developer | security-auditor, code-reviewer | superpowers, dotnet-claude-code-skills | ✅ Yes |
+| Post-implement | — | code-reviewer, security-auditor | dev-agent-skills, engineering-workflow-plugin | ✅ Yes |
 
 ### Parallel Execution
 Tasks marked `[P]` in tasks.md can run concurrently:
@@ -167,13 +170,16 @@ Use `/rewind` for recovery.
 
 ### Wave Execution Strategy
 
+> **Canonical reference**: See `.claude/skills/dotnet-implementation-execution.md` for detailed patterns.
+
+**Summary**:
 1. **Wave 1 (Infrastructure)**: Execute SEQUENTIALLY, checkpoint after completion
 2. **Wave 2+ (Domain/Application)**: Execute `[P]` marked tasks in PARALLEL
 3. **Quality Gate**: Run `code-reviewer` + `security-auditor` after each wave
 4. **Context Management**: `/compact` between waves if context >150k tokens
 5. **Validation**: Verify all wave tasks complete before proceeding to next wave
 
-**Wave Execution Example**:
+**Quick Example**:
 ```
 # Wave 1: Infrastructure (sequential)
 Implement T001 → checkpoint → T002 → checkpoint → T003
@@ -181,7 +187,6 @@ Implement T001 → checkpoint → T002 → checkpoint → T003
 # Wave 2: Domain Layer (parallel)
 & Use backend-developer to implement T004 (User entity)
 & Use backend-developer to implement T005 (Product entity)
-& Use backend-developer to implement T006 (Order entity)
 /tasks  # Monitor progress
 
 # Quality gate after Wave 2
@@ -225,8 +230,13 @@ Per Constitution Article III:
 - **Skills**: `.claude/skills/` — Execution patterns and workflows
 - **Agents**: `.claude/agents/` — Specialized sub-agent definitions
 - **Constitution**: `.specify/memory/constitution.md` — Governance principles
+- **Plugins**: `.claude/skills/external-plugins.md` — Third-party plugin integration guide
+
+---
 
 ## External Plugins
+
+External plugins extend Claude Code capabilities. See `.claude/skills/external-plugins.md` for detailed usage, installation, and troubleshooting.
 
 | Plugin | Use For | Spec-Kit Phase(s) |
 |--------|---------|-------------------|
@@ -235,3 +245,6 @@ Per Constitution Article III:
 | `engineering-workflow-plugin` | Code review, git workflows | `/speckit.analyze`, post-implement |
 | `dev-agent-skills` | Conventional commits, PR creation/review | Post-implement (PRs, commits) |
 | `awesome-claude-skills` | Software architecture, design patterns | `/speckit.plan`, `/speckit.constitution` |
+
+**Installation**: `/plugin marketplace add <owner>/<plugin-name>`
+**List installed**: `/plugins`

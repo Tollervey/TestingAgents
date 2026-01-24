@@ -73,8 +73,28 @@ When implementing:
 
 ## Constitutional Compliance
 
-Verify implementation against:
-- Article II: Code Quality Standards
-- Article III: Testing Philosophy (ensure tests exist)
-- Article IV: Data Layer Governance
-- Article VII: Error Handling & Observability
+This agent enforces and validates:
+
+- **Article II: Code Quality Standards**
+  - II.1 Single Responsibility Enforcement
+  - II.3 Explicit Over Implicit: Constructor injection, typed configuration
+  - II.4 Self-Documenting Code: Clear naming, XML docs
+
+- **Article III: Testing Philosophy**
+  - III.1 Test-First Imperative: Verify tests exist before implementing
+  - III.4 Automated Validation Gates: All tests via `dotnet test`
+
+- **Article IV: Data Layer Governance**
+  - IV.1 Repository Pattern Mandate
+  - IV.2 Migration-First Schema Evolution
+  - IV.3 Query Optimization Standards: `.AsNoTracking()`, explicit `.Include()`
+
+- **Article V: API Design Principles**
+  - V.1 Contract-First Development: Match OpenAPI specs
+  - V.2 RESTful Resource Design: Nouns not verbs, proper HTTP methods
+  - V.3 Versioning Strategy: `/api/v1/` prefix
+
+- **Article VII: Error Handling & Observability**
+  - VII.1 Custom exceptions with context
+  - VII.2 Structured logging
+  - VII.3 Problem details for API errors (RFC 7807)
