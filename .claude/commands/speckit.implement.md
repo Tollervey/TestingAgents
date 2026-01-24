@@ -144,6 +144,51 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 7. **Wave-Based Execution** (from CLAUDE.md):
 
+   **Agent Recommendations by Wave**:
+
+   | Wave | Primary Agent(s) | Supporting Agent(s) | When to Use |
+   |------|-----------------|---------------------|-------------|
+   | Wave 1 (Infrastructure) | `backend-developer`, `database-architect` | — | Project scaffolding, config, migrations |
+   | Wave 2+ (Domain) | `backend-developer`, `test-engineer` | `frontend-developer` | Entity/service implementation (parallel [P]) |
+   | Quality Gate | `code-reviewer`, `security-auditor` | — | After each wave completion |
+   | Complex Decisions | `solution-architect` | — | Architecture questions, refactoring decisions |
+
+   **Agent Invocation Examples**:
+   ```
+   # Infrastructure (Wave 1)
+   Use database-architect to create the initial EF Core migrations for User and Order entities
+   Use backend-developer to implement the repository interfaces in src/Domain/Interfaces/
+   
+   # Domain Layer (Wave 2 - parallel)
+   & Use test-engineer to write unit tests for OrderService in tests/Unit/OrderServiceTests.cs
+   & Use backend-developer to implement the User aggregate in src/Domain/Entities/User.cs
+   & Use backend-developer to implement the Product aggregate in src/Domain/Entities/Product.cs
+   
+   # Quality Gate
+   & Use code-reviewer to review Wave 2 code for constitution compliance
+   & Use security-auditor to scan for vulnerabilities in authentication code
+   
+   # Complex Decisions (when needed)
+   Use solution-architect to evaluate CQRS vs traditional layered approach for the Order module
+   ```
+
+   **TDD Workflow (Non-Negotiable per Constitution Article III)**:
+   ```
+   # Step 1: RED - Write failing tests FIRST
+   Use test-engineer to create unit tests for ProductService including happy path, edge cases, and error conditions
+   
+   # Step 2: Verify tests fail
+   Run: dotnet test --filter "ProductServiceTests"
+   Expected: Tests FAIL (no implementation yet)
+   
+   # Step 3: GREEN - Implement until tests pass
+   Use backend-developer to implement ProductService until all tests pass
+   
+   # Step 4: Verify tests pass
+   Run: dotnet test --filter "ProductServiceTests"
+   Expected: All tests PASS
+   ```
+
    **Wave 1 (Infrastructure)**: Execute SEQUENTIALLY
    ```
    # Sequential execution with checkpoints
