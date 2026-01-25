@@ -147,29 +147,29 @@ Based on plan.md structure:
 
 > **TDD REQUIRED: Write tests FIRST, verify they FAIL (RED), then implement until GREEN**
 
-- [ ] T059 [P] [US2] Unit tests for InMemoryPaymentRepository in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Persistence/InMemoryPaymentRepositoryTests.cs`
-- [ ] T060 [P] [US2] Unit tests for payment event handling in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Services/PaymentEventProcessorTests.cs`
-- [ ] T061 [P] [US2] Unit tests for payment queries in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Services/BreezSdkServiceQueryTests.cs`
-- [ ] T062 [P] [US2] Unit tests for event channel distribution in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Infrastructure/PaymentEventChannelTests.cs`
+- [X] T059 [P] [US2] Unit tests for InMemoryPaymentRepository in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Persistence/InMemoryPaymentRepositoryTests.cs`
+- [X] T060 [P] [US2] Unit tests for payment event handling in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Services/PaymentEventProcessorTests.cs`
+- [X] T061 [P] [US2] Unit tests for payment queries in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Services/BreezSdkServiceQueryTests.cs`
+- [X] T062 [P] [US2] Unit tests for event channel distribution in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Infrastructure/PaymentEventChannelTests.cs`
 
 ### Persistence (Core Package)
 
-- [ ] T063 [US2] Create InMemoryPaymentRepository in `src/Breez.Sdk.Liquid.Extensions.Core/Persistence/InMemoryPaymentRepository.cs`
+- [X] T063 [US2] Create InMemoryPaymentRepository in `src/Breez.Sdk.Liquid.Extensions.Core/Persistence/InMemoryPaymentRepository.cs`
 
 ### Event System (Core Package)
 
-- [ ] T064 [US2] Create PaymentEventChannel using System.Threading.Channels in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/PaymentEventChannel.cs`
-- [ ] T065 [US2] Create PaymentEventProcessor (IHostedService) in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/PaymentEventProcessor.cs`
-- [ ] T066 [US2] Implement payment event subscription in BreezSdkService `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkService.cs`
+- [X] T064 [US2] Create PaymentEventChannel using System.Threading.Channels in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/PaymentEventChannel.cs`
+- [X] T065 [US2] Create PaymentEventProcessor (IHostedService) in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/PaymentEventProcessor.cs`
+- [X] T066 [US2] Implement payment event subscription in BreezSdkService `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkService.cs`
 
 ### Query Support (Core Package)
 
-- [ ] T067 [US2] Add GetPaymentByHashAsync to BreezSdkService in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkService.cs`
-- [ ] T068 [US2] Add GetPaymentHistoryAsync with pagination to BreezSdkService in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkService.cs`
-- [ ] T069 [US2] Add payment history filtering (by status, date range, amount) to IPaymentRepository and implementations in `src/Breez.Sdk.Liquid.Extensions.Core/Abstractions/IPaymentRepository.cs`
-- [ ] T070 [US2] Add payment state persistence on status changes in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkService.cs`
+- [X] T067 [US2] Add GetPaymentByHashAsync to BreezSdkService in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkService.cs`
+- [X] T068 [US2] Add GetPaymentHistoryAsync with pagination to BreezSdkService in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkService.cs`
+- [X] T069 [US2] Add payment history filtering (by status, date range, amount) to IPaymentRepository and implementations in `src/Breez.Sdk.Liquid.Extensions.Core/Abstractions/IPaymentRepository.cs`
+- [X] T070 [US2] Add payment state persistence on status changes in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkService.cs`
 
-**Checkpoint**: User Story 2 complete - full payment lifecycle with events and history queries
+**Checkpoint**: User Story 2 complete - full payment lifecycle with events and history queries ✅
 
 ---
 

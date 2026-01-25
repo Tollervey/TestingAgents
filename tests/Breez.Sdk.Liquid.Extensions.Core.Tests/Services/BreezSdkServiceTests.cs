@@ -3,6 +3,7 @@ using Breez.Sdk.Liquid.Extensions.Core.Configuration;
 using Breez.Sdk.Liquid.Extensions.Core.Domain;
 using Breez.Sdk.Liquid.Extensions.Core.Exceptions;
 using Breez.Sdk.Liquid.Extensions.Core.Infrastructure;
+using Breez.Sdk.Liquid.Extensions.Core.Persistence;
 using Breez.Sdk.Liquid.Extensions.TestUtilities.Fakes;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -21,6 +22,7 @@ namespace Breez.Sdk.Liquid.Extensions.Core.Tests.Services;
 public class BreezSdkServiceTests
 {
     private readonly FakeBreezSdkWrapper _fakeWrapper;
+    private readonly IPaymentRepository _repository;
     private readonly BreezSdkOptions _options;
     private readonly NullLogger<BreezSdkService> _logger;
     private BreezSdkService _sut;
@@ -28,6 +30,7 @@ public class BreezSdkServiceTests
     public BreezSdkServiceTests()
     {
         _fakeWrapper = new FakeBreezSdkWrapper();
+        _repository = new InMemoryPaymentRepository();
         _options = CreateValidOptions();
         _logger = new NullLogger<BreezSdkService>();
 
@@ -35,13 +38,19 @@ public class BreezSdkServiceTests
         _sut = null!;
     }
 
+    /// <summary>
+    /// Helper method to create BreezSdkService with all required dependencies.
+    /// </summary>
+    private BreezSdkService CreateService() =>
+        new(_fakeWrapper, _repository, Options.Create(_options), _logger);
+
     #region Invoice Creation Tests
 
     [Fact]
     public async Task CreateInvoiceAsync_WithValidAmount_ReturnsSuccessWithInvoice()
     {
         // Arrange
-        _sut = new BreezSdkService(_fakeWrapper, Options.Create(_options), _logger);
+        _sut = CreateService();
         await _sut.ConnectAsync();
         const ulong amountSat = 5000;
         const string description = "Test payment";
@@ -64,7 +73,7 @@ public class BreezSdkServiceTests
     public async Task CreateInvoiceAsync_WithZeroAmount_ReturnsFailure()
     {
         // Arrange
-        _sut = new BreezSdkService(_fakeWrapper, Options.Create(_options), _logger);
+        _sut = CreateService();
         await _sut.ConnectAsync();
         const ulong amountSat = 0;
 
@@ -83,7 +92,7 @@ public class BreezSdkServiceTests
     public async Task CreateInvoiceAsync_WhenAmountExceedsMaximum_ReturnsFailure()
     {
         // Arrange
-        _sut = new BreezSdkService(_fakeWrapper, Options.Create(_options), _logger);
+        _sut = CreateService();
         await _sut.ConnectAsync();
         ulong amountSat = _options.MaxInvoiceAmountSat + 1;
 
@@ -103,7 +112,7 @@ public class BreezSdkServiceTests
     public async Task CreateInvoiceAsync_WhenDescriptionExceedsMaxLength_ReturnsFailure()
     {
         // Arrange
-        _sut = new BreezSdkService(_fakeWrapper, Options.Create(_options), _logger);
+        _sut = CreateService();
         await _sut.ConnectAsync();
         const ulong amountSat = 5000;
         var longDescription = new string('x', _options.MaxInvoiceDescriptionLength + 1);
@@ -124,7 +133,7 @@ public class BreezSdkServiceTests
     public async Task CreateInvoiceAsync_WhenNotConnected_ReturnsFailure()
     {
         // Arrange
-        _sut = new BreezSdkService(_fakeWrapper, Options.Create(_options), _logger);
+        _sut = CreateService();
         // NOTE: Not calling ConnectAsync
         const ulong amountSat = 5000;
 
@@ -143,7 +152,7 @@ public class BreezSdkServiceTests
     public async Task CreateInvoiceAsync_WithoutExpiry_UsesDefaultExpiry()
     {
         // Arrange
-        _sut = new BreezSdkService(_fakeWrapper, Options.Create(_options), _logger);
+        _sut = CreateService();
         await _sut.ConnectAsync();
         const ulong amountSat = 5000;
 
@@ -164,7 +173,7 @@ public class BreezSdkServiceTests
     public async Task CreateInvoiceAsync_WithCustomExpiry_UsesProvidedExpiry()
     {
         // Arrange
-        _sut = new BreezSdkService(_fakeWrapper, Options.Create(_options), _logger);
+        _sut = CreateService();
         await _sut.ConnectAsync();
         const ulong amountSat = 5000;
         const uint expirySec = 7200; // 2 hours
@@ -185,7 +194,7 @@ public class BreezSdkServiceTests
     public async Task CreateInvoiceAsync_MapsResponseCorrectly()
     {
         // Arrange
-        _sut = new BreezSdkService(_fakeWrapper, Options.Create(_options), _logger);
+        _sut = CreateService();
         await _sut.ConnectAsync();
         const ulong amountSat = 10000;
         const string description = "Detailed payment description";
@@ -213,7 +222,7 @@ public class BreezSdkServiceTests
     public async Task CreateInvoiceAsync_WhenSdkThrowsException_ReturnsFailure()
     {
         // Arrange
-        _sut = new BreezSdkService(_fakeWrapper, Options.Create(_options), _logger);
+        _sut = CreateService();
         await _sut.ConnectAsync();
 
         var sdkException = new PaymentException(
@@ -240,7 +249,7 @@ public class BreezSdkServiceTests
     public async Task ConnectAsync_CallsWrapperConnect()
     {
         // Arrange
-        _sut = new BreezSdkService(_fakeWrapper, Options.Create(_options), _logger);
+        _sut = CreateService();
         _fakeWrapper.IsConnected.Should().BeFalse();
 
         // Act
@@ -262,7 +271,7 @@ public class BreezSdkServiceTests
             MaxInvoiceAmountSat = 10_000_000,
             MaxInvoiceDescriptionLength = 200
         };
-        _sut = new BreezSdkService(_fakeWrapper, Options.Create(invalidOptions), _logger);
+        _sut = new BreezSdkService(_fakeWrapper, _repository, Options.Create(invalidOptions), _logger);
 
         // Act & Assert
         await Assert.ThrowsAsync<ConfigurationException>(() => _sut.ConnectAsync());
@@ -279,7 +288,7 @@ public class BreezSdkServiceTests
             MaxInvoiceAmountSat = 10_000_000,
             MaxInvoiceDescriptionLength = 200
         };
-        _sut = new BreezSdkService(_fakeWrapper, Options.Create(invalidOptions), _logger);
+        _sut = new BreezSdkService(_fakeWrapper, _repository, Options.Create(invalidOptions), _logger);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ConfigurationException>(() => _sut.ConnectAsync());
@@ -290,7 +299,7 @@ public class BreezSdkServiceTests
     public async Task DisconnectAsync_CallsWrapperDisconnect()
     {
         // Arrange
-        _sut = new BreezSdkService(_fakeWrapper, Options.Create(_options), _logger);
+        _sut = CreateService();
         await _sut.ConnectAsync();
         _fakeWrapper.IsConnected.Should().BeTrue();
 
@@ -306,7 +315,7 @@ public class BreezSdkServiceTests
     public async Task DisconnectAsync_WhenNotConnected_DoesNotThrow()
     {
         // Arrange
-        _sut = new BreezSdkService(_fakeWrapper, Options.Create(_options), _logger);
+        _sut = CreateService();
 
         // Act
         var act = async () => await _sut.DisconnectAsync();
@@ -319,7 +328,7 @@ public class BreezSdkServiceTests
     public async Task IsConnected_ReturnsWrapperConnectionState()
     {
         // Arrange
-        _sut = new BreezSdkService(_fakeWrapper, Options.Create(_options), _logger);
+        _sut = CreateService();
 
         // Act & Assert - Initially not connected
         _sut.IsConnected.Should().BeFalse();
@@ -337,7 +346,7 @@ public class BreezSdkServiceTests
     public async Task GetBalanceAsync_WhenConnected_ReturnsSuccessWithBalance()
     {
         // Arrange
-        _sut = new BreezSdkService(_fakeWrapper, Options.Create(_options), _logger);
+        _sut = CreateService();
         await _sut.ConnectAsync();
         const ulong expectedBalance = 100_000;
         _fakeWrapper.Balance = expectedBalance;
@@ -355,7 +364,7 @@ public class BreezSdkServiceTests
     public async Task GetBalanceAsync_WhenNotConnected_ReturnsFailure()
     {
         // Arrange
-        _sut = new BreezSdkService(_fakeWrapper, Options.Create(_options), _logger);
+        _sut = CreateService();
         // NOTE: Not calling ConnectAsync
 
         // Act
@@ -372,7 +381,7 @@ public class BreezSdkServiceTests
     public async Task GetBalanceAsync_WhenBalanceIsZero_ReturnsSuccessWithZero()
     {
         // Arrange
-        _sut = new BreezSdkService(_fakeWrapper, Options.Create(_options), _logger);
+        _sut = CreateService();
         await _sut.ConnectAsync();
         _fakeWrapper.Balance = 0;
 

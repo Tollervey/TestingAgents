@@ -1,6 +1,7 @@
 using Breez.Sdk.Liquid.Extensions.Core.Abstractions;
 using Breez.Sdk.Liquid.Extensions.Core.Configuration;
 using Breez.Sdk.Liquid.Extensions.Core.Domain;
+using Breez.Sdk.Liquid.Extensions.Core.Domain.Events;
 using Breez.Sdk.Liquid.Extensions.Core.Exceptions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -21,7 +22,11 @@ namespace Breez.Sdk.Liquid.Extensions.Core.Infrastructure;
 /// </remarks>
 public class BreezSdkService : IBreezSdkService
 {
+    private const int MaxPaymentHistoryLimit = 1000;
+
     private readonly IBreezSdkWrapper _wrapper;
+    private readonly IPaymentRepository _repository;
+    private readonly IPaymentEventChannel? _eventChannel;
     private readonly BreezSdkOptions _options;
     private readonly ILogger<BreezSdkService> _logger;
 
@@ -29,14 +34,36 @@ public class BreezSdkService : IBreezSdkService
     /// Initializes a new instance of the <see cref="BreezSdkService"/> class.
     /// </summary>
     /// <param name="wrapper">The SDK wrapper for low-level SDK operations.</param>
+    /// <param name="repository">The payment repository for state persistence.</param>
     /// <param name="options">Configuration options for BreezSDK.</param>
     /// <param name="logger">Logger for structured logging.</param>
     public BreezSdkService(
         IBreezSdkWrapper wrapper,
+        IPaymentRepository repository,
+        IOptions<BreezSdkOptions> options,
+        ILogger<BreezSdkService> logger)
+        : this(wrapper, repository, null, options, logger)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BreezSdkService"/> class with event publishing support.
+    /// </summary>
+    /// <param name="wrapper">The SDK wrapper for low-level SDK operations.</param>
+    /// <param name="repository">The payment repository for state persistence.</param>
+    /// <param name="eventChannel">The event channel for publishing payment events (optional).</param>
+    /// <param name="options">Configuration options for BreezSDK.</param>
+    /// <param name="logger">Logger for structured logging.</param>
+    public BreezSdkService(
+        IBreezSdkWrapper wrapper,
+        IPaymentRepository repository,
+        IPaymentEventChannel? eventChannel,
         IOptions<BreezSdkOptions> options,
         ILogger<BreezSdkService> logger)
     {
         _wrapper = wrapper ?? throw new ArgumentNullException(nameof(wrapper));
+        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+        _eventChannel = eventChannel;
         _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -160,6 +187,7 @@ public class BreezSdkService : IBreezSdkService
                 cancellationToken);
 
             // Map SDK response to domain Invoice
+            var createdAt = DateTimeOffset.UtcNow;
             var invoice = new Invoice
             {
                 PaymentHash = sdkResponse.PaymentHash,
@@ -167,10 +195,39 @@ public class BreezSdkService : IBreezSdkService
                 Type = InvoiceType.Bolt11,
                 AmountSat = amountSat,
                 Description = description,
-                CreatedAt = DateTimeOffset.UtcNow,
+                CreatedAt = createdAt,
                 ExpiresAt = DateTimeOffset.FromUnixTimeSeconds(sdkResponse.ExpiryTimestamp),
                 FeeSat = sdkResponse.FeesSat ?? 0
             };
+
+            // Create and persist payment state
+            var paymentState = new PaymentState
+            {
+                PaymentHash = sdkResponse.PaymentHash,
+                Status = PaymentStatus.Pending,
+                AmountSat = amountSat,
+                FeeSat = sdkResponse.FeesSat ?? 0,
+                Description = description,
+                CreatedAt = createdAt,
+                ExpiresAt = invoice.ExpiresAt
+            };
+            await _repository.AddAsync(paymentState, cancellationToken);
+
+            // Publish InvoiceCreated event
+            if (_eventChannel != null)
+            {
+                var invoiceCreatedEvent = new InvoiceCreated
+                {
+                    PaymentHash = sdkResponse.PaymentHash,
+                    Invoice = sdkResponse.Invoice,
+                    AmountSat = amountSat,
+                    Description = description,
+                    ExpiresAt = invoice.ExpiresAt,
+                    Timestamp = createdAt
+                };
+                await _eventChannel.PublishAsync(invoiceCreatedEvent, cancellationToken);
+                _logger.LogDebug("Published InvoiceCreated event for {PaymentHash}", invoice.PaymentHash);
+            }
 
             _logger.LogInformation(
                 "Successfully created invoice {PaymentHash} for {AmountSat} sat (fees: {FeeSat} sat)",
@@ -192,10 +249,10 @@ public class BreezSdkService : IBreezSdkService
         string paymentHash,
         CancellationToken cancellationToken = default)
     {
-        // NOTE: Repository integration will be added in a future task
-        // For now, return null (payment not found)
-        _logger.LogDebug("GetPaymentByHashAsync called for {PaymentHash} (not implemented)", paymentHash);
-        return Task.FromResult<PaymentState?>(null);
+        ArgumentException.ThrowIfNullOrWhiteSpace(paymentHash);
+
+        _logger.LogDebug("Retrieving payment by hash: {PaymentHash}", paymentHash);
+        return _repository.GetByHashAsync(paymentHash, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -204,13 +261,15 @@ public class BreezSdkService : IBreezSdkService
         int limit = 50,
         CancellationToken cancellationToken = default)
     {
-        // NOTE: Repository integration will be added in a future task
-        // For now, return empty list
+        ArgumentOutOfRangeException.ThrowIfNegative(offset);
+        ArgumentOutOfRangeException.ThrowIfLessThan(limit, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(limit, MaxPaymentHistoryLimit);
+
         _logger.LogDebug(
-            "GetPaymentHistoryAsync called with offset={Offset}, limit={Limit} (not implemented)",
+            "Retrieving payment history with offset={Offset}, limit={Limit}",
             offset,
             limit);
-        return Task.FromResult<IReadOnlyList<PaymentState>>(Array.Empty<PaymentState>());
+        return _repository.GetAllAsync(offset, limit, cancellationToken);
     }
 
     /// <inheritdoc />
