@@ -89,7 +89,7 @@ When Claude Code needs to fetch Umbraco documentation directly from docs.umbraco
 ### Edge Cases
 
 - How does the system handle tasks that involve both Umbraco CMS and the existing BreezSDK integration? Agents should be composable; both can be invoked on the same project.
-- What happens when the Umbraco MCP server is not running? Agents should fall back to WebFetch for docs.umbraco.com.
+- What happens when the Umbraco MCP server is not running? Agents silently fall back to WebFetch for docs.umbraco.com without retry attempts or user notification.
 - What if MCP search returns no results? Agents should try alternative search terms or browse documentation structure.
 - How does the frontend agent handle projects not using Lit? The agent should note that plain JavaScript or other frameworks (React, Vue) are also supported for backoffice extensions.
 
@@ -127,7 +127,7 @@ When Claude Code needs to fetch Umbraco documentation directly from docs.umbraco
 ### Key Entities
 
 - **MCP Integration Guide**: A section in external-plugins.md documenting how to use the Umbraco MCP. Key attributes: endpoint URL, available tools, search strategies, fallback options, spec-kit phase mapping.
-- **Agent Definition**: A markdown file defining a specialized sub-agent. Key attributes: name, description, tools, model, expertise areas, MCP usage guidance, code examples, Constitutional Compliance section.
+- **Agent Definition**: A markdown file defining a specialized sub-agent. Key attributes: name, description, tools, model, expertise areas, MCP usage guidance, code examples (minimal snippets: 1-2 per topic, ~5-10 lines each), Constitutional Compliance section.
 - **Backoffice Extension**: UI components for the Umbraco backoffice built with Lit/TypeScript using the Bellissima architecture. Types include: dashboards, property editors, workspaces, section views, header apps.
 
 ## Success Criteria *(mandatory)*
@@ -140,11 +140,18 @@ When Claude Code needs to fetch Umbraco documentation directly from docs.umbraco
 - **SC-004**: Settings.local.json contains WebFetch permission for docs.umbraco.com
 - **SC-005**: Each agent definition includes guidance on using the Umbraco MCP for documentation lookup
 - **SC-006**: Agent tool assignments match the established pattern (architect=read-only/Opus, developers=write/Sonnet, reviewers=read-only/Haiku)
-- **SC-007**: Backend developer agent includes code examples for Composers, Services, and Notification Handlers
-- **SC-008**: Frontend developer agent includes code examples for Lit components, UUI usage, and Management API integration
+- **SC-007**: Backend developer agent includes minimal code examples (1-2 snippets, ~5-10 lines each) for Composers, Services, and Notification Handlers
+- **SC-008**: Frontend developer agent includes minimal code examples (1-2 snippets, ~5-10 lines each) for Lit components, UUI usage, and Management API integration
 - **SC-009**: Backend reviewer agent includes review criteria for C# patterns and Umbraco service usage
 - **SC-010**: Frontend reviewer agent includes review criteria for Lit/TypeScript patterns and accessibility compliance
 - **SC-011**: All agents include Constitutional Compliance sections matching the format used by existing agents
+
+## Clarifications
+
+### Session 2026-01-25
+
+- Q: When MCP server is unavailable, what should agents do? → A: Silently fallback to WebFetch for docs.umbraco.com
+- Q: How comprehensive should embedded code examples be in agent definitions? → A: Minimal snippets (1-2 examples per topic, ~5-10 lines each)
 
 ## Assumptions
 
