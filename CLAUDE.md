@@ -229,6 +229,18 @@ Per Constitution Article III:
 
 **No production code without failing tests first.**
 
+### Test Timing Guidelines (CRITICAL)
+Avoid tests that wait for actual time durations - they are slow and unreliable:
+
+| Scenario | BAD (Slow) | GOOD (Fast) |
+|----------|------------|-------------|
+| Timeout behavior | `Task.Delay(30s)` then assert timeout | Use short timeout (100ms) or verify TimeoutRejectedException type |
+| Circuit breaker | 16 second break duration | 1-2 second break duration |
+| Exponential backoff | Assert exact timing (fails due to jitter) | Assert behavior occurred (retry count, state change) |
+| Transient states | Try to observe mid-transition | Collect state history via events, assert history contains expected state |
+
+**Rule**: If a test takes >5 seconds due to actual waiting, redesign it to test behavior, not timing.
+
 ### Branch Strategy
 - Feature branches for new work
 - Integration tests for API endpoints

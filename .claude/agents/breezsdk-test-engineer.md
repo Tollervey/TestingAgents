@@ -273,6 +273,19 @@ public class BreezSdkIntegrationTests : IAsyncLifetime
 }
 ```
 
+## Test Timing Guidelines (CRITICAL)
+
+**Never write tests that wait for actual time durations** - they cause agent timeouts and slow test runs.
+
+| Scenario | BAD (Slow) | GOOD (Fast) |
+|----------|------------|-------------|
+| Timeout behavior | `Task.Delay(30s)` waiting for timeout | Use 100ms timeout or just verify exception type |
+| Circuit breaker | 16s break duration, 60s sampling | 1-2s break duration, 2-3s sampling |
+| Reconnection backoff | Assert exact timing (jitter causes failures) | Assert retry count or state transitions |
+| Connection state | Observe transient state mid-reconnection | Collect state history via events, assert contains expected state |
+
+**Rule**: If a test requires waiting >2 seconds, redesign to test behavior, not timing.
+
 ## Output Format
 
 When implementing tests:
@@ -281,6 +294,7 @@ When implementing tests:
 3. Mock SDK wrapper, not SDK directly
 4. Include both happy path and error cases
 5. Verify cleanup (listener removal, disconnect) in dispose tests
+6. **Use short timeouts** (100ms-1s) for resilience/timing tests
 
 ## Constitutional Compliance
 

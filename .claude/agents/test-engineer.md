@@ -113,6 +113,19 @@ When creating tests:
 4. Add comments explaining non-obvious test logic
 5. **Confirm tests fail** before implementation
 
+## Test Timing Guidelines (CRITICAL)
+
+**Never write tests that wait for actual time durations** - they are slow and cause timeouts.
+
+| Scenario | BAD (Slow) | GOOD (Fast) |
+|----------|------------|-------------|
+| Timeout behavior | `Task.Delay(30s)` waiting for timeout | Use 100ms timeout or just verify exception type |
+| Circuit breaker | 16s break duration, 60s sampling | 1-2s break duration, 2-3s sampling |
+| Exponential backoff | Assert exact timing | Assert retry count or state changes occurred |
+| Transient states | Observe state mid-operation | Collect state history via events |
+
+**Rule**: If a test requires waiting >2 seconds, redesign to test behavior, not timing.
+
 ## Verification Command
 
 After creating tests, always run:
