@@ -90,7 +90,7 @@ When Claude Code needs to fetch Umbraco documentation directly from docs.umbraco
 
 - How does the system handle tasks that involve both Umbraco CMS and the existing BreezSDK integration? Agents should be composable; both can be invoked on the same project.
 - What happens when the Umbraco MCP server is not running? Agents silently fall back to WebFetch for docs.umbraco.com without retry attempts or user notification.
-- What if MCP search returns no results? Agents should try alternative search terms or browse documentation structure.
+- What if MCP search returns no results? Agents MUST follow this fallback sequence: (1) retry with broader/alternative search terms, (2) use `get_space_content` to browse documentation structure, (3) fall back to WebFetch to browse docs.umbraco.com directly. This behavior should be documented in each agent's MCP Integration section.
 - How does the frontend agent handle projects not using Lit? The agent should note that plain JavaScript or other frameworks (React, Vue) are also supported for backoffice extensions.
 
 ## Requirements *(mandatory)*
@@ -157,7 +157,7 @@ When Claude Code needs to fetch Umbraco documentation directly from docs.umbraco
 
 - Umbraco v17 LTS is the target version (built on .NET 10 LTS, released November 2025)
 - The Umbraco MCP Documentation server is available at `https://docs.umbraco.com/~gitbook/mcp` (GitBook-hosted)
-- The Umbraco MCP for VS Code has been installed and configured separately by the user
+- The Umbraco MCP for VS Code has been installed and configured separately by the user (external-plugins.md MUST document the prerequisite setup steps for MCP server availability)
 - Network access is available for MCP queries and WebFetch fallback
 - The MCP provides live, authoritative documentation - no static knowledge skill is needed
 - The project follows the existing agent patterns established by BreezSDK integration
