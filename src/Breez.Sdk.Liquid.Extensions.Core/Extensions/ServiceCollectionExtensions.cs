@@ -5,6 +5,7 @@ using Breez.Sdk.Liquid.Extensions.Core.Persistence;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -61,6 +62,9 @@ public static class ServiceCollectionExtensions
         // Register logging if not already registered
         services.AddLogging();
 
+        // Register startup validator for fail-fast configuration validation
+        services.AddHostedService<BreezSdkStartupValidator>();
+
         // Register core services
         services.AddSingleton<IBreezSdkWrapper, BreezSdkWrapper>();
         services.AddSingleton<IBreezSdkService, BreezSdkService>();
@@ -111,6 +115,9 @@ public static class ServiceCollectionExtensions
 
         // Register logging if not already registered
         services.AddLogging();
+
+        // Register startup validator for fail-fast configuration validation
+        services.AddHostedService<BreezSdkStartupValidator>();
 
         // Register core services
         services.AddSingleton<IBreezSdkWrapper, BreezSdkWrapper>();
@@ -163,6 +170,9 @@ public static class ServiceCollectionExtensions
         // Register logging if not already registered
         services.AddLogging();
 
+        // Register startup validator for fail-fast configuration validation
+        services.AddHostedService<BreezSdkStartupValidator>();
+
         // Register offline service (no wrapper needed)
         services.AddSingleton<IBreezSdkService, OfflineBreezSdkService>();
 
@@ -211,6 +221,9 @@ public static class ServiceCollectionExtensions
 
         // Register logging if not already registered
         services.AddLogging();
+
+        // Register startup validator for fail-fast configuration validation
+        services.AddHostedService<BreezSdkStartupValidator>();
 
         // Register offline service (no wrapper needed)
         services.AddSingleton<IBreezSdkService, OfflineBreezSdkService>();

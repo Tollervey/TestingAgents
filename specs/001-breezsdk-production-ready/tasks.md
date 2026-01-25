@@ -183,17 +183,17 @@ Based on plan.md structure:
 
 > **TDD REQUIRED: Write tests FIRST, verify they FAIL (RED), then implement until GREEN**
 
-- [ ] T071 [P] [US3] Unit tests for secrets redaction in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Configuration/SecretsRedactionTests.cs`
-- [ ] T072 [P] [US3] Unit tests for configuration validation fail-fast in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Configuration/ConfigurationValidationTests.cs`
-- [ ] T073 [P] [US3] Unit tests for offline mode configuration in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Configuration/OfflineModeConfigurationTests.cs`
+- [X] T071 [P] [US3] Unit tests for secrets redaction in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Configuration/SecretsRedactionTests.cs`
+- [X] T072 [P] [US3] Unit tests for configuration validation fail-fast in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Configuration/ConfigurationValidationTests.cs`
+- [X] T073 [P] [US3] Unit tests for offline mode configuration in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Configuration/OfflineModeConfigurationTests.cs`
 
 ### Secrets Management (Core Package)
 
-- [ ] T074 [US3] Create SecretsRedactor utility in `src/Breez.Sdk.Liquid.Extensions.Core/Configuration/SecretsRedactor.cs`
-- [ ] T075 [US3] Implement ILogger secrets filtering in BreezSdkService `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkService.cs`
-- [ ] T076 [US3] Add startup validation with fail-fast behavior in `src/Breez.Sdk.Liquid.Extensions.Core/Extensions/ServiceCollectionExtensions.cs`
-- [ ] T077 [US3] Create BreezSdkStartupValidator as IHostedService in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkStartupValidator.cs`
-- [ ] T078 [US3] Add SDK version compatibility check in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkVersionChecker.cs`
+- [X] T074 [US3] Create SecretsRedactor utility in `src/Breez.Sdk.Liquid.Extensions.Core/Configuration/SecretsRedactor.cs`
+- [X] T075 [US3] Implement ILogger secrets filtering in BreezSdkService `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkService.cs`
+- [X] T076 [US3] Add startup validation with fail-fast behavior in `src/Breez.Sdk.Liquid.Extensions.Core/Extensions/ServiceCollectionExtensions.cs`
+- [X] T077 [US3] Create BreezSdkStartupValidator as IHostedService in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkStartupValidator.cs`
+- [X] T078 [US3] Add SDK version compatibility check in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkVersionChecker.cs`
 
 **Checkpoint**: User Story 3 complete - secrets secured, validation enforced
 
