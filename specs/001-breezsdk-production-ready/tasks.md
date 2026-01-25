@@ -274,18 +274,18 @@ Based on plan.md structure:
 
 > **TDD REQUIRED: Write tests FIRST, verify they FAIL (RED), then implement until GREEN**
 
-- [ ] T102 [P] [US6] Unit tests for BreezSdkMetrics in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Observability/BreezSdkMetricsTests.cs`
-- [ ] T103 [P] [US6] Unit tests for activity/trace instrumentation in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Observability/ActivitySourceTests.cs`
-- [ ] T104 [P] [US6] Unit tests for structured logging in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Observability/StructuredLoggingTests.cs`
+- [X] T102 [P] [US6] Unit tests for BreezSdkMetrics in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Observability/BreezSdkMetricsTests.cs`
+- [X] T103 [P] [US6] Unit tests for activity/trace instrumentation in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Observability/ActivitySourceTests.cs`
+- [X] T104 [P] [US6] Unit tests for structured logging in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Observability/StructuredLoggingTests.cs`
 
 ### Observability (Core Package)
 
-- [ ] T105 [US6] Create ActivitySources for tracing in `src/Breez.Sdk.Liquid.Extensions.Core/Observability/ActivitySources.cs`
-- [ ] T106 [US6] Create BreezSdkMetrics for counters and histograms in `src/Breez.Sdk.Liquid.Extensions.Core/Observability/BreezSdkMetrics.cs`
-- [ ] T107 [US6] Add trace instrumentation to BreezSdkService operations in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkService.cs`
-- [ ] T108 [US6] Add structured logging with correlation IDs in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkService.cs` and `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/PaymentEventProcessor.cs`
+- [X] T105 [US6] Create ActivitySources for tracing in `src/Breez.Sdk.Liquid.Extensions.Core/Observability/ActivitySources.cs`
+- [X] T106 [US6] Create BreezSdkMetrics for counters and histograms in `src/Breez.Sdk.Liquid.Extensions.Core/Observability/BreezSdkMetrics.cs`
+- [X] T107 [US6] Add trace instrumentation to BreezSdkService operations in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkService.cs`
+- [X] T108 [US6] Add structured logging with correlation IDs in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkService.cs` and `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/PaymentEventProcessor.cs`
 
-**Checkpoint**: User Story 6 complete - full observability for production monitoring
+**Checkpoint**: User Story 6 complete - full observability for production monitoring ✅
 
 ---
 

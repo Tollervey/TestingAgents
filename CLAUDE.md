@@ -159,6 +159,20 @@ For operations >5 minutes:
 - `/tasks` to monitor progress
 - Maximum 5 concurrent background agents
 
+**When to use background agents:**
+- Long-running tasks (>2 minutes expected)
+- Multiple independent tasks (3+) that can run in parallel
+
+**When to use foreground agents:**
+- Quick tasks (<2 minutes)
+- When you need results immediately
+- When task count is ≤2 (parallelism benefit is minimal)
+
+**Timeout strategy:**
+- Use 120000ms (2 min) timeout for simple implementation tasks
+- Use 300000ms (5 min) timeout for complex multi-file changes
+- If agent times out 3x consecutively, read the output file directly with Read tool
+
 ### Context Management
 - `/compact` after completing each user story or wave
 - Delegate to sub-agents for tasks >30k tokens
@@ -275,6 +289,34 @@ private static ResiliencePipeline CreateFastTestPolicy() =>
 | Exception propagation after retries | Waiting for real timeouts |
 
 **Rule**: If a test takes >2 seconds due to waiting, create a fast test policy with short delays.
+
+### Test Execution Best Practices
+
+**Avoid full test suite runs during development:**
+- Use `--filter "FullyQualifiedName~ClassName"` for targeted tests
+- Run new feature tests in isolation first
+- Full suite runs can hang on CI-dependent or integration tests
+
+**If tests hang, check for:**
+- Blocking calls (`.Wait()`, `.Result`) - use `await` instead
+- Infinite loops in async code
+- Missing CancellationToken handling
+- Tests waiting for real timeouts instead of short test timeouts
+
+### Static State in Tests
+
+When testing classes with static state (Meters, ActivitySources, ConcurrentDictionaries):
+- Use unique identifiers per test (e.g., `$"test-{Guid.NewGuid():N}"`)
+- Don't assert exact counts - filter by your unique identifier
+- Static state persists across test runs in the same process
+
+### API Verification Before Writing Tests
+
+1. Verify the API exists in the target framework
+2. Check if it's a standard API or requires an extension package
+3. For OpenTelemetry: `Activity` is `System.Diagnostics`, extensions are in `OpenTelemetry.Api`
+4. Prefer standard APIs over extension methods for broader compatibility
+5. Example: Use `activity.AddEvent()` instead of `activity.RecordException()` (extension method)
 
 ### Branch Strategy
 - Feature branches for new work

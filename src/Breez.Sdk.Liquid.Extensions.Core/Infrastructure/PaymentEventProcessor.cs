@@ -129,31 +129,42 @@ public sealed class PaymentEventProcessor : IHostedService, IDisposable
             return;
         }
 
-        _logger.LogDebug(
-            "Dispatching event {EventType} with hash {PaymentHash} to handlers",
-            paymentEvent.GetType().Name,
-            paymentEvent.PaymentHash);
+        // Create log scope with correlation ID from event (or generate new one)
+        var correlationId = paymentEvent.CorrelationId ?? Guid.NewGuid().ToString();
 
-        foreach (var handler in _handlers)
+        using (_logger.BeginScope(new Dictionary<string, object>
         {
-            try
+            ["CorrelationId"] = correlationId,
+            ["PaymentHash"] = paymentEvent.PaymentHash,
+            ["EventType"] = paymentEvent.GetType().Name
+        }))
+        {
+            _logger.LogDebug(
+                "Dispatching event {EventType} with hash {PaymentHash} to handlers",
+                paymentEvent.GetType().Name,
+                paymentEvent.PaymentHash);
+
+            foreach (var handler in _handlers)
             {
-                await handler.HandleAsync(paymentEvent, cancellationToken);
-            }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-            {
-                // Don't log cancellation as an error - it's expected behavior
-                throw;
-            }
-            catch (Exception ex)
-            {
-                // Log error but continue processing with other handlers
-                _logger.LogError(
-                    ex,
-                    "Handler {HandlerType} failed to process event {PaymentHash}: {ErrorMessage}",
-                    handler.GetType().Name,
-                    paymentEvent.PaymentHash,
-                    ex.Message);
+                try
+                {
+                    await handler.HandleAsync(paymentEvent, cancellationToken);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    // Don't log cancellation as an error - it's expected behavior
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    // Log error but continue processing with other handlers
+                    _logger.LogError(
+                        ex,
+                        "Handler {HandlerType} failed to process event {PaymentHash}: {ErrorMessage}",
+                        handler.GetType().Name,
+                        paymentEvent.PaymentHash,
+                        ex.Message);
+                }
             }
         }
     }
