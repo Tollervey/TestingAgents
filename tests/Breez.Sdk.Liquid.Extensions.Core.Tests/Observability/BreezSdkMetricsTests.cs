@@ -164,33 +164,41 @@ public class BreezSdkMetricsTests : IDisposable
     [Fact]
     public void InvoiceCreated_ShouldTrackDifferentNetworksSeparately()
     {
-        // Arrange & Act
-        BreezSdkMetrics.RecordInvoiceCreated("mainnet", "success");
-        BreezSdkMetrics.RecordInvoiceCreated("testnet", "success");
+        // Arrange - Use unique network names to avoid interference from other tests
+        var networkA = $"network-a-{Guid.NewGuid():N}";
+        var networkB = $"network-b-{Guid.NewGuid():N}";
+
+        // Act
+        BreezSdkMetrics.RecordInvoiceCreated(networkA, "success");
+        BreezSdkMetrics.RecordInvoiceCreated(networkB, "success");
         _listener.RecordObservableInstruments();
 
-        // Assert
+        // Assert - Filter by our unique networks
         var measurements = _counterMeasurements["breez.invoice.created"];
-        measurements.Should().HaveCount(2);
 
-        var hasMainnet = measurements.Any(m =>
-            m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString() == "mainnet"));
-        var hasTestnet = measurements.Any(m =>
-            m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString() == "testnet"));
-        hasMainnet.Should().BeTrue();
-        hasTestnet.Should().BeTrue();
+        var hasNetworkA = measurements.Any(m =>
+            m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString() == networkA));
+        var hasNetworkB = measurements.Any(m =>
+            m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString() == networkB));
+        hasNetworkA.Should().BeTrue();
+        hasNetworkB.Should().BeTrue();
     }
 
     [Fact]
     public void InvoiceCreated_ShouldTrackDifferentStatusesSeparately()
     {
-        // Arrange & Act
-        BreezSdkMetrics.RecordInvoiceCreated("mainnet", "success");
-        BreezSdkMetrics.RecordInvoiceCreated("mainnet", "failure");
+        // Arrange - Use unique network name to avoid interference from other tests
+        var network = $"status-test-{Guid.NewGuid():N}";
+
+        // Act
+        BreezSdkMetrics.RecordInvoiceCreated(network, "success");
+        BreezSdkMetrics.RecordInvoiceCreated(network, "failure");
         _listener.RecordObservableInstruments();
 
-        // Assert
-        var measurements = _counterMeasurements["breez.invoice.created"];
+        // Assert - Filter by our unique network
+        var measurements = _counterMeasurements["breez.invoice.created"]
+            .Where(m => m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString() == network))
+            .ToList();
         measurements.Should().HaveCount(2);
 
         var hasSuccess = measurements.Any(m =>
@@ -285,14 +293,19 @@ public class BreezSdkMetricsTests : IDisposable
     [Fact]
     public void PaymentFailed_ShouldTrackDifferentErrorTypesSeparately()
     {
-        // Arrange & Act
-        BreezSdkMetrics.RecordPaymentFailed("mainnet", "insufficient_funds");
-        BreezSdkMetrics.RecordPaymentFailed("mainnet", "timeout");
-        BreezSdkMetrics.RecordPaymentFailed("mainnet", "network_error");
+        // Arrange - Use unique network name to avoid interference from other tests
+        var network = $"error-type-test-{Guid.NewGuid():N}";
+
+        // Act
+        BreezSdkMetrics.RecordPaymentFailed(network, "insufficient_funds");
+        BreezSdkMetrics.RecordPaymentFailed(network, "timeout");
+        BreezSdkMetrics.RecordPaymentFailed(network, "network_error");
         _listener.RecordObservableInstruments();
 
-        // Assert
-        var measurements = _counterMeasurements["breez.payment.failed"];
+        // Assert - Filter by our unique network
+        var measurements = _counterMeasurements["breez.payment.failed"]
+            .Where(m => m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString() == network))
+            .ToList();
         measurements.Should().HaveCount(3);
 
         var errorTypes = measurements.Select(m =>
@@ -336,9 +349,9 @@ public class BreezSdkMetricsTests : IDisposable
     [Fact]
     public void OperationDuration_ShouldRecordMultipleMeasurements()
     {
-        // Arrange
-        var operationType = "send_payment";
-        var network = "mainnet";
+        // Arrange - Use unique identifiers to avoid interference from other tests
+        var operationType = $"op-multi-{Guid.NewGuid():N}";
+        var network = $"net-multi-{Guid.NewGuid():N}";
 
         // Act
         BreezSdkMetrics.RecordOperationDuration(operationType, network, 50.0);
@@ -346,8 +359,10 @@ public class BreezSdkMetricsTests : IDisposable
         BreezSdkMetrics.RecordOperationDuration(operationType, network, 225.75);
         _listener.RecordObservableInstruments();
 
-        // Assert
-        var measurements = _histogramMeasurements["breez.operation.duration"];
+        // Assert - Filter by our unique network
+        var measurements = _histogramMeasurements["breez.operation.duration"]
+            .Where(m => m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString() == network))
+            .ToList();
         measurements.Should().HaveCount(3);
 
         var durations = measurements.Select(m => m.Value).ToList();
@@ -359,14 +374,19 @@ public class BreezSdkMetricsTests : IDisposable
     [Fact]
     public void OperationDuration_ShouldTrackDifferentOperationTypesSeparately()
     {
-        // Arrange & Act
-        BreezSdkMetrics.RecordOperationDuration("connect", "mainnet", 100.0);
-        BreezSdkMetrics.RecordOperationDuration("prepare_receive", "mainnet", 50.0);
-        BreezSdkMetrics.RecordOperationDuration("send_payment", "mainnet", 200.0);
+        // Arrange - Use unique network name to avoid interference from other tests
+        var network = $"op-types-test-{Guid.NewGuid():N}";
+
+        // Act
+        BreezSdkMetrics.RecordOperationDuration("connect", network, 100.0);
+        BreezSdkMetrics.RecordOperationDuration("prepare_receive", network, 50.0);
+        BreezSdkMetrics.RecordOperationDuration("send_payment", network, 200.0);
         _listener.RecordObservableInstruments();
 
-        // Assert
-        var measurements = _histogramMeasurements["breez.operation.duration"];
+        // Assert - Filter by our unique network
+        var measurements = _histogramMeasurements["breez.operation.duration"]
+            .Where(m => m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString() == network))
+            .ToList();
         measurements.Should().HaveCount(3);
 
         var operationTypes = measurements.Select(m =>
