@@ -27,12 +27,14 @@ namespace Breez.Sdk.Liquid.Extensions.Core.Infrastructure;
 public class BreezSdkWrapper : IBreezSdkWrapper
 {
     private readonly ILogger<BreezSdkWrapper> _logger;
-    private readonly BreezSdkOptions _options;
+    private readonly IOptions<BreezSdkOptions> _options;
 
     // SDK state management
     private bool _isConnected;
     private bool _disposed;
     private Action<SdkEvent>? _eventCallback;
+    private ConnectionState _state = ConnectionState.Disconnected;
+    private readonly SemaphoreSlim _reconnectionLock = new(1, 1);
 
     // TODO: Replace with actual SDK instance when integrating Breez.Sdk.Liquid bindings
     // private BindingLiquidSdk? _sdk;
@@ -48,12 +50,49 @@ public class BreezSdkWrapper : IBreezSdkWrapper
         IOptions<BreezSdkOptions> options,
         ILogger<BreezSdkWrapper> logger)
     {
-        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        _options = options ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <inheritdoc />
     public bool IsConnected => _isConnected && !_disposed;
+
+    /// <inheritdoc />
+    public ConnectionState State => _state;
+
+    /// <inheritdoc />
+    public event EventHandler<ConnectionStateChangedEventArgs>? ConnectionStateChanged;
+
+    /// <inheritdoc />
+    public bool CanAttemptReconnect => _state switch
+    {
+        ConnectionState.Reconnecting => false,
+        ConnectionState.Failed => false,
+        _ when _disposed => false,
+        _ => true
+    };
+
+    /// <summary>
+    /// Transitions the connection state and fires the state change event.
+    /// </summary>
+    /// <param name="newState">The new connection state.</param>
+    /// <param name="exception">Optional exception that caused the state change.</param>
+    private void TransitionState(ConnectionState newState, Exception? exception = null)
+    {
+        var oldState = _state;
+        if (oldState == newState)
+        {
+            return;
+        }
+
+        _state = newState;
+        ConnectionStateChanged?.Invoke(this, new ConnectionStateChangedEventArgs
+        {
+            OldState = oldState,
+            NewState = newState,
+            Exception = exception
+        });
+    }
 
     /// <inheritdoc />
     public async Task ConnectAsync(CancellationToken cancellationToken = default)
@@ -67,57 +106,72 @@ public class BreezSdkWrapper : IBreezSdkWrapper
             return;
         }
 
+        TransitionState(ConnectionState.Connecting);
+
         _logger.LogInformation("Connecting to BreezSDK (Network: {Network}, OfflineMode: {OfflineMode})",
-            _options.Network, _options.OfflineMode);
+            _options.Value.Network, _options.Value.OfflineMode);
 
         // Execute connection with resilience policy
-        await ResiliencePolicies.ConnectPolicy.ExecuteAsync(async ct =>
+        try
         {
-            // Validate configuration
-            ValidateConfiguration();
-
-            // Simulate connection delay if configured
-            if (_options.OfflineSimulateDelayMs > 0)
+            await ResiliencePolicies.ConnectPolicy.ExecuteAsync(async ct =>
             {
-                await Task.Delay(_options.OfflineSimulateDelayMs, ct);
-            }
+                await ConnectInternalAsync(ct);
+            }, cancellationToken);
 
-            // Simulate failures if configured
-            if (_options.OfflineSimulateFailureRate > 0)
-            {
-                var random = new Random();
-                if (random.NextDouble() < _options.OfflineSimulateFailureRate)
-                {
-                    throw new ConnectionException(
-                        "Simulated connection failure for testing purposes");
-                }
-            }
+            TransitionState(ConnectionState.Connected);
+        }
+        catch (Exception)
+        {
+            TransitionState(ConnectionState.Disconnected);
+            throw;
+        }
+    }
 
-            // TODO: Real SDK integration would look like:
-            // var config = BreezSdkLiquidMethods.DefaultConfig(
-            //     _options.Network == BreezNetwork.Mainnet ? LiquidNetwork.Mainnet : LiquidNetwork.Testnet,
-            //     _options.ApiKey!
-            // ) with { workingDir = _options.WorkingDirectory };
-            //
-            // var connectRequest = new ConnectRequest(config, _options.Mnemonic!);
-            // _sdk = BreezSdkLiquidMethods.Connect(connectRequest);
-            //
-            // if (_eventCallback != null)
-            // {
-            //     _eventListenerId = _sdk.AddEventListener(new SdkEventListener(_eventCallback, _logger));
-            // }
+    /// <summary>
+    /// Internal connection logic without state transitions.
+    /// Used by both ConnectAsync and TryReconnectAsync.
+    /// </summary>
+    private async Task ConnectInternalAsync(CancellationToken cancellationToken)
+    {
+        // Validate configuration
+        ValidateConfiguration();
 
-            // Simulate SDK initialization failure for specific test case
-            if (_options.ApiKey == "invalid-api-key-that-will-fail")
+        // Simulate connection delay if configured
+        if (_options.Value.OfflineSimulateDelayMs > 0)
+        {
+            await Task.Delay(_options.Value.OfflineSimulateDelayMs, cancellationToken);
+        }
+
+        // Simulate failures if configured
+        if (_options.Value.OfflineSimulateFailureRate > 0)
+        {
+            var random = new Random();
+            if (random.NextDouble() < _options.Value.OfflineSimulateFailureRate)
             {
                 throw new ConnectionException(
-                    "SDK initialization failed: Invalid API key or network error");
+                    "Simulated connection failure for testing purposes");
             }
+        }
 
-            _isConnected = true;
-            _logger.LogInformation("Successfully connected to BreezSDK");
+        // TODO: Real SDK integration would look like:
+        // var config = BreezSdkLiquidMethods.DefaultConfig(
+        //     _options.Value.Network == BreezNetwork.Mainnet ? LiquidNetwork.Mainnet : LiquidNetwork.Testnet,
+        //     _options.Value.ApiKey!
+        // ) with { workingDir = _options.Value.WorkingDirectory };
+        //
+        // var connectRequest = new ConnectRequest(config, _options.Value.Mnemonic!);
+        // _sdk = BreezSdkLiquidMethods.Connect(connectRequest);
 
-        }, cancellationToken);
+        // Simulate SDK initialization failure for specific test case
+        if (_options.Value.ApiKey == "invalid-api-key-that-will-fail")
+        {
+            throw new ConnectionException(
+                "SDK initialization failed: Invalid API key or network error");
+        }
+
+        _isConnected = true;
+        _logger.LogInformation("Successfully connected to BreezSDK");
     }
 
     /// <inheritdoc />
@@ -153,6 +207,10 @@ public class BreezSdkWrapper : IBreezSdkWrapper
             _isConnected = false;
             throw;
         }
+        finally
+        {
+            TransitionState(ConnectionState.Disconnected);
+        }
 
         await Task.CompletedTask;
     }
@@ -167,6 +225,9 @@ public class BreezSdkWrapper : IBreezSdkWrapper
         ObjectDisposedException.ThrowIf(_disposed, this);
         cancellationToken.ThrowIfCancellationRequested();
 
+        // Wait for reconnection to complete if in progress
+        await WaitForConnectionAsync(cancellationToken);
+
         // Check connection state
         if (!_isConnected)
         {
@@ -174,7 +235,7 @@ public class BreezSdkWrapper : IBreezSdkWrapper
         }
 
         // Check for offline mode restriction
-        if (_options.OfflineMode)
+        if (_options.Value.OfflineMode)
         {
             throw new ConnectionException(
                 "Payment operations are not available in offline mode. " +
@@ -194,9 +255,9 @@ public class BreezSdkWrapper : IBreezSdkWrapper
             .ExecuteAsync(async ct =>
             {
                 // Simulate operation delay if configured
-                if (_options.OfflineSimulateDelayMs > 0)
+                if (_options.Value.OfflineSimulateDelayMs > 0)
                 {
-                    await Task.Delay(_options.OfflineSimulateDelayMs, ct);
+                    await Task.Delay(_options.Value.OfflineSimulateDelayMs, ct);
                 }
 
                 // TODO: Real SDK integration would look like:
@@ -244,6 +305,9 @@ public class BreezSdkWrapper : IBreezSdkWrapper
         ObjectDisposedException.ThrowIf(_disposed, this);
         cancellationToken.ThrowIfCancellationRequested();
 
+        // Wait for reconnection to complete if in progress
+        await WaitForConnectionAsync(cancellationToken);
+
         if (!_isConnected)
         {
             throw new ConnectionException("SDK is not connected. Call ConnectAsync first.");
@@ -256,9 +320,9 @@ public class BreezSdkWrapper : IBreezSdkWrapper
             .ExecuteAsync(async ct =>
             {
                 // Simulate operation delay if configured
-                if (_options.OfflineSimulateDelayMs > 0)
+                if (_options.Value.OfflineSimulateDelayMs > 0)
                 {
-                    await Task.Delay(_options.OfflineSimulateDelayMs, ct);
+                    await Task.Delay(_options.Value.OfflineSimulateDelayMs, ct);
                 }
 
                 // TODO: Real SDK integration would look like:
@@ -273,7 +337,7 @@ public class BreezSdkWrapper : IBreezSdkWrapper
                 // Mock implementation for testing
                 return new SdkWalletInfo
                 {
-                    BalanceSat = _options.OfflineMockBalanceSat,
+                    BalanceSat = _options.Value.OfflineMockBalanceSat,
                     PendingReceiveSat = 0,
                     PendingSendSat = 0
                 };
@@ -287,6 +351,9 @@ public class BreezSdkWrapper : IBreezSdkWrapper
         ObjectDisposedException.ThrowIf(_disposed, this);
         cancellationToken.ThrowIfCancellationRequested();
 
+        // Wait for reconnection to complete if in progress
+        await WaitForConnectionAsync(cancellationToken);
+
         if (!_isConnected)
         {
             throw new ConnectionException("SDK is not connected. Call ConnectAsync first.");
@@ -299,9 +366,9 @@ public class BreezSdkWrapper : IBreezSdkWrapper
             .ExecuteAsync(async ct =>
             {
                 // Simulate operation delay if configured
-                if (_options.OfflineSimulateDelayMs > 0)
+                if (_options.Value.OfflineSimulateDelayMs > 0)
                 {
-                    await Task.Delay(_options.OfflineSimulateDelayMs, ct);
+                    await Task.Delay(_options.Value.OfflineSimulateDelayMs, ct);
                 }
 
                 // TODO: Real SDK integration would look like:
@@ -332,18 +399,7 @@ public class BreezSdkWrapper : IBreezSdkWrapper
         _logger.LogDebug("Registering event callback");
         _eventCallback = eventCallback;
 
-        // TODO: Real SDK integration would look like:
-        // if (_isConnected && _sdk != null)
-        // {
-        //     // Remove old listener if exists
-        //     if (_eventListenerId != null)
-        //     {
-        //         _sdk.RemoveEventListener(_eventListenerId);
-        //     }
-        //
-        //     // Add new listener
-        //     _eventListenerId = _sdk.AddEventListener(new SdkEventListener(eventCallback, _logger));
-        // }
+        RegisterEventCallbackInternal(eventCallback);
     }
 
     /// <inheritdoc />
@@ -385,12 +441,12 @@ public class BreezSdkWrapper : IBreezSdkWrapper
     private void ValidateConfiguration()
     {
         // In offline mode, relax validation for development/testing
-        if (_options.OfflineMode)
+        if (_options.Value.OfflineMode)
         {
             _logger.LogWarning("Running in offline mode - skipping API key and mnemonic validation");
 
             // Still require working directory
-            if (string.IsNullOrWhiteSpace(_options.WorkingDirectory))
+            if (string.IsNullOrWhiteSpace(_options.Value.WorkingDirectory))
             {
                 throw new ConfigurationException(
                     "Working directory is required even in offline mode",
@@ -401,7 +457,7 @@ public class BreezSdkWrapper : IBreezSdkWrapper
         }
 
         // Validate API key
-        if (string.IsNullOrWhiteSpace(_options.ApiKey))
+        if (string.IsNullOrWhiteSpace(_options.Value.ApiKey))
         {
             throw new ConfigurationException(
                 "Breez API key is required for SDK initialization. " +
@@ -410,7 +466,7 @@ public class BreezSdkWrapper : IBreezSdkWrapper
         }
 
         // Validate mnemonic
-        if (string.IsNullOrWhiteSpace(_options.Mnemonic))
+        if (string.IsNullOrWhiteSpace(_options.Value.Mnemonic))
         {
             throw new ConfigurationException(
                 "BIP39 mnemonic is required for wallet access. " +
@@ -419,7 +475,7 @@ public class BreezSdkWrapper : IBreezSdkWrapper
         }
 
         // Validate working directory
-        if (string.IsNullOrWhiteSpace(_options.WorkingDirectory))
+        if (string.IsNullOrWhiteSpace(_options.Value.WorkingDirectory))
         {
             throw new ConfigurationException(
                 "Working directory is required for SDK data storage. " +
@@ -479,6 +535,126 @@ public class BreezSdkWrapper : IBreezSdkWrapper
         // Simple fee model: 0.5% with minimum of 1 sat
         var fee = (ulong)Math.Max(1, amountSat * 0.005);
         return fee;
+    }
+
+    #endregion
+
+    #region Reconnection
+
+    /// <summary>
+    /// Waits for any ongoing reconnection to complete, or throws if in Failed state.
+    /// </summary>
+    private async Task WaitForConnectionAsync(CancellationToken cancellationToken)
+    {
+        // If in failed state, fail fast
+        if (_state == ConnectionState.Failed)
+        {
+            throw new ConnectionException(
+                "SDK connection is in failed state. All reconnection attempts have been exhausted.");
+        }
+
+        // If reconnecting, wait for it to complete
+        if (_state == ConnectionState.Reconnecting)
+        {
+            // Wait for the reconnection lock to be available, which indicates reconnection completed
+            await _reconnectionLock.WaitAsync(cancellationToken);
+            _reconnectionLock.Release();
+
+            // After reconnection completes, check if we're now in failed state
+            if (_state == ConnectionState.Failed)
+            {
+                throw new ConnectionException(
+                    "SDK connection is in failed state. All reconnection attempts have been exhausted.");
+            }
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> TryReconnectAsync(CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
+        // If already connected, return success
+        if (_state == ConnectionState.Connected)
+        {
+            return true;
+        }
+
+        // Only one reconnection at a time
+        if (!await _reconnectionLock.WaitAsync(0, cancellationToken))
+        {
+            // Already reconnecting, wait for it to complete
+            await _reconnectionLock.WaitAsync(cancellationToken);
+            _reconnectionLock.Release();
+            return _state == ConnectionState.Connected;
+        }
+
+        try
+        {
+            TransitionState(ConnectionState.Reconnecting);
+
+            var options = _options.Value.Reconnection ?? new ReconnectionOptions();
+            var delay = options.InitialDelayMs;
+
+            for (int attempt = 1; attempt <= options.MaxAttempts; attempt++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                try
+                {
+                    await ConnectInternalAsync(cancellationToken);
+
+                    // Re-register event callback if one was registered
+                    if (_eventCallback != null)
+                    {
+                        RegisterEventCallbackInternal(_eventCallback);
+                    }
+
+                    TransitionState(ConnectionState.Connected);
+                    return true;
+                }
+                catch (Exception) when (attempt < options.MaxAttempts)
+                {
+                    await Task.Delay(delay, cancellationToken);
+                    delay = Math.Min((int)(delay * options.BackoffMultiplier), options.MaxDelayMs);
+                }
+                catch (Exception ex) when (attempt == options.MaxAttempts)
+                {
+                    TransitionState(ConnectionState.Failed, ex);
+                    return false;
+                }
+            }
+
+            return false;
+        }
+        finally
+        {
+            _reconnectionLock.Release();
+        }
+    }
+
+    #endregion
+
+    #region Event Callback Management
+
+    /// <summary>
+    /// Internal event callback registration without storing the callback.
+    /// Used during reconnection to re-register existing callback.
+    /// </summary>
+    private void RegisterEventCallbackInternal(Action<SdkEvent> callback)
+    {
+        // TODO: Real SDK integration would look like:
+        // if (_isConnected && _sdk != null)
+        // {
+        //     // Remove old listener if exists
+        //     if (_eventListenerId != null)
+        //     {
+        //         _sdk.RemoveEventListener(_eventListenerId);
+        //     }
+        //
+        //     // Add new listener
+        //     _eventListenerId = _sdk.AddEventListener(new SdkEventListener(callback, _logger));
+        // }
     }
 
     #endregion

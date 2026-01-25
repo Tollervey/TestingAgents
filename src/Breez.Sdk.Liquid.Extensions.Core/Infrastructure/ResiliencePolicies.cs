@@ -1,6 +1,8 @@
 using Polly;
+using Polly.CircuitBreaker;
 using Polly.Retry;
 using Polly.Timeout;
+using Breez.Sdk.Liquid.Extensions.Core.Configuration;
 
 namespace Breez.Sdk.Liquid.Extensions.Core.Infrastructure;
 
@@ -212,6 +214,61 @@ public static class ResiliencePolicies
                 UseJitter = false
             })
             .AddTimeout(TimeSpan.FromSeconds(30))
+            .Build();
+    }
+
+    /// <summary>
+    /// Creates a circuit breaker policy with the specified options.
+    /// </summary>
+    /// <param name="options">The circuit breaker configuration options.</param>
+    /// <returns>A resilience pipeline configured with circuit breaker behavior.</returns>
+    /// <remarks>
+    /// The circuit breaker pattern prevents cascading failures by temporarily blocking calls
+    /// to an operation that is likely to fail. The circuit opens after <see cref="CircuitBreakerOptions.FailureThreshold"/>
+    /// failures within <see cref="CircuitBreakerOptions.SamplingDurationSeconds"/> seconds,
+    /// and remains open for <see cref="CircuitBreakerOptions.BreakDurationSeconds"/> seconds
+    /// before transitioning to half-open state for recovery testing.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
+    public static ResiliencePipeline CreateCircuitBreakerPolicy(CircuitBreakerOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+
+        return new ResiliencePipelineBuilder()
+            .AddCircuitBreaker(new CircuitBreakerStrategyOptions
+            {
+                FailureRatio = 1.0, // All failures count (since we use MinimumThroughput = FailureThreshold)
+                SamplingDuration = TimeSpan.FromSeconds(options.SamplingDurationSeconds),
+                MinimumThroughput = options.FailureThreshold,
+                BreakDuration = TimeSpan.FromSeconds(options.BreakDurationSeconds)
+            })
+            .Build();
+    }
+
+    /// <summary>
+    /// Creates a typed circuit breaker policy with the specified options.
+    /// </summary>
+    /// <typeparam name="T">The result type returned by the operation.</typeparam>
+    /// <param name="options">The circuit breaker configuration options.</param>
+    /// <returns>A typed resilience pipeline configured with circuit breaker behavior.</returns>
+    /// <remarks>
+    /// This is a generic version of <see cref="CreateCircuitBreakerPolicy"/> that can be used with operations
+    /// returning specific types. The circuit breaker pattern prevents cascading failures by temporarily blocking calls
+    /// to an operation that is likely to fail.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
+    public static ResiliencePipeline<T> CreateCircuitBreakerPolicy<T>(CircuitBreakerOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+
+        return new ResiliencePipelineBuilder<T>()
+            .AddCircuitBreaker(new CircuitBreakerStrategyOptions<T>
+            {
+                FailureRatio = 1.0,
+                SamplingDuration = TimeSpan.FromSeconds(options.SamplingDurationSeconds),
+                MinimumThroughput = options.FailureThreshold,
+                BreakDuration = TimeSpan.FromSeconds(options.BreakDurationSeconds)
+            })
             .Build();
     }
 }

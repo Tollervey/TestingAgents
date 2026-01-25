@@ -74,6 +74,12 @@ public class BreezSdkOptions
     /// </summary>
     public CircuitBreakerOptions CircuitBreaker { get; set; } = new();
 
+    /// <summary>
+    /// Configuration options for automatic reconnection behavior.
+    /// When null, default reconnection options are used.
+    /// </summary>
+    public ReconnectionOptions? Reconnection { get; set; }
+
     // Offline mode simulation properties
 
     /// <summary>

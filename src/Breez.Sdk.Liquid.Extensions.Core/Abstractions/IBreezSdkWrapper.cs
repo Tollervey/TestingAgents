@@ -12,6 +12,22 @@ public interface IBreezSdkWrapper : IAsyncDisposable
     bool IsConnected { get; }
 
     /// <summary>
+    /// The current connection state.
+    /// </summary>
+    ConnectionState State { get; }
+
+    /// <summary>
+    /// Event fired when the connection state changes.
+    /// </summary>
+    event EventHandler<ConnectionStateChangedEventArgs>? ConnectionStateChanged;
+
+    /// <summary>
+    /// Indicates whether a reconnection attempt is allowed in the current state.
+    /// Returns false when in Reconnecting, Failed, or disposed state.
+    /// </summary>
+    bool CanAttemptReconnect { get; }
+
+    /// <summary>
     /// Initializes and connects the SDK.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -58,6 +74,13 @@ public interface IBreezSdkWrapper : IAsyncDisposable
     /// </summary>
     /// <param name="eventCallback">The callback to invoke on events.</param>
     void RegisterEventCallback(Action<SdkEvent> eventCallback);
+
+    /// <summary>
+    /// Attempts to reconnect to the SDK with exponential backoff.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if reconnection succeeded, false if all attempts failed.</returns>
+    Task<bool> TryReconnectAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>

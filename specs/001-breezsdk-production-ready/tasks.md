@@ -248,19 +248,19 @@ Based on plan.md structure:
 
 > **TDD REQUIRED: Write tests FIRST, verify they FAIL (RED), then implement until GREEN**
 
-- [ ] T094 [P] [US5] Unit tests for retry policies in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Infrastructure/ResiliencePoliciesTests.cs`
-- [ ] T095 [P] [US5] Unit tests for circuit breaker in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Infrastructure/CircuitBreakerTests.cs`
-- [ ] T096 [P] [US5] Unit tests for exception mapping in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Exceptions/ExceptionMappingTests.cs`
-- [ ] T097 [P] [US5] Unit tests for reconnection behavior in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Infrastructure/ReconnectionTests.cs`
+- [X] T094 [P] [US5] Unit tests for retry policies in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Infrastructure/ResiliencePoliciesTests.cs`
+- [X] T095 [P] [US5] Unit tests for circuit breaker in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Infrastructure/CircuitBreakerTests.cs`
+- [X] T096 [P] [US5] Unit tests for exception mapping in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Exceptions/ExceptionMappingTests.cs`
+- [X] T097 [P] [US5] Unit tests for reconnection behavior in `tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Infrastructure/ReconnectionTests.cs`
 
 ### Resilience (Core Package)
 
-- [ ] T098 [US5] Enhance ResiliencePolicies with circuit breaker in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/ResiliencePolicies.cs`
-- [ ] T099 [US5] Implement SDK reconnection logic in BreezSdkWrapper `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkWrapper.cs`
-- [ ] T100 [US5] Add exception categorization and mapping in BreezSdkService `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkService.cs`
-- [ ] T101 [US5] Implement connection state tracking in BreezSdkWrapper `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkWrapper.cs`
+- [X] T098 [US5] Enhance ResiliencePolicies with circuit breaker in `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/ResiliencePolicies.cs`
+- [X] T099 [US5] Implement SDK reconnection logic in BreezSdkWrapper `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkWrapper.cs`
+- [X] T100 [US5] Add exception categorization and mapping in ExceptionMapper `src/Breez.Sdk.Liquid.Extensions.Core/Exceptions/ExceptionMapper.cs`
+- [X] T101 [US5] Implement connection state tracking in BreezSdkWrapper `src/Breez.Sdk.Liquid.Extensions.Core/Infrastructure/BreezSdkWrapper.cs`
 
-**Checkpoint**: User Story 5 complete - production-ready resilience and error handling
+**Checkpoint**: User Story 5 complete - production-ready resilience and error handling ✅
 
 ---
 

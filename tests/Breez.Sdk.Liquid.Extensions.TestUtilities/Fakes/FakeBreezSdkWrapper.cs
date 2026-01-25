@@ -13,11 +13,27 @@ public class FakeBreezSdkWrapper : IBreezSdkWrapper
     private bool _isConnected;
     private ulong _balance = 100_000;
     private int _invoiceCounter;
+    private ConnectionState _state = ConnectionState.Disconnected;
 
     /// <summary>
     /// Gets whether the fake SDK is connected.
     /// </summary>
     public bool IsConnected => _isConnected;
+
+    /// <summary>
+    /// Gets the current connection state.
+    /// </summary>
+    public ConnectionState State => _state;
+
+    /// <summary>
+    /// Gets whether a reconnection attempt can be made.
+    /// </summary>
+    public bool CanAttemptReconnect => _state != ConnectionState.Reconnecting && _state != ConnectionState.Failed;
+
+    /// <summary>
+    /// Event fired when the connection state changes.
+    /// </summary>
+    public event EventHandler<ConnectionStateChangedEventArgs>? ConnectionStateChanged;
 
     /// <summary>
     /// Gets or sets the simulated wallet balance in satoshis.
@@ -43,7 +59,9 @@ public class FakeBreezSdkWrapper : IBreezSdkWrapper
     /// <inheritdoc />
     public Task ConnectAsync(CancellationToken cancellationToken = default)
     {
+        TransitionState(ConnectionState.Connecting);
         _isConnected = true;
+        TransitionState(ConnectionState.Connected);
         return Task.CompletedTask;
     }
 
@@ -51,7 +69,39 @@ public class FakeBreezSdkWrapper : IBreezSdkWrapper
     public Task DisconnectAsync(CancellationToken cancellationToken = default)
     {
         _isConnected = false;
+        TransitionState(ConnectionState.Disconnected);
         return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task<bool> TryReconnectAsync(CancellationToken cancellationToken = default)
+    {
+        if (_state == ConnectionState.Connected)
+        {
+            return Task.FromResult(true);
+        }
+
+        TransitionState(ConnectionState.Reconnecting);
+        _isConnected = true;
+        TransitionState(ConnectionState.Connected);
+        return Task.FromResult(true);
+    }
+
+    private void TransitionState(ConnectionState newState, Exception? exception = null)
+    {
+        var oldState = _state;
+        if (oldState == newState)
+        {
+            return;
+        }
+
+        _state = newState;
+        ConnectionStateChanged?.Invoke(this, new ConnectionStateChangedEventArgs
+        {
+            OldState = oldState,
+            NewState = newState,
+            Exception = exception
+        });
     }
 
     /// <inheritdoc />
