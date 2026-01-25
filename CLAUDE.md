@@ -111,6 +111,11 @@
 | `breezsdk-reviewer` | Haiku | BreezSDK code review, SDK pattern compliance |
 | `breezsdk-ux` | Sonnet | BreezSDK UX guidelines, payment flow design |
 | `breezsdk-test-engineer` | Sonnet | BreezSDK testing patterns, mock strategies |
+| `umbraco-architect` | Opus | Umbraco architecture, Document Type design, package architecture |
+| `umbraco-backend-developer` | Sonnet | Umbraco C# development, Composers, Services, Notification Handlers |
+| `umbraco-frontend-developer` | Sonnet | Umbraco backoffice UI, Lit/TypeScript, UUI components |
+| `umbraco-backend-reviewer` | Haiku | Umbraco C# code review, pattern compliance |
+| `umbraco-frontend-reviewer` | Haiku | Umbraco frontend review, accessibility compliance |
 
 ### Agent Tools & Permissions
 
@@ -128,6 +133,11 @@
 | `breezsdk-reviewer` | Read, Grep, Glob | ❌ Read-only |
 | `breezsdk-ux` | Read, Grep, Glob | ❌ Read-only |
 | `breezsdk-test-engineer` | Read, Write, Edit, Bash, Glob, Grep | ✅ Yes |
+| `umbraco-architect` | Read, Glob, Grep | ❌ Read-only |
+| `umbraco-backend-developer` | Read, Write, Edit, Bash, Glob, Grep | ✅ Yes |
+| `umbraco-frontend-developer` | Read, Write, Edit, Bash, Glob, Grep | ✅ Yes |
+| `umbraco-backend-reviewer` | Read, Glob, Grep | ❌ Read-only |
+| `umbraco-frontend-reviewer` | Read, Glob, Grep | ❌ Read-only |
 
 ### Agent & Plugin Utilization by Phase
 
@@ -138,12 +148,12 @@ This is the **authoritative** mapping of which agents and plugins apply to each 
 | `/speckit.constitution` | solution-architect | — | awesome-claude-skills | No |
 | `/speckit.specify` | solution-architect | — | — | No |
 | `/speckit.clarify` | solution-architect | — | — | No |
-| `/speckit.plan` | solution-architect, database-architect, breezsdk-architect | — | superpowers, awesome-claude-skills | No |
+| `/speckit.plan` | solution-architect, database-architect, breezsdk-architect, umbraco-architect | — | superpowers, awesome-claude-skills | No |
 | `/speckit.tasks` | (orchestrator) | — | — | No |
 | `/speckit.checklist` | (orchestrator) | — | — | No |
 | `/speckit.analyze` | code-reviewer | — | engineering-workflow-plugin | No |
-| `/speckit.implement` | backend-developer, test-engineer, frontend-developer, breezsdk-developer, breezsdk-test-engineer | security-auditor, code-reviewer | superpowers, dotnet-claude-code-skills | ✅ Yes |
-| Post-implement | — | code-reviewer, security-auditor, breezsdk-reviewer, breezsdk-ux | dev-agent-skills, engineering-workflow-plugin | ✅ Yes |
+| `/speckit.implement` | backend-developer, test-engineer, frontend-developer, breezsdk-developer, breezsdk-test-engineer, umbraco-backend-developer, umbraco-frontend-developer | security-auditor, code-reviewer | superpowers, dotnet-claude-code-skills | ✅ Yes |
+| Post-implement | — | code-reviewer, security-auditor, breezsdk-reviewer, breezsdk-ux, umbraco-backend-reviewer, umbraco-frontend-reviewer | dev-agent-skills, engineering-workflow-plugin | ✅ Yes |
 
 ### Parallel Execution
 Tasks marked `[P]` in tasks.md can run concurrently:

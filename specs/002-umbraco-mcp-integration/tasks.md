@@ -27,9 +27,9 @@ This feature only modifies configuration files:
 
 **Purpose**: Verify prerequisites and existing structure
 
-- [ ] T001 Verify `.claude/agents/` directory exists and review existing agent patterns (e.g., breezsdk-*.md)
-- [ ] T002 Verify `.claude/skills/external-plugins.md` exists and review existing plugin documentation patterns
-- [ ] T003 [P] Verify `.claude/settings.local.json` has WebFetch permission for docs.umbraco.com (plan.md notes line 72)
+- [X] T001 Verify `.claude/agents/` directory exists and review existing agent patterns (e.g., breezsdk-*.md)
+- [X] T002 Verify `.claude/skills/external-plugins.md` exists and review existing plugin documentation patterns
+- [X] T003 [P] Verify `.claude/settings.local.json` has WebFetch permission for docs.umbraco.com (plan.md notes line 72)
 
 ---
 
@@ -51,11 +51,11 @@ This feature only modifies configuration files:
 
 ### Verification for User Story 1 (Manual Validation)
 
-- [ ] T004 [US1] Create verification checklist for MCP Integration Guide content in `.specify/checklists/us1-mcp-guide.md`
+- [X] T004 [US1] Create verification checklist for MCP Integration Guide content in `.specify/checklists/us1-mcp-guide.md`
 
 ### Implementation for User Story 1
 
-- [ ] T005 [US1] Add Umbraco MCP section to `.claude/skills/external-plugins.md` with:
+- [X] T005 [US1] Add Umbraco MCP section to `.claude/skills/external-plugins.md` with:
   - Endpoint URL: `https://docs.umbraco.com/~gitbook/mcp`
   - MCP tools table (search_content, get_page_content, get_page_by_path, get_space_content)
   - Key documentation paths from research.md
@@ -77,25 +77,25 @@ This feature only modifies configuration files:
 
 ### Verification for User Story 2 (Manual Validation)
 
-- [ ] T006 [US2] Create verification checklist for agent structure and content in `.specify/checklists/us2-agents.md`
+- [X] T006 [US2] Create verification checklist for agent structure and content in `.specify/checklists/us2-agents.md`
 
 ### Implementation for User Story 2
 
-- [ ] T007 [P] [US2] Create `.claude/agents/umbraco-architect.md` with:
+- [X] T007 [P] [US2] Create `.claude/agents/umbraco-architect.md` with:
   - Frontmatter: name, description, tools (Read, Glob, Grep), model (opus)
   - Expertise: Document Type design, Composition patterns, Package architecture, Multi-site strategies
   - MCP Integration section with endpoint, tools, and **no-results fallback sequence**
   - Constitutional Compliance section
   - Output format guidance
 
-- [ ] T008 [P] [US2] Create `.claude/agents/umbraco-backend-developer.md` with:
+- [X] T008 [P] [US2] Create `.claude/agents/umbraco-backend-developer.md` with:
   - Frontmatter: name, description, tools (Read, Write, Edit, Bash, Glob, Grep), model (sonnet)
   - Expertise: Composers, Notification Handlers, Content/Media/Member Services, Controllers, DI patterns
   - Minimal code examples (1-2 per topic, ~5-10 lines): Composers, Services, Notification Handlers
   - MCP Integration section with endpoint, tools, and **no-results fallback sequence**
   - Constitutional Compliance section
 
-- [ ] T009 [P] [US2] Create `.claude/agents/umbraco-frontend-developer.md` with:
+- [X] T009 [P] [US2] Create `.claude/agents/umbraco-frontend-developer.md` with:
   - Frontmatter: name, description, tools (Read, Write, Edit, Bash, Glob, Grep), model (sonnet)
   - Expertise: Lit Web Components, TypeScript, Vite, UUI, RxJS, Management API, Extension types
   - Minimal code examples (1-2 per topic, ~5-10 lines): Lit component, UUI usage, Management API
@@ -103,14 +103,14 @@ This feature only modifies configuration files:
   - MCP Integration section with endpoint, tools, and **no-results fallback sequence**
   - Constitutional Compliance section
 
-- [ ] T010 [P] [US2] Create `.claude/agents/umbraco-backend-reviewer.md` with:
+- [X] T010 [P] [US2] Create `.claude/agents/umbraco-backend-reviewer.md` with:
   - Frontmatter: name, description, tools (Read, Glob, Grep), model (haiku)
   - Expertise: C# code quality, Composer patterns, Service layer design, Notification Handler best practices
   - Review checklist for C# patterns and Clean Architecture compliance
   - MCP Integration section with endpoint, tools, and **no-results fallback sequence**
   - Constitutional Compliance section
 
-- [ ] T011 [P] [US2] Create `.claude/agents/umbraco-frontend-reviewer.md` with:
+- [X] T011 [P] [US2] Create `.claude/agents/umbraco-frontend-reviewer.md` with:
   - Frontmatter: name, description, tools (Read, Glob, Grep), model (haiku)
   - Expertise: Lit/Web Component patterns, TypeScript best practices, UUI usage, accessibility
   - Review checklist for Lit/TypeScript patterns and WCAG 2.1 AA compliance
@@ -129,25 +129,25 @@ This feature only modifies configuration files:
 
 ### Verification for User Story 3 (Manual Validation)
 
-- [ ] T012 [US3] Create verification checklist for CLAUDE.md updates in `.specify/checklists/us3-claudemd.md`
+- [X] T012 [US3] Create verification checklist for CLAUDE.md updates in `.specify/checklists/us3-claudemd.md`
 
 ### Implementation for User Story 3
 
-- [ ] T013 [US3] Update Available Agents table in `CLAUDE.md` to add all 5 Umbraco agents:
+- [X] T013 [US3] Update Available Agents table in `CLAUDE.md` to add all 5 Umbraco agents:
   - umbraco-architect | Opus | Umbraco architecture, Document Type design, package architecture
   - umbraco-backend-developer | Sonnet | Umbraco C# development, Composers, Services, Notification Handlers
   - umbraco-frontend-developer | Sonnet | Umbraco backoffice UI, Lit/TypeScript, UUI components
   - umbraco-backend-reviewer | Haiku | Umbraco C# code review, pattern compliance
   - umbraco-frontend-reviewer | Haiku | Umbraco frontend review, accessibility compliance
 
-- [ ] T014 [US3] Update Agent Tools & Permissions table in `CLAUDE.md` to add all 5 Umbraco agents:
+- [X] T014 [US3] Update Agent Tools & Permissions table in `CLAUDE.md` to add all 5 Umbraco agents:
   - umbraco-architect | Read, Glob, Grep | ❌ Read-only
   - umbraco-backend-developer | Read, Write, Edit, Bash, Glob, Grep | ✅ Yes
   - umbraco-frontend-developer | Read, Write, Edit, Bash, Glob, Grep | ✅ Yes
   - umbraco-backend-reviewer | Read, Glob, Grep | ❌ Read-only
   - umbraco-frontend-reviewer | Read, Glob, Grep | ❌ Read-only
 
-- [ ] T015 [US3] Update Agent & Plugin Utilization by Phase table in `CLAUDE.md`:
+- [X] T015 [US3] Update Agent & Plugin Utilization by Phase table in `CLAUDE.md`:
   - `/speckit.plan`: Add umbraco-architect to Primary Agents
   - `/speckit.implement`: Add umbraco-backend-developer, umbraco-frontend-developer to Primary Agents
   - Post-implement: Add umbraco-backend-reviewer, umbraco-frontend-reviewer to Supporting Agents
@@ -176,7 +176,7 @@ This feature only modifies configuration files:
 
 ### Verification for User Story 5 (Manual Validation)
 
-- [ ] T016 [US5] Verify `.claude/settings.local.json` has WebFetch permission for docs.umbraco.com domain
+- [X] T016 [US5] Verify `.claude/settings.local.json` has WebFetch permission for docs.umbraco.com domain
   - Per plan.md: "settings.local.json already has `WebFetch(domain:docs.umbraco.com)` permission (line 72)"
   - If present: Document verification in task completion
   - If missing: Add permission entry
@@ -189,12 +189,12 @@ This feature only modifies configuration files:
 
 **Purpose**: Final validation across all user stories
 
-- [ ] T017 [P] Verify all 5 agent files exist: `ls .claude/agents/umbraco-*.md`
-- [ ] T018 [P] Verify CLAUDE.md has all 3 tables updated: Search for "umbraco-" entries in each table
-- [ ] T019 [P] Verify external-plugins.md has Umbraco MCP section: Search for "Umbraco MCP" heading
-- [ ] T020 [P] Verify each agent references MCP: Search for "~gitbook/mcp" in each agent file
-- [ ] T021 [P] Verify tool assignments match BreezSDK pattern: Compare frontmatter across all agents
-- [ ] T022 [P] Verify Constitutional Compliance sections exist in all agents
+- [X] T017 [P] Verify all 5 agent files exist: `ls .claude/agents/umbraco-*.md`
+- [X] T018 [P] Verify CLAUDE.md has all 3 tables updated: Search for "umbraco-" entries in each table
+- [X] T019 [P] Verify external-plugins.md has Umbraco MCP section: Search for "Umbraco MCP" heading
+- [X] T020 [P] Verify each agent references MCP: Search for "~gitbook/mcp" in each agent file
+- [X] T021 [P] Verify tool assignments match BreezSDK pattern: Compare frontmatter across all agents
+- [X] T022 [P] Verify Constitutional Compliance sections exist in all agents
 
 ---
 

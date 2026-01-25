@@ -210,6 +210,89 @@ If a plugin command fails:
 3. Ensure you're in the correct directory context
 4. Try reinstalling: `/plugin marketplace remove <owner>/<name>` then `/plugin marketplace add <owner>/<name>`
 
+---
+
+## MCP Servers
+
+### Umbraco MCP (GitBook)
+
+**Use For**: Accessing official Umbraco v17 LTS documentation for backend and frontend development
+**Spec-Kit Phases**: `/speckit.plan`, `/speckit.implement`
+
+**Prerequisite Setup**:
+
+Before agents can use the Umbraco MCP, ensure the GitBook MCP server is configured:
+
+1. **VS Code**: Install the GitBook MCP extension or configure manually in `.vscode/mcp.json`
+2. **Claude Code CLI**: The MCP endpoint is accessed via the configured MCP tools
+
+If MCP is not available, agents will automatically fall back to WebFetch.
+
+**Endpoint**: `https://docs.umbraco.com/~gitbook/mcp`
+
+**Available MCP Tools**:
+
+| Tool | Purpose | Parameters |
+|------|---------|------------|
+| `search_content` | Search documentation content | `query: string` |
+| `get_page_content` | Retrieve page by ID | `pageId: string` |
+| `get_page_by_path` | Retrieve page by URL path | `path: string` |
+| `get_space_content` | Get space/section overview | `spaceId?: string` |
+
+**Key Documentation Paths**:
+
+| Path | Content |
+|------|---------|
+| `/umbraco-cms/reference/extending/extending-overview` | Extension points overview |
+| `/umbraco-cms/reference/notifications` | Notification Handlers (events) |
+| `/umbraco-cms/reference/management/services` | Core services (IContentService, etc.) |
+| `/umbraco-cms/extending/backoffice-setup` | Bellissima backoffice setup |
+| `/umbraco-cms/extending/extension-types` | Dashboard, Property Editor, Workspace types |
+| `/umbraco-cms/extending/ui-documentation` | UUI component library usage |
+
+**No-Results Fallback Sequence**:
+
+When MCP search returns no results or is unavailable:
+
+1. **Retry with broader terms**: Simplify the query (e.g., "Composer" instead of "IUserComposer registration")
+2. **Browse via `get_space_content`**: Navigate the documentation structure to find relevant sections
+3. **WebFetch fallback**: Use `WebFetch(domain:docs.umbraco.com)` to fetch specific documentation pages directly
+
+**Invocation Examples**:
+
+```
+# Search for Composer patterns
+Use Umbraco MCP search_content to find "Composer dependency injection"
+
+# Get specific page by path
+Use Umbraco MCP get_page_by_path for "/umbraco-cms/reference/notifications"
+
+# Browse extension types
+Use Umbraco MCP get_space_content to explore the extending section
+
+# Fallback when MCP unavailable
+Use WebFetch to retrieve https://docs.umbraco.com/umbraco-cms/reference/notifications
+```
+
+**Integration with Spec-Kit**:
+
+| Phase | Usage |
+|-------|-------|
+| `/speckit.plan` | Research Umbraco architecture patterns and extension points |
+| `/speckit.implement` | Look up API details, code examples, and best practices |
+
+**Agent Integration**:
+
+The following agents are configured to use Umbraco MCP:
+
+- `umbraco-architect`: Architecture decisions, Document Type design
+- `umbraco-backend-developer`: C# implementation, Composers, Services
+- `umbraco-frontend-developer`: Lit/TypeScript, UUI, Management API
+- `umbraco-backend-reviewer`: C# code review, pattern compliance
+- `umbraco-frontend-reviewer`: Frontend review, accessibility
+
+---
+
 ## Related Skills
 
 - See `.claude/skills/dotnet-implementation-execution.md` for:
