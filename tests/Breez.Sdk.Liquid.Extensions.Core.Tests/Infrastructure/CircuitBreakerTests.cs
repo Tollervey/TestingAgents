@@ -11,8 +11,9 @@ namespace Breez.Sdk.Liquid.Extensions.Core.Tests.Infrastructure;
 /// These tests verify the circuit breaker pattern implementation using Polly v8.
 /// </summary>
 /// <remarks>
-/// TDD RED PHASE: These tests reference CreateCircuitBreakerPolicy methods that don't exist yet.
-/// They will fail initially, then pass once circuit breaker support is added to ResiliencePolicies.
+/// IMPORTANT: These tests use SHORT DURATION options (1-2 seconds) to keep tests fast.
+/// We verify BEHAVIOR (state transitions, failure counts) not production timing values.
+/// Production break/sampling durations are configuration, not logic worth waiting for.
 ///
 /// Circuit Breaker States:
 /// - CLOSED: Normal operation, requests pass through
@@ -30,17 +31,19 @@ namespace Breez.Sdk.Liquid.Extensions.Core.Tests.Infrastructure;
 public class CircuitBreakerTests
 {
     private readonly CircuitBreakerOptions _defaultOptions;
-    private readonly CircuitBreakerOptions _customOptions;
+    private readonly CircuitBreakerOptions _fastTestOptions;
 
     public CircuitBreakerTests()
     {
         _defaultOptions = new CircuitBreakerOptions();
 
-        _customOptions = new CircuitBreakerOptions
+        // Use SHORT durations for fast testing (1-2 seconds instead of 15-30 seconds)
+        // This tests the same behavior without waiting for production-length durations
+        _fastTestOptions = new CircuitBreakerOptions
         {
             FailureThreshold = 3,
-            SamplingDurationSeconds = 30,
-            BreakDurationSeconds = 15
+            SamplingDurationSeconds = 2,  // Fast: 2s instead of 30s
+            BreakDurationSeconds = 1      // Fast: 1s instead of 15s
         };
     }
 
@@ -96,11 +99,11 @@ public class CircuitBreakerTests
     public async Task CircuitBreaker_WithCustomThreshold_OpensAfterCustomFailureCount()
     {
         // Arrange
-        var policy = ResiliencePolicies.CreateCircuitBreakerPolicy(_customOptions);
+        var policy = ResiliencePolicies.CreateCircuitBreakerPolicy(_fastTestOptions);
         var callCount = 0;
 
         // Act - Simulate failures to reach custom threshold (3)
-        for (int i = 0; i < _customOptions.FailureThreshold; i++)
+        for (int i = 0; i < _fastTestOptions.FailureThreshold; i++)
         {
             try
             {
@@ -134,7 +137,7 @@ public class CircuitBreakerTests
         }
 
         circuitBroken.Should().BeTrue();
-        callCount.Should().Be(_customOptions.FailureThreshold);
+        callCount.Should().Be(_fastTestOptions.FailureThreshold);
     }
 
     [Fact]
@@ -241,8 +244,8 @@ public class CircuitBreakerTests
     public async Task CircuitBreaker_TransitionsToHalfOpenAfterBreakDuration()
     {
         // Arrange - Open the circuit
-        var policy = ResiliencePolicies.CreateCircuitBreakerPolicy(_customOptions);
-        await OpenCircuit(policy, _customOptions.FailureThreshold);
+        var policy = ResiliencePolicies.CreateCircuitBreakerPolicy(_fastTestOptions);
+        await OpenCircuit(policy, _fastTestOptions.FailureThreshold);
 
         // Verify circuit is open
         var circuitIsOpen = false;
@@ -261,7 +264,7 @@ public class CircuitBreakerTests
         circuitIsOpen.Should().BeTrue();
 
         // Act - Wait for break duration to elapse (add buffer for timing)
-        await Task.Delay(TimeSpan.FromSeconds(_customOptions.BreakDurationSeconds + 1));
+        await Task.Delay(TimeSpan.FromSeconds(_fastTestOptions.BreakDurationSeconds + 1));
 
         // Assert - Circuit should allow a test call (half-open state)
         var executionAttempted = false;
@@ -280,9 +283,9 @@ public class CircuitBreakerTests
     public async Task CircuitBreaker_ClosesOnSuccessfulHalfOpenCall()
     {
         // Arrange - Open the circuit and wait for half-open transition
-        var policy = ResiliencePolicies.CreateCircuitBreakerPolicy(_customOptions);
-        await OpenCircuit(policy, _customOptions.FailureThreshold);
-        await Task.Delay(TimeSpan.FromSeconds(_customOptions.BreakDurationSeconds + 1));
+        var policy = ResiliencePolicies.CreateCircuitBreakerPolicy(_fastTestOptions);
+        await OpenCircuit(policy, _fastTestOptions.FailureThreshold);
+        await Task.Delay(TimeSpan.FromSeconds(_fastTestOptions.BreakDurationSeconds + 1));
 
         // Act - Make successful call in half-open state
         var result = await policy.ExecuteAsync(async token =>
@@ -313,9 +316,9 @@ public class CircuitBreakerTests
     public async Task CircuitBreaker_RemainsOpenOnFailedHalfOpenCall()
     {
         // Arrange - Open the circuit and wait for half-open transition
-        var policy = ResiliencePolicies.CreateCircuitBreakerPolicy(_customOptions);
-        await OpenCircuit(policy, _customOptions.FailureThreshold);
-        await Task.Delay(TimeSpan.FromSeconds(_customOptions.BreakDurationSeconds + 1));
+        var policy = ResiliencePolicies.CreateCircuitBreakerPolicy(_fastTestOptions);
+        await OpenCircuit(policy, _fastTestOptions.FailureThreshold);
+        await Task.Delay(TimeSpan.FromSeconds(_fastTestOptions.BreakDurationSeconds + 1));
 
         // Act - Make failed call in half-open state
         Exception? halfOpenException = null;
@@ -368,12 +371,12 @@ public class CircuitBreakerTests
     [Fact]
     public void CreateCircuitBreakerPolicy_WithCustomOptions_RespectsConfiguration()
     {
-        // Arrange
+        // Arrange - Custom options (values don't affect this test, just verifies policy creation)
         var customOptions = new CircuitBreakerOptions
         {
             FailureThreshold = 2,
-            SamplingDurationSeconds = 20,
-            BreakDurationSeconds = 10
+            SamplingDurationSeconds = 5,
+            BreakDurationSeconds = 3
         };
 
         // Act
@@ -398,12 +401,12 @@ public class CircuitBreakerTests
     [Fact]
     public async Task CreateCircuitBreakerPolicy_SamplingDuration_CountsFailuresInWindow()
     {
-        // Arrange - Use short sampling duration
+        // Arrange - Use minimal sampling duration for fast testing
         var options = new CircuitBreakerOptions
         {
             FailureThreshold = 3,
-            SamplingDurationSeconds = 2, // 2-second window
-            BreakDurationSeconds = 5
+            SamplingDurationSeconds = 1, // 1-second window (fast test)
+            BreakDurationSeconds = 1
         };
         var policy = ResiliencePolicies.CreateCircuitBreakerPolicy(options);
 
@@ -424,8 +427,8 @@ public class CircuitBreakerTests
             }
         }
 
-        // Wait for sampling window to pass
-        await Task.Delay(TimeSpan.FromSeconds(options.SamplingDurationSeconds + 1));
+        // Wait for sampling window to pass (short wait for fast test)
+        await Task.Delay(TimeSpan.FromSeconds(options.SamplingDurationSeconds + 0.5));
 
         // Generate 2 more failures (should not trigger circuit break because previous failures aged out)
         for (int i = 0; i < 2; i++)

@@ -825,28 +825,33 @@ public class ReconnectionTests : IAsyncDisposable
         await act.Should().ThrowAsync<ObjectDisposedException>();
     }
 
-    [Fact(Skip = "DisconnectAsync does not cancel in-progress reconnection by design")]
-    public async Task DisconnectAsync_DuringReconnection_CancelsReconnection()
+    [Fact]
+    public async Task DisconnectAsync_DuringReconnection_DoesNotCancelReconnection()
     {
         // Arrange
         var options = CreateValidOptions();
-        options.OfflineSimulateDelayMs = 2000; // Long delay to allow disconnection during reconnect
+        options.OfflineSimulateDelayMs = 200; // Short delay to observe reconnection
         _optionsMock.Setup(x => x.Value).Returns(options);
         _sut = new BreezSdkWrapper(_optionsMock.Object, _loggerMock.Object);
 
         // Start reconnection
         var reconnectTask = _sut.TryReconnectAsync();
-        await Task.Delay(100); // Ensure we're in Reconnecting state
+        await Task.Delay(50); // Ensure we're in Reconnecting state
 
-        // Act - Disconnect during reconnection
-        await _sut.DisconnectAsync();
+        // Act - Call disconnect during reconnection (by design, doesn't cancel reconnection)
+        var disconnectTask = _sut.DisconnectAsync();
 
-        // Assert
-        _sut.State.Should().Be(ConnectionState.Disconnected);
+        // Wait for both to complete
+        var reconnectResult = await reconnectTask;
+        await disconnectTask;
 
-        // The reconnect task should complete (either cancelled or failed)
-        var completedTask = await Task.WhenAny(reconnectTask, Task.Delay(1000));
-        completedTask.Should().Be(reconnectTask);
+        // Assert - By design, DisconnectAsync does NOT cancel in-progress reconnection
+        // Reconnection should complete successfully
+        reconnectResult.Should().BeTrue("reconnection should complete successfully");
+        // Final state could be Connected (reconnection won) or Disconnected (disconnect ran after)
+        // The key assertion is that reconnection was NOT cancelled
+        _sut.State.Should().BeOneOf(new[] { ConnectionState.Connected, ConnectionState.Disconnected },
+            "state depends on timing but reconnection should have completed");
     }
 
     #endregion

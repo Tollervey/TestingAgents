@@ -230,16 +230,51 @@ Per Constitution Article III:
 **No production code without failing tests first.**
 
 ### Test Timing Guidelines (CRITICAL)
-Avoid tests that wait for actual time durations - they are slow and unreliable:
+
+**Core Principle**: Tests should verify BEHAVIOR, not exact timing. Production delay values are configuration, not logic worth testing.
+
+#### Slow Test Anti-Patterns
 
 | Scenario | BAD (Slow) | GOOD (Fast) |
 |----------|------------|-------------|
-| Timeout behavior | `Task.Delay(30s)` then assert timeout | Use short timeout (100ms) or verify TimeoutRejectedException type |
+| Timeout behavior | `Task.Delay(30s)` then assert timeout | Use short timeout (100ms), verify TimeoutRejectedException |
+| Retry policies | Use production policy with 2s delays | Create test policy with 50ms delays |
+| Exponential backoff | Wait for 2s + 4s + 8s = 14s | Use 50ms + 100ms + 200ms = 350ms |
 | Circuit breaker | 16 second break duration | 1-2 second break duration |
-| Exponential backoff | Assert exact timing (fails due to jitter) | Assert behavior occurred (retry count, state change) |
-| Transient states | Try to observe mid-transition | Collect state history via events, assert history contains expected state |
+| Reconnection | Assert exact timing (jitter fails) | Assert retry count or state transitions |
+| Transient states | Observe mid-transition | Collect state history via events |
 
-**Rule**: If a test takes >5 seconds due to actual waiting, redesign it to test behavior, not timing.
+#### Fast Test Policy Pattern (Polly)
+
+When testing resilience policies, create test-specific versions with short delays:
+
+```csharp
+// SLOW: Using production policy (2s base delay, 14s total for 3 retries)
+await ResiliencePolicies.ConnectPolicy.ExecuteAsync(...);
+
+// FAST: Create test policy with 50ms base delay (350ms total)
+private static ResiliencePipeline CreateFastTestPolicy() =>
+    new ResiliencePipelineBuilder()
+        .AddRetry(new RetryStrategyOptions
+        {
+            MaxRetryAttempts = 3,           // Same count as production
+            Delay = TimeSpan.FromMilliseconds(50),  // Fast delay for tests
+            BackoffType = DelayBackoffType.Exponential,
+            UseJitter = true
+        })
+        .Build();
+```
+
+#### What to Test vs What to Skip
+
+| Test This (Behavior) | Skip This (Configuration) |
+|---------------------|---------------------------|
+| Retry count is correct | Exact delay values (2s, 4s, 8s) |
+| Backoff pattern (exponential vs constant) | Production timeout duration |
+| Jitter is applied (delays vary) | Precise timing measurements |
+| Exception propagation after retries | Waiting for real timeouts |
+
+**Rule**: If a test takes >2 seconds due to waiting, create a fast test policy with short delays.
 
 ### Branch Strategy
 - Feature branches for new work
