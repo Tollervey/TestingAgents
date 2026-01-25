@@ -9,6 +9,8 @@
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.Data.Sqlite" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
@@ -29,6 +31,7 @@
     <ProjectReference Include="..\..\src\Breez.Sdk.Liquid.Extensions.SqlServer\Breez.Sdk.Liquid.Extensions.SqlServer.csproj" />
     <ProjectReference Include="..\..\src\Breez.Sdk.Liquid.Extensions.PostgreSql\Breez.Sdk.Liquid.Extensions.PostgreSql.csproj" />
     <ProjectReference Include="..\..\src\Breez.Sdk.Liquid.Extensions.Sqlite\Breez.Sdk.Liquid.Extensions.Sqlite.csproj" />
+    <ProjectReference Include="..\Breez.Sdk.Liquid.Extensions.TestUtilities\Breez.Sdk.Liquid.Extensions.TestUtilities.csproj" />
   </ItemGroup>
 
 </Project>

@@ -209,32 +209,32 @@ Based on plan.md structure:
 
 > **TDD REQUIRED: Write tests FIRST, verify they FAIL (RED), then implement until GREEN**
 
-- [ ] T079 [P] [US4] Integration tests for SqlServer persistence in `tests/Breez.Sdk.Liquid.Extensions.Integration.Tests/SqlServer/SqlServerPaymentRepositoryTests.cs`
-- [ ] T080 [P] [US4] Integration tests for PostgreSql persistence in `tests/Breez.Sdk.Liquid.Extensions.Integration.Tests/PostgreSql/PostgreSqlPaymentRepositoryTests.cs`
-- [ ] T081 [P] [US4] Integration tests for Sqlite persistence in `tests/Breez.Sdk.Liquid.Extensions.Integration.Tests/Sqlite/SqlitePaymentRepositoryTests.cs`
+- [X] T079 [P] [US4] Integration tests for SqlServer persistence in `tests/Breez.Sdk.Liquid.Extensions.Integration.Tests/SqlServer/SqlServerPaymentRepositoryTests.cs`
+- [X] T080 [P] [US4] Integration tests for PostgreSql persistence in `tests/Breez.Sdk.Liquid.Extensions.Integration.Tests/PostgreSql/PostgreSqlPaymentRepositoryTests.cs`
+- [X] T081 [P] [US4] Integration tests for Sqlite persistence in `tests/Breez.Sdk.Liquid.Extensions.Integration.Tests/Sqlite/SqlitePaymentRepositoryTests.cs`
 
 ### SQLite Package
 
-- [ ] T082 [P] [US4] Create SqlitePaymentDbContext in `src/Breez.Sdk.Liquid.Extensions.Sqlite/Data/SqlitePaymentDbContext.cs`
-- [ ] T083 [P] [US4] Create SqlitePaymentRepository in `src/Breez.Sdk.Liquid.Extensions.Sqlite/Data/SqlitePaymentRepository.cs`
-- [ ] T084 [P] [US4] Create PaymentStateConfiguration for EF Core in `src/Breez.Sdk.Liquid.Extensions.Sqlite/Data/PaymentStateConfiguration.cs`
-- [ ] T085 [P] [US4] Create ServiceCollectionExtensions with AddBreezSdkSqlite() in `src/Breez.Sdk.Liquid.Extensions.Sqlite/Extensions/ServiceCollectionExtensions.cs`
+- [X] T082 [P] [US4] Create SqlitePaymentDbContext in `src/Breez.Sdk.Liquid.Extensions.Sqlite/Data/SqlitePaymentDbContext.cs`
+- [X] T083 [P] [US4] Create SqlitePaymentRepository in `src/Breez.Sdk.Liquid.Extensions.Sqlite/Data/SqlitePaymentRepository.cs`
+- [X] T084 [P] [US4] Create PaymentStateConfiguration for EF Core in `src/Breez.Sdk.Liquid.Extensions.Sqlite/Data/PaymentStateConfiguration.cs`
+- [X] T085 [P] [US4] Create ServiceCollectionExtensions with AddBreezSdkSqlite() in `src/Breez.Sdk.Liquid.Extensions.Sqlite/Extensions/ServiceCollectionExtensions.cs`
 
 ### SQL Server Package
 
-- [ ] T086 [P] [US4] Create SqlServerPaymentDbContext in `src/Breez.Sdk.Liquid.Extensions.SqlServer/Data/SqlServerPaymentDbContext.cs`
-- [ ] T087 [P] [US4] Create SqlServerPaymentRepository in `src/Breez.Sdk.Liquid.Extensions.SqlServer/Data/SqlServerPaymentRepository.cs`
-- [ ] T088 [P] [US4] Create PaymentStateConfiguration for EF Core in `src/Breez.Sdk.Liquid.Extensions.SqlServer/Data/PaymentStateConfiguration.cs`
-- [ ] T089 [P] [US4] Create ServiceCollectionExtensions with AddBreezSdkSqlServer() in `src/Breez.Sdk.Liquid.Extensions.SqlServer/Extensions/ServiceCollectionExtensions.cs`
+- [X] T086 [P] [US4] Create SqlServerPaymentDbContext in `src/Breez.Sdk.Liquid.Extensions.SqlServer/Data/SqlServerPaymentDbContext.cs`
+- [X] T087 [P] [US4] Create SqlServerPaymentRepository in `src/Breez.Sdk.Liquid.Extensions.SqlServer/Data/SqlServerPaymentRepository.cs`
+- [X] T088 [P] [US4] Create PaymentStateConfiguration for EF Core in `src/Breez.Sdk.Liquid.Extensions.SqlServer/Data/PaymentStateConfiguration.cs`
+- [X] T089 [P] [US4] Create ServiceCollectionExtensions with AddBreezSdkSqlServer() in `src/Breez.Sdk.Liquid.Extensions.SqlServer/Extensions/ServiceCollectionExtensions.cs`
 
 ### PostgreSQL Package
 
-- [ ] T090 [P] [US4] Create PostgreSqlPaymentDbContext in `src/Breez.Sdk.Liquid.Extensions.PostgreSql/Data/PostgreSqlPaymentDbContext.cs`
-- [ ] T091 [P] [US4] Create PostgreSqlPaymentRepository in `src/Breez.Sdk.Liquid.Extensions.PostgreSql/Data/PostgreSqlPaymentRepository.cs`
-- [ ] T092 [P] [US4] Create PaymentStateConfiguration for EF Core in `src/Breez.Sdk.Liquid.Extensions.PostgreSql/Data/PaymentStateConfiguration.cs`
-- [ ] T093 [P] [US4] Create ServiceCollectionExtensions with AddBreezSdkPostgreSql() in `src/Breez.Sdk.Liquid.Extensions.PostgreSql/Extensions/ServiceCollectionExtensions.cs`
+- [X] T090 [P] [US4] Create PostgreSqlPaymentDbContext in `src/Breez.Sdk.Liquid.Extensions.PostgreSql/Data/PostgreSqlPaymentDbContext.cs`
+- [X] T091 [P] [US4] Create PostgreSqlPaymentRepository in `src/Breez.Sdk.Liquid.Extensions.PostgreSql/Data/PostgreSqlPaymentRepository.cs`
+- [X] T092 [P] [US4] Create PaymentStateConfiguration for EF Core in `src/Breez.Sdk.Liquid.Extensions.PostgreSql/Data/PaymentStateConfiguration.cs`
+- [X] T093 [P] [US4] Create ServiceCollectionExtensions with AddBreezSdkPostgreSql() in `src/Breez.Sdk.Liquid.Extensions.PostgreSql/Extensions/ServiceCollectionExtensions.cs`
 
-**Checkpoint**: User Story 4 complete - pluggable persistence with 3 database options
+**Checkpoint**: User Story 4 complete - pluggable persistence with 3 database options ✅
 
 ---
 
