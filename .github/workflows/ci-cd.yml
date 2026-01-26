@@ -97,7 +97,7 @@ jobs:
         dotnet pack src/Breez.Sdk.Liquid.Extensions.Umbraco/Breez.Sdk.Liquid.Extensions.Umbraco.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.VERSION }} --output ./nupkgs
 
     - name: Upload NuGet packages artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: nupkgs
         path: ./nupkgs/*.nupkg
