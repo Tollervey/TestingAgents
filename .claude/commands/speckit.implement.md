@@ -126,13 +126,43 @@ This command leverages the following Claude Code 2.1.19 capabilities:
    - **Terraform**: `.terraform/`, `*.tfstate*`, `*.tfvars`, `.terraform.lock.hcl`
    - **Kubernetes/k8s**: `*.secret.yaml`, `secrets/`, `.kube/`, `kubeconfig*`, `*.key`, `*.crt`
 
-5. Parse tasks.md structure and extract:
+5. **Initialize Agent Metrics Tracking**:
+
+   At the start of each implementation phase, initialize metrics collection:
+   ```powershell
+   .\.specify\scripts\powershell\agent-metrics.ps1 -Action Init -PhaseName "<feature-name>-<phase>"
+   ```
+
+   **Metrics Tracking Protocol**:
+   - Record EVERY agent invocation when it completes
+   - Track: agent name, task ID, status, tokens used, duration
+   - Token count is reported in agent progress notifications (e.g., "Agent X progress: Y new tokens")
+   - Duration is calculated from invocation start to completion
+
+   **Recording Agent Completion**:
+   When an agent completes (via TaskOutput or task-notification), record its metrics:
+   ```powershell
+   .\.specify\scripts\powershell\agent-metrics.ps1 -Action Record `
+       -AgentName "backend-developer" `
+       -TaskId "a620108" `
+       -Status "completed" `  # or "failed" or "timeout"
+       -TokensUsed 45000 `
+       -DurationMs 120000 `
+       -Description "Implement PaywallController"
+   ```
+
+   **Extracting Metrics from Notifications**:
+   - Token count: Parse from `"Agent X progress: Y new tokens"` messages
+   - Status: From `<status>completed</status>` in task-notification
+   - Duration: Track start time when launching agent, calculate on completion
+
+6. Parse tasks.md structure and extract:
    - **Task phases**: Setup, Tests, Core, Integration, Polish
    - **Task dependencies**: Sequential vs parallel execution rules
    - **Task details**: ID, description, file paths, parallel markers [P]
    - **Execution flow**: Order and dependency requirements
 
-5a. **Register tasks with Native Task Management** (v2.1.16):
+6a. **Register tasks with Native Task Management** (v2.1.16):
    - Use TodoWrite to register all tasks from tasks.md
    - Include dependency relationships for automatic blocking
    - Format tasks with status tracking:
@@ -152,7 +182,7 @@ This command leverages the following Claude Code 2.1.19 capabilities:
    - Inline response previews for background agents
    - Persistent state across context compaction
 
-6. **Checkpoint Strategy** (CRITICAL for recovery):
+7. **Checkpoint Strategy** (CRITICAL for recovery):
 
    **When to Create Checkpoints**:
    - **BEFORE each wave starts**: Create checkpoint with wave identifier
@@ -175,7 +205,7 @@ This command leverages the following Claude Code 2.1.19 capabilities:
    - `Pre-migration-[name]`: Before database migrations
    - `Known-good-[description]`: Stable state with passing tests
 
-7. **Wave-Based Execution** (from CLAUDE.md):
+8. **Wave-Based Execution** (from CLAUDE.md):
 
    **Agent Recommendations by Wave**:
 
@@ -287,21 +317,21 @@ This command leverages the following Claude Code 2.1.19 capabilities:
    - Experimental implementation approaches
    - Changes to shared infrastructure code
 
-8. Execute implementation following the task plan:
+9. Execute implementation following the task plan:
    - **Phase-by-phase execution**: Complete each phase before moving to the next
    - **Respect dependencies**: Run sequential tasks in order, parallel tasks [P] can run together  
    - **Follow TDD approach**: Execute test tasks before their corresponding implementation tasks
    - **File-based coordination**: Tasks affecting the same files must run sequentially
    - **Validation checkpoints**: Verify each phase completion before proceeding
 
-9. Implementation execution rules:
+10. Implementation execution rules:
    - **Setup first**: Initialize project structure, dependencies, configuration
    - **Tests before code**: Write tests for contracts, entities, and integration scenarios FIRST
    - **Core development**: Implement models, services, CLI commands, endpoints
    - **Integration work**: Database connections, middleware, logging, external services
    - **Polish and validation**: Additional tests, performance optimization, documentation
 
-10. Progress tracking and error handling:
+11. Progress tracking and error handling:
    - Report progress after each completed task
    - Halt execution if any non-parallel task fails
    - For parallel tasks [P], continue with successful tasks, report failed ones
@@ -309,18 +339,53 @@ This command leverages the following Claude Code 2.1.19 capabilities:
    - Suggest next steps if implementation cannot proceed
    - **IMPORTANT** For completed tasks, make sure to mark the task off as [X] in the tasks file.
 
-11. Completion validation:
+12. Completion validation:
    - Verify all required tasks are completed
    - Check that implemented features match the original specification
    - Validate that tests pass and coverage meets requirements
    - Confirm the implementation follows the technical plan
    - Report final status with summary of completed work
 
-12. **MANDATORY Exit Criteria** (BLOCKING - must pass before phase completion):
+13. **Generate Agent Metrics Report**:
+
+   Before completing the phase, generate the agent performance report:
+   ```powershell
+   .\.specify\scripts\powershell\agent-metrics.ps1 -Action Report
+   ```
+
+   This produces a comprehensive report showing:
+
+   **Summary Section**:
+   - Total agent invocations
+   - Total tokens consumed
+   - Overall success rate
+   - Success/failure breakdown
+
+   **Agent Performance Table**:
+   ```
+   Agent                     Count  Success  Fail/TO  Avg Tokens    Avg Time   Min Time   Max Time
+   ─────────────────────────────────────────────────────────────────────────────────────────────────
+   backend-developer            12   100.0%        0      38,450      2m 15s     45.2s     5m 30s
+   test-engineer                 8    87.5%        1      25,200      1m 45s     30.1s     4m 10s
+   code-reviewer                 4   100.0%        0      12,100        45s     20.5s     1m 15s
+   ```
+
+   **Efficiency Indicators**:
+   - Most used agent (indicates workflow patterns)
+   - Highest token usage (candidates for optimization)
+   - Fastest agent (benchmark for efficiency)
+   - Agents with failures (need prompt refinement)
+
+   **After Report Generation**:
+   - Review any agents with failure rates >10%
+   - Note agents with high token usage for prompt optimization
+   - Archive metrics after review: `.\.specify\scripts\powershell\agent-metrics.ps1 -Action Reset`
+
+14. **MANDATORY Exit Criteria** (BLOCKING - must pass before phase completion):
 
    **This step is NON-NEGOTIABLE. Do NOT mark the phase complete until ALL checks pass.**
 
-   **Step 12a: Build Verification**
+   **Step 14a: Build Verification**
    ```bash
    # Run build on the entire solution/project
    dotnet build <solution-file-or-project>
@@ -335,7 +400,7 @@ This command leverages the following Claude Code 2.1.19 capabilities:
    - **DO NOT** suppress errors without explicit user approval
    - **DO NOT** mark phase complete if build fails
 
-   **Step 12b: Test Verification**
+   **Step 14b: Test Verification**
    ```bash
    # Run all tests
    dotnet test <solution-file-or-project> --no-build
@@ -349,7 +414,7 @@ This command leverages the following Claude Code 2.1.19 capabilities:
      3. If pre-existing test failures cannot be fixed, document and get user approval
    - **DO NOT** mark phase complete if tests regress
 
-   **Step 12c: Generate Exit Report**
+   **Step 14c: Generate Exit Report**
 
    Before marking complete, output this summary:
    ```

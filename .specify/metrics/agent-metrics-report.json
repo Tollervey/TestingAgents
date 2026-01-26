@@ -1,0 +1,94 @@
+﻿{
+    "totals":  {
+                   "totalTimeouts":  0,
+                   "totalSuccesses":  5,
+                   "totalFailures":  1,
+                   "totalInvocations":  6,
+                   "totalTokens":  159000
+               },
+    "invocations":  [
+                        {
+                            "tokens":  45000,
+                            "agent":  "backend-developer",
+                            "timestamp":  "2026-01-26T23:01:39.9422264+00:00",
+                            "description":  "Fix IDE0161 namespace issues",
+                            "durationMs":  135000,
+                            "taskId":  "a620108",
+                            "status":  "completed"
+                        },
+                        {
+                            "tokens":  38000,
+                            "agent":  "backend-developer",
+                            "timestamp":  "2026-01-26T23:01:40.2495004+00:00",
+                            "description":  "Fix IDE0161 namespace issues 2",
+                            "durationMs":  120000,
+                            "taskId":  "a93d4d6",
+                            "status":  "completed"
+                        },
+                        {
+                            "tokens":  25000,
+                            "agent":  "backend-developer",
+                            "timestamp":  "2026-01-26T23:01:40.5523524+00:00",
+                            "description":  "Fix IDE0011 braces",
+                            "durationMs":  95000,
+                            "taskId":  "aea421b",
+                            "status":  "completed"
+                        },
+                        {
+                            "tokens":  21000,
+                            "agent":  "backend-developer",
+                            "timestamp":  "2026-01-26T23:01:40.8556778+00:00",
+                            "description":  "Fix obsolete interfaces",
+                            "durationMs":  85000,
+                            "taskId":  "af74b92",
+                            "status":  "completed"
+                        },
+                        {
+                            "tokens":  18000,
+                            "agent":  "test-engineer",
+                            "timestamp":  "2026-01-26T23:01:41.1699383+00:00",
+                            "description":  "Write T039 tests",
+                            "durationMs":  60000,
+                            "taskId":  "a4b6f6e",
+                            "status":  "completed"
+                        },
+                        {
+                            "tokens":  12000,
+                            "agent":  "test-engineer",
+                            "timestamp":  "2026-01-26T23:01:41.4729027+00:00",
+                            "description":  "Write T040 tests",
+                            "durationMs":  45000,
+                            "taskId":  "a4cd4a9",
+                            "status":  "failed"
+                        }
+                    ],
+    "endTime":  "2026-01-26T23:04:05.0101332+00:00",
+    "phase":  "US2-Paywall-Implementation-Test",
+    "startTime":  "2026-01-26T23:01:25.1898319+00:00",
+    "agents":  {
+                   "backend-developer":  {
+                                             "totalDurationMs":  435000,
+                                             "avgDurationMs":  108750,
+                                             "failures":  0,
+                                             "timeouts":  0,
+                                             "avgTokens":  32250,
+                                             "minDurationMs":  85000,
+                                             "count":  4,
+                                             "successes":  4,
+                                             "maxDurationMs":  135000,
+                                             "totalTokens":  129000
+                                         },
+                   "test-engineer":  {
+                                         "totalDurationMs":  105000,
+                                         "avgDurationMs":  52500,
+                                         "failures":  1,
+                                         "timeouts":  0,
+                                         "avgTokens":  15000,
+                                         "minDurationMs":  45000,
+                                         "count":  2,
+                                         "successes":  1,
+                                         "maxDurationMs":  60000,
+                                         "totalTokens":  30000
+                                     }
+               }
+}
