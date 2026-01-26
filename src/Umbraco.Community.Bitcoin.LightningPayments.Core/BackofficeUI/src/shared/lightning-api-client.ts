@@ -2,7 +2,21 @@
  * Lightning Payments Management API Client
  */
 
-import type { DashboardStats, WalletBalance, PaymentSummary, ApiError, Bolt12Offer, RefundTransaction, PaymentNotification, ExchangeRate } from './types.js';
+import type {
+  DashboardStats,
+  WalletBalance,
+  PaymentSummary,
+  ApiError,
+  Bolt12Offer,
+  RefundTransaction,
+  PaymentNotification,
+  ExchangeRate,
+  DashboardStatsResponse,
+  ChartDataResponse,
+  WalletBalanceResponse,
+  WalletLimitsResponse,
+  PaymentListResponse
+} from './types.js';
 
 const BASE_URL = '/umbraco/management/api/v1/lightning-payments';
 
@@ -50,10 +64,13 @@ async function fetchApi<T>(
 /** Lightning Payments API client */
 export const LightningApiClient = {
   // Dashboard endpoints
-  getDashboardStats: () => fetchApi<DashboardStats>('/dashboard/stats'),
-  getWalletBalance: () => fetchApi<WalletBalance>('/dashboard/balance'),
+  getDashboardStats: () => fetchApi<DashboardStatsResponse>('/dashboard/stats'),
+  getChartData: (period: 'day' | 'week' | 'month' = 'week') => fetchApi<ChartDataResponse>(`/dashboard/chart?period=${period}`),
+  getWalletBalance: () => fetchApi<WalletBalanceResponse>('/wallet/balance'),
+  getWalletLimits: () => fetchApi<WalletLimitsResponse>('/wallet/limits'),
 
   // Payment endpoints
+  getPayments: (skip = 0, take = 20) => fetchApi<PaymentListResponse>(`/payments?skip=${skip}&take=${take}`),
   getRecentPayments: (limit = 10) => fetchApi<PaymentSummary[]>(`/payments?limit=${limit}`),
   getPayment: (paymentHash: string) => fetchApi<PaymentSummary>(`/payments/${paymentHash}`),
 

@@ -79,40 +79,40 @@
 
 > **TDD REQUIRED: Write tests FIRST, verify they FAIL (RED), then implement until GREEN**
 
-- [ ] T022 [P] [US1] Unit tests for `DashboardStatsService` in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Features/DashboardStatsServiceTests.cs`
-- [ ] T023 [P] [US1] Unit tests for `DashboardController` in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Api/DashboardControllerTests.cs`
-- [ ] T024 [P] [US1] Contract tests for `/dashboard/stats` and `/dashboard/chart` endpoints in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Api/Contract/DashboardContractTests.cs`
+- [x] T022 [P] [US1] Unit tests for `DashboardStatsService` in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Features/DashboardStatsServiceTests.cs`
+- [x] T023 [P] [US1] Unit tests for `DashboardController` in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Api/DashboardControllerTests.cs`
+- [x] T024 [P] [US1] Contract tests for `/dashboard/stats` and `/dashboard/chart` endpoints in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Api/Contract/DashboardContractTests.cs`
 
 ### Implementation for User Story 1
 
 #### Backend Services
 
-- [ ] T025 [US1] Create `DashboardStats` model in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Features/Dashboard/DashboardStats.cs`
-- [ ] T026 [P] [US1] Create `ChartData` and `ChartDataPoint` models in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Features/Dashboard/ChartData.cs`
-- [ ] T027 [P] [US1] Create `WalletBalance` model in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Features/Dashboard/WalletBalance.cs`
-- [ ] T028 [P] [US1] Create `WalletLimits` model in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Features/Dashboard/WalletLimits.cs`
-- [ ] T029 [US1] Create `IDashboardStatsService` interface in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Features/Dashboard/IDashboardStatsService.cs`
-- [ ] T030 [US1] Implement `DashboardStatsService` in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Features/Dashboard/DashboardStatsService.cs`
+- [x] T025 [US1] Create `DashboardStats` model in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Features/Dashboard/DashboardStats.cs`
+- [x] T026 [P] [US1] Create `ChartData` and `ChartDataPoint` models in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Features/Dashboard/ChartData.cs`
+- [x] T027 [P] [US1] Create `WalletBalance` model in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Features/Dashboard/WalletBalance.cs`
+- [x] T028 [P] [US1] Create `WalletLimits` model in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Features/Dashboard/WalletLimits.cs`
+- [x] T029 [US1] Create `IDashboardStatsService` interface in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Features/Dashboard/IDashboardStatsService.cs`
+- [x] T030 [US1] Implement `DashboardStatsService` in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Features/Dashboard/DashboardStatsService.cs`
 
 #### Backend API (from management-api.yaml)
 
-- [ ] T031 [US1] Create `DashboardController` with `getDashboardStats`, `getPaymentChart`, `getWalletBalance`, `getWalletLimits` endpoints in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Management/DashboardController.cs`
-- [ ] T032 [US1] Create `PaymentsController` with `listPayments`, `getPayment` endpoints in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Management/PaymentsController.cs`
+- [x] T031 [US1] Create `DashboardController` with `getDashboardStats`, `getPaymentChart`, `getWalletBalance`, `getWalletLimits` endpoints in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Management/DashboardController.cs`
+- [x] T032 [US1] Create `PaymentsController` with `listPayments`, `getPayment` endpoints in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Management/PaymentsController.cs`
 
 #### Backend DTOs
 
-- [ ] T033 [P] [US1] Create `PaymentListResponse`, `PaymentSummary`, `PaymentDetails` DTOs in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Management/Dto/PaymentDtos.cs`
+- [x] T033 [P] [US1] Create `PaymentListResponse`, `PaymentSummary`, `PaymentDetails` DTOs in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Management/Dto/PaymentDtos.cs`
 
 #### Frontend Components (Bellissima/Lit)
 
-- [ ] T034 [US1] Create `lightning-dashboard.element.ts` main dashboard component in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/BackofficeUI/src/dashboard/lightning-dashboard.element.ts`
-- [ ] T035 [P] [US1] Create `payment-history-table.element.ts` component in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/BackofficeUI/src/dashboard/payment-history-table.element.ts`
-- [ ] T036 [P] [US1] Create `connection-status.element.ts` component in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/BackofficeUI/src/dashboard/connection-status.element.ts`
-- [ ] T037 [P] [US1] Create `payment-chart.element.ts` component in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/BackofficeUI/src/dashboard/payment-chart.element.ts`
+- [x] T034 [US1] Create `lightning-dashboard.element.ts` main dashboard component in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/BackofficeUI/src/dashboard/lightning-dashboard.element.ts`
+- [x] T035 [P] [US1] Create `payment-history-table.element.ts` component in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/BackofficeUI/src/dashboard/payment-history-table.element.ts`
+- [x] T036 [P] [US1] Create `connection-status.element.ts` component in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/BackofficeUI/src/dashboard/connection-status.element.ts`
+- [x] T037 [P] [US1] Create `payment-chart.element.ts` component in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/BackofficeUI/src/dashboard/payment-chart.element.ts`
 
 #### DI Registration
 
-- [ ] T038 [US1] Register `IDashboardStatsService` and dashboard-related services in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Extensions/LightningPaymentsExtensions.cs`
+- [x] T038 [US1] Register `IDashboardStatsService` and dashboard-related services in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Extensions/LightningPaymentsExtensions.cs`
 
 **Checkpoint**: User Story 1 complete - Dashboard is fully functional and testable independently
 

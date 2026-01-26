@@ -11,6 +11,23 @@
         "label": "Lightning Payments",
         "pathname": "lightning-payments"
       }
+    },
+    {
+      "type": "dashboard",
+      "alias": "Lightning.Payments.Dashboard",
+      "name": "Lightning Payments Dashboard",
+      "element": "/App_Plugins/LightningPayments/dashboard/lightning-dashboard.element.js",
+      "weight": 10,
+      "meta": {
+        "label": "Dashboard",
+        "pathname": "dashboard"
+      },
+      "conditions": [
+        {
+          "alias": "Umb.Condition.SectionAlias",
+          "match": "Lightning.Payments.Section"
+        }
+      ]
     }
   ]
 }

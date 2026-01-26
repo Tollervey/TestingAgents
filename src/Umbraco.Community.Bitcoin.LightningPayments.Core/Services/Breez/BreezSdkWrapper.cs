@@ -179,6 +179,12 @@ namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Breez
         public Task RescanOnchainSwapsAsync(BindingLiquidSdk sdk, CancellationToken ct = default)
         => Task.Run(() => sdk.RescanOnchainSwaps(), ct);
 
+        /// <summary>
+        /// Gets wallet information including balance and pending amounts.
+        /// </summary>
+        public Task<GetInfoResponse> GetInfoAsync(BindingLiquidSdk sdk, CancellationToken ct = default)
+        => Task.Run(() => sdk.GetInfo(), ct);
+
         #endregion
 
         #region Events

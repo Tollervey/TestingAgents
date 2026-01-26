@@ -116,3 +116,65 @@ export interface ExchangeRate {
   source: string;
   isStale: boolean;
 }
+
+/** Dashboard statistics response */
+export interface DashboardStatsResponse {
+  totalReceivedSat: number;
+  pendingCount: number;
+  paidCount: number;
+  failedCount: number;
+  last24Hours: {
+    count: number;
+    amountSat: number;
+  };
+}
+
+/** Chart data response */
+export interface ChartDataResponse {
+  period: string;
+  dataPoints: ChartDataPoint[];
+}
+
+/** Chart data point */
+export interface ChartDataPoint {
+  timestamp: string;
+  amountSat: number;
+  count: number;
+}
+
+/** Wallet balance response */
+export interface WalletBalanceResponse {
+  balanceSat: number;
+  pendingReceiveSat: number;
+  pendingSendSat: number;
+}
+
+/** Wallet limits response */
+export interface WalletLimitsResponse {
+  receive: LimitRange;
+  send: LimitRange;
+}
+
+/** Limit range */
+export interface LimitRange {
+  minSat: number;
+  maxSat: number;
+}
+
+/** Payment list response */
+export interface PaymentListResponse {
+  items: PaymentSummaryDto[];
+  total: number;
+}
+
+/** Payment summary DTO */
+export interface PaymentSummaryDto {
+  paymentHash: string;
+  amountSat: number;
+  status: PaymentStatus;
+  kind: PaymentKind;
+  contentId: number;
+  contentName?: string;
+  createdAt: string;
+  paidAt?: string;
+}
