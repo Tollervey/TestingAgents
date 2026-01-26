@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -39,6 +40,19 @@ namespace Microsoft.Extensions.DependencyInjection
                 .ValidateOnStart();
 
             builder.Services.AddSingleton<IValidateOptions<LightningPaymentsSettings>, LightningPaymentsSettingsValidator>();
+
+            // Bind notification options
+            builder.Services.AddOptions<NotificationOptions>()
+                .Bind(builder.Config.GetSection(NotificationOptions.SectionName))
+                .ValidateDataAnnotations();
+
+            // Bind exchange rate options
+            builder.Services.AddOptions<ExchangeRateOptions>()
+                .Bind(builder.Config.GetSection(ExchangeRateOptions.SectionName))
+                .ValidateDataAnnotations();
+
+            // Register FluentValidation validators from this assembly
+            builder.Services.AddValidatorsFromAssemblyContaining<LightningPaymentsSettings>(ServiceLifetime.Scoped);
 
             // Bind rate limiting options (optional)
             var rlSection = builder.Config.GetSection($"{LightningPaymentsSettings.SectionName}:RateLimiting");

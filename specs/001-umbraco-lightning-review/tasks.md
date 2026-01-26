@@ -25,15 +25,15 @@
 
 **Purpose**: Project initialization, configuration, and shared exception hierarchy
 
-- [ ] T001 Create unified exception hierarchy `LightningPaymentsException` base class in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Exception/LightningPaymentsException.cs`
-- [ ] T002 [P] Create `PaymentNotFoundException` exception in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Exception/PaymentNotFoundException.cs`
-- [ ] T003 [P] Create `InsufficientBalanceException` exception in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Exception/InsufficientBalanceException.cs`
-- [ ] T004 [P] Create `BreezSdkConnectionException` exception in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Exception/BreezSdkConnectionException.cs`
-- [ ] T005 [P] Create `InvalidInvoiceException` exception in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Exception/InvalidInvoiceException.cs`
-- [ ] T006 [P] Create `RefundExceedsOriginalException` exception in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Exception/RefundExceedsOriginalException.cs`
-- [ ] T007 Create `NotificationOptions` configuration class in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Configuration/NotificationOptions.cs`
-- [ ] T008 [P] Create `ExchangeRateOptions` configuration class in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Configuration/ExchangeRateOptions.cs`
-- [ ] T008a [P] Configure FluentValidation for API request validation in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Extensions/LightningPaymentsExtensions.cs` and create base validator class in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Validation/`
+- [x] T001 Create unified exception hierarchy `LightningPaymentsException` base class in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Exceptions/LightningPaymentsException.cs`
+- [x] T002 [P] Create `PaymentNotFoundException` exception in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Exceptions/PaymentNotFoundException.cs`
+- [x] T003 [P] Create `InsufficientBalanceException` exception in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Exceptions/InsufficientBalanceException.cs`
+- [x] T004 [P] Create `BreezSdkConnectionException` exception in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Exceptions/BreezSdkConnectionException.cs`
+- [x] T005 [P] Create `InvalidInvoiceException` exception in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Exceptions/InvalidInvoiceException.cs`
+- [x] T006 [P] Create `RefundExceedsOriginalException` exception in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Exceptions/RefundExceedsOriginalException.cs`
+- [x] T007 Create `NotificationOptions` configuration class in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Configuration/NotificationOptions.cs`
+- [x] T008 [P] Create `ExchangeRateOptions` configuration class in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Configuration/ExchangeRateOptions.cs`
+- [x] T008a [P] Configure FluentValidation for API request validation in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Extensions/LightningPaymentsExtensions.cs` and create base validator class in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Validation/`
 
 ---
 
