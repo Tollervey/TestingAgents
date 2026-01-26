@@ -299,27 +299,27 @@ Based on plan.md structure:
 
 > **TDD REQUIRED: Write tests FIRST, verify they FAIL (RED), then implement until GREEN**
 
-- [ ] T109 [P] [US7] Unit tests for BreezSdkHealthCheck in `tests/Breez.Sdk.Liquid.Extensions.AspNetCore.Tests/HealthChecks/BreezSdkHealthCheckTests.cs`
-- [ ] T110 [P] [US7] Unit tests for WebhookValidationMiddleware in `tests/Breez.Sdk.Liquid.Extensions.AspNetCore.Tests/Middleware/WebhookValidationMiddlewareTests.cs`
-- [ ] T111 [P] [US7] Unit tests for WebhookEndpoints in `tests/Breez.Sdk.Liquid.Extensions.AspNetCore.Tests/Endpoints/WebhookEndpointsTests.cs`
-- [ ] T112 [P] [US7] Integration tests for ASP.NET Core integration in `tests/Breez.Sdk.Liquid.Extensions.Integration.Tests/AspNetCore/AspNetCoreIntegrationTests.cs`
+- [x] T109 [P] [US7] Unit tests for BreezSdkHealthCheck in `tests/Breez.Sdk.Liquid.Extensions.AspNetCore.Tests/HealthChecks/BreezSdkHealthCheckTests.cs`
+- [x] T110 [P] [US7] Unit tests for WebhookValidationMiddleware in `tests/Breez.Sdk.Liquid.Extensions.AspNetCore.Tests/Middleware/WebhookValidationMiddlewareTests.cs`
+- [x] T111 [P] [US7] Unit tests for WebhookEndpoints in `tests/Breez.Sdk.Liquid.Extensions.AspNetCore.Tests/Endpoints/WebhookEndpointsTests.cs`
+- [x] T112 [P] [US7] Integration tests for ASP.NET Core integration in `tests/Breez.Sdk.Liquid.Extensions.AspNetCore.Tests/Integration/WebApplicationBuilderExtensionsTests.cs`
 
 ### ASP.NET Core Package
 
-- [ ] T113 [US7] Create BreezSdkHealthCheck implementing IHealthCheck in `src/Breez.Sdk.Liquid.Extensions.AspNetCore/HealthChecks/BreezSdkHealthCheck.cs`
-- [ ] T114 [US7] Create WebhookValidator utility in `src/Breez.Sdk.Liquid.Extensions.AspNetCore/Middleware/WebhookValidator.cs`
-- [ ] T115 [US7] Create WebhookValidationMiddleware in `src/Breez.Sdk.Liquid.Extensions.AspNetCore/Middleware/WebhookValidationMiddleware.cs`
-- [ ] T116 [US7] Create WebhookEndpoints with MapBreezSdkEndpoints() in `src/Breez.Sdk.Liquid.Extensions.AspNetCore/Endpoints/WebhookEndpoints.cs`
-- [ ] T117 [US7] Create WebApplicationBuilderExtensions with AddBreezSdk() for WebApplicationBuilder in `src/Breez.Sdk.Liquid.Extensions.AspNetCore/Extensions/WebApplicationBuilderExtensions.cs`
-- [ ] T118 [US7] Create HealthCheckBuilderExtensions with AddBreezSdkHealthCheck() in `src/Breez.Sdk.Liquid.Extensions.AspNetCore/Extensions/HealthCheckBuilderExtensions.cs`
+- [x] T113 [US7] Create BreezSdkHealthCheck implementing IHealthCheck in `src/Breez.Sdk.Liquid.Extensions.AspNetCore/HealthChecks/BreezSdkHealthCheck.cs`
+- [x] T114 [US7] Create WebhookValidator utility in `src/Breez.Sdk.Liquid.Extensions.AspNetCore/Middleware/WebhookValidator.cs`
+- [x] T115 [US7] Create WebhookValidationMiddleware in `src/Breez.Sdk.Liquid.Extensions.AspNetCore/Middleware/WebhookValidationMiddleware.cs`
+- [x] T116 [US7] Create WebhookEndpoints with MapBreezSdkEndpoints() in `src/Breez.Sdk.Liquid.Extensions.AspNetCore/Endpoints/WebhookEndpoints.cs`
+- [x] T117 [US7] Create WebApplicationBuilderExtensions with AddBreezSdk() for WebApplicationBuilder in `src/Breez.Sdk.Liquid.Extensions.AspNetCore/Extensions/WebApplicationBuilderExtensions.cs`
+- [x] T118 [US7] Create HealthCheckBuilderExtensions with AddBreezSdkHealthCheck() in `src/Breez.Sdk.Liquid.Extensions.AspNetCore/Extensions/HealthCheckBuilderExtensions.cs`
 
 ### Umbraco Package
 
-- [ ] T119 [US7] Create BreezSdkComposer in `src/Breez.Sdk.Liquid.Extensions.Umbraco/Composers/BreezSdkComposer.cs`
-- [ ] T120 [US7] Create BreezSdkComponent in `src/Breez.Sdk.Liquid.Extensions.Umbraco/Components/BreezSdkComponent.cs`
-- [ ] T121 [US7] Create UmbracoBuilderExtensions in `src/Breez.Sdk.Liquid.Extensions.Umbraco/Extensions/UmbracoBuilderExtensions.cs`
+- [x] T119 [US7] Create BreezSdkComposer in `src/Breez.Sdk.Liquid.Extensions.Umbraco/Composers/BreezSdkComposer.cs`
+- [x] T120 [US7] Create BreezSdkComponent in `src/Breez.Sdk.Liquid.Extensions.Umbraco/Components/BreezSdkComponent.cs`
+- [x] T121 [US7] Create UmbracoBuilderExtensions in `src/Breez.Sdk.Liquid.Extensions.Umbraco/Extensions/UmbracoBuilderExtensions.cs`
 
-**Checkpoint**: User Story 7 complete - platform-specific packages ready
+**Checkpoint**: User Story 7 complete - platform-specific packages ready ✅
 
 ---
 
