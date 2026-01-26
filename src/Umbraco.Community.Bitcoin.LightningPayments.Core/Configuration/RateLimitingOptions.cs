@@ -1,4 +1,4 @@
-﻿namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Configuration
+namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Configuration
 {
     /// <summary>
     /// Options to control rate limiting behavior for LightningPayments endpoints.

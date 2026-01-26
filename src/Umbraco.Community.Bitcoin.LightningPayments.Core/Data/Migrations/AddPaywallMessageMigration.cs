@@ -1,4 +1,4 @@
-﻿namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Data.Migrations
+namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Data.Migrations
 {
 
     //public class PackageMigrationPlan : AutomaticPackageMigrationPlan

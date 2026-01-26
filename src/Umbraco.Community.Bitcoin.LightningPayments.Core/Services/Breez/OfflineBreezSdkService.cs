@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Umbraco.Community.Bitcoin.LightningPayments.Core.Configuration;
@@ -138,7 +138,8 @@ namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Breez
         private bool ShouldSimulateFailure()
         {
             var r = _offlineOptions.SimulatedFailureRate;
-            if (r <= 0) return false;
+            if (r <= 0)
+            { return false; }
             return Random.Shared.NextDouble() < r;
         }
 

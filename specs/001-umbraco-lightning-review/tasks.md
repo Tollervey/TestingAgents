@@ -128,32 +128,32 @@
 
 > **TDD REQUIRED: Write tests FIRST, verify they FAIL (RED), then implement until GREEN**
 
-- [ ] T039 [P] [US2] Unit tests for `PaywallPropertyEditorValueConverter` in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Features/PropertyEditor/PaywallPropertyEditorValueConverterTests.cs`
-- [ ] T040 [P] [US2] Contract tests for `/paywall/invoice` and `/paywall/status` endpoints in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Api/Contract/PaywallContractTests.cs`
+- [x] T039 [P] [US2] Unit tests for `PaywallPropertyEditorValueConverter` in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Features/PropertyEditor/PaywallPropertyEditorValueConverterTests.cs`
+- [x] T040 [P] [US2] Contract tests for `/paywall/invoice` and `/paywall/status` endpoints in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Api/Contract/PaywallContractTests.cs`
 
 ### Implementation for User Story 2
 
 #### Backend Services
 
-- [ ] T041 [US2] Create `PaywallConfig` model with tiered pricing in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Features/PropertyEditor/PaywallConfig.cs`
-- [ ] T042 [US2] Update/Create `PaywallPropertyEditorValueConverter` in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Features/PropertyEditor/PaywallPropertyEditorValueConverter.cs`
+- [x] T041 [US2] Create `PaywallConfig` model with tiered pricing in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Features/PropertyEditor/PaywallConfig.cs`
+- [x] T042 [US2] Update/Create `PaywallPropertyEditorValueConverter` in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Features/PropertyEditor/PaywallPropertyEditorValueConverter.cs`
 
 #### Backend API (from public-api.yaml)
 
-- [ ] T043 [US2] Create `PaywallController` with `createPaywallInvoice`, `getPaywallStatus` endpoints in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Public/PaywallController.cs`
+- [x] T043 [US2] Create `PaywallController` with `createPaywallInvoice`, `getPaywallStatus` endpoints in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Public/PaywallController.cs`
 
 #### Backend DTOs
 
-- [ ] T044 [P] [US2] Create `CreatePaywallInvoiceRequest`, `PaywallStatus`, `InvoiceResponse` DTOs in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Public/Dto/PaywallDtos.cs`
+- [x] T044 [P] [US2] Create `CreatePaywallInvoiceRequest`, `PaywallStatus`, `InvoiceResponse` DTOs in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Public/Dto/PaywallDtos.cs`
 
 #### Frontend Components (Bellissima/Lit)
 
-- [ ] T045 [US2] Create `paywall-editor.element.ts` property editor component in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/BackofficeUI/src/property-editor/paywall-editor.element.ts`
-- [ ] T046 [P] [US2] Create `tier-config.element.ts` component for tier pricing in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/BackofficeUI/src/property-editor/tier-config.element.ts`
+- [x] T045 [US2] Create `paywall-editor.element.ts` property editor component in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/BackofficeUI/src/property-editor/paywall-editor.element.ts`
+- [x] T046 [P] [US2] Create `tier-config.element.ts` component for tier pricing in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/BackofficeUI/src/property-editor/tier-config.element.ts`
 
 #### Manifest Updates
 
-- [ ] T047 [US2] Register property editor UI in `umbraco-package.json` manifest in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/BackofficeUI/umbraco-package.json`
+- [x] T047 [US2] Register property editor UI in `umbraco-package.json` manifest in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/BackofficeUI/umbraco-package.json`
 
 **Checkpoint**: User Story 2 complete - Paywall editor is fully functional and testable independently
 

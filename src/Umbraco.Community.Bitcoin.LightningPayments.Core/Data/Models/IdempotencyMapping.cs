@@ -1,4 +1,4 @@
-﻿namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Data.Models
+namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Data.Models
 {
     /// <summary>
     /// Maps a client-provided idempotency key to a created invoice/paymentHash and stores status.

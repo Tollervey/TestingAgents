@@ -1,4 +1,4 @@
-﻿using Breez.Sdk.Liquid;
+using Breez.Sdk.Liquid;
 
 namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Breez
 {
@@ -39,70 +39,80 @@ namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Breez
         public async Task<InputType?> ParseAsync(string input, CancellationToken ct = default)
         {
             var sdk = await _handleProvider.GetSdkAsync(ct);
-            if (sdk == null) return null;
+            if (sdk == null)
+            { return null; }
             return await _wrapper.ParseAsync(sdk, input, ct);
         }
 
         public async Task<LightningPaymentLimitsResponse?> FetchLightningLimitsAsync(CancellationToken ct = default)
         {
             var sdk = await _handleProvider.GetSdkAsync(ct);
-            if (sdk == null) return null;
+            if (sdk == null)
+            { return null; }
             return await _wrapper.FetchLightningLimitsAsync(sdk, ct);
         }
 
         public async Task<OnchainPaymentLimitsResponse?> FetchOnchainLimitsAsync(CancellationToken ct = default)
         {
             var sdk = await _handleProvider.GetSdkAsync(ct);
-            if (sdk == null) return null;
+            if (sdk == null)
+            { return null; }
             return await _wrapper.FetchOnchainLimitsAsync(sdk, ct);
         }
 
         public async Task<PrepareSendResponse?> PrepareSendAsync(PrepareSendRequest request, CancellationToken ct = default)
         {
             var sdk = await _handleProvider.GetSdkAsync(ct);
-            if (sdk == null) return null;
+            if (sdk == null)
+            { return null; }
             return await _wrapper.PrepareSendPaymentAsync(sdk, request, ct);
         }
 
         public async Task<SendPaymentResponse?> SendPaymentAsync(SendPaymentRequest request, CancellationToken ct = default)
         {
             var sdk = await _handleProvider.GetSdkAsync(ct);
-            if (sdk == null) return null;
+            if (sdk == null)
+            { return null; }
             return await _wrapper.SendPaymentAsync(sdk, request, ct);
         }
 
         public async Task<List<global::Breez.Sdk.Liquid.Payment>> ListPaymentsAsync(ListPaymentsRequest request, CancellationToken ct = default)
         {
             var sdk = await _handleProvider.GetSdkAsync(ct);
-            if (sdk == null) return new List<global::Breez.Sdk.Liquid.Payment>();
+            if (sdk == null)
+            { return new List<global::Breez.Sdk.Liquid.Payment>(); }
             return await _wrapper.ListPaymentsAsync(sdk, request, ct);
         }
 
         public async Task<global::Breez.Sdk.Liquid.Payment?> GetPaymentAsync(GetPaymentRequest request, CancellationToken ct = default)
         {
             var sdk = await _handleProvider.GetSdkAsync(ct);
-            if (sdk == null) return null;
+            if (sdk == null)
+            { return null; }
             return await _wrapper.GetPaymentAsync(sdk, request, ct);
         }
 
         public async Task<RecommendedFees?> RecommendedFeesAsync(CancellationToken ct = default)
         {
             var sdk = await _handleProvider.GetSdkAsync(ct);
-            if (sdk == null) return null;
+            if (sdk == null)
+            { return null; }
             return await _wrapper.RecommendedFeesAsync(sdk, ct);
         }
 
         public async Task<FetchPaymentProposedFeesResponse?> FetchPaymentProposedFeesAsync(FetchPaymentProposedFeesRequest request, CancellationToken ct = default)
         {
             var sdk = await _handleProvider.GetSdkAsync(ct);
-            if (sdk == null) return null;
+            if (sdk == null)
+            { return null; }
             return await _wrapper.FetchPaymentProposedFeesAsync(sdk, request, ct);
         }
 
         public async Task AcceptPaymentProposedFeesAsync(AcceptPaymentProposedFeesRequest request, CancellationToken ct = default)
         {
             var sdk = await _handleProvider.GetSdkAsync(ct);
-            if (sdk == null) return; // no-op if not connected
+            if (sdk == null)
+            { return; } // no-op if not connected
             await _wrapper.AcceptPaymentProposedFeesAsync(sdk, request, ct);
         }
     }

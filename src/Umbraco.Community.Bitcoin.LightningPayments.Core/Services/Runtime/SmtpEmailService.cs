@@ -1,4 +1,4 @@
-﻿using MailKit.Net.Smtp;
+using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
@@ -19,7 +19,7 @@ namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Runtime
         /// </summary>
         /// <param name="settings">Lightning Payments settings (SMTP config).</param>
         /// <param name="clientFactory">Optional factory for creating <see cref="ISmtpClient"/> (useful for tests).</param>
-        public SmtpEmailService(IOptions<LightningPaymentsSettings> settings, Func<ISmtpClient> clientFactory = null)
+        public SmtpEmailService(IOptions<LightningPaymentsSettings> settings, Func<ISmtpClient>? clientFactory = null)
         {
             _settings = settings.Value;
             _clientFactory = clientFactory ?? (() => new SmtpClient());
@@ -48,7 +48,9 @@ namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Runtime
             }
             finally
             {
-                try { await client.DisconnectAsync(true); } catch { /* swallow disconnect errors */ }
+                try
+                { await client.DisconnectAsync(true); }
+                catch { /* swallow disconnect errors */ }
                 (client as IDisposable)?.Dispose();
             }
         }

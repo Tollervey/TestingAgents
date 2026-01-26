@@ -280,6 +280,43 @@ Claude Code hooks (`.claude/hooks.json`) automatically enforce:
 
 ## Workflow Rules
 
+### Phase Completion Requirements (MANDATORY)
+
+**CRITICAL**: No implementation phase may be marked complete until these exit criteria pass:
+
+1. **Build Verification** (blocking):
+   ```bash
+   dotnet build <solution-file>  # Must exit with code 0
+   ```
+   - If build fails, fix ALL errors before completing the phase
+   - Pre-existing errors discovered during implementation MUST be fixed
+   - Do NOT suppress warnings as errors without explicit user approval
+
+2. **Test Verification** (blocking):
+   ```bash
+   dotnet test <solution-file> --no-build  # Must not regress
+   ```
+   - All previously passing tests must still pass
+   - New tests written in this phase must pass (GREEN phase of TDD)
+   - If tests fail, investigate and fix before completing
+
+3. **Regression Check**:
+   - Compare test count before/after implementation
+   - No decrease in passing test count allowed
+   - Document any tests that were intentionally modified
+
+**If pre-existing issues block the build:**
+1. Document the pre-existing issues found
+2. Fix them as part of the implementation phase
+3. Clearly separate pre-existing fixes from new implementation in commit messages
+4. Never suppress errors without documenting why
+
+**Exit Criteria Checklist** (verify before marking phase complete):
+- [ ] `dotnet build` exits with code 0
+- [ ] `dotnet test` shows no regressions
+- [ ] All new implementation code compiles
+- [ ] All new tests pass (TDD GREEN)
+
 ### Before Every Commit
 1. `dotnet build` — must pass
 2. `dotnet test` — must pass

@@ -28,6 +28,18 @@
           "match": "Lightning.Payments.Section"
         }
       ]
+    },
+    {
+      "type": "propertyEditorUi",
+      "alias": "lightningPayments.paywall",
+      "name": "Lightning Paywall",
+      "element": "/App_Plugins/LightningPayments/property-editor/paywall-editor.element.js",
+      "meta": {
+        "label": "Lightning Paywall",
+        "icon": "icon-lock",
+        "group": "Lightning Payments",
+        "propertyEditorSchemaAlias": "Umbraco.JSON"
+      }
     }
   ]
 }

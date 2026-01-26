@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Umbraco.Community.Bitcoin.LightningPayments.Core.Features.Paywall.Services;
@@ -8,7 +8,7 @@ using Umbraco.Cms.Core.Composing;
 
 namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Components;
 
-public class PackageDiagnosticsComponent : IComponent
+public class PackageDiagnosticsComponent : IAsyncComponent
 {
     private readonly ILogger<PackageDiagnosticsComponent> _logger;
     private readonly IWebHostEnvironment _env;
@@ -25,7 +25,7 @@ public class PackageDiagnosticsComponent : IComponent
         _paywallMessageService = paywallMessageService;
     }
 
-    public void Initialize()
+    public Task InitializeAsync(bool isRestarting, CancellationToken cancellationToken)
     {
         try
         {
@@ -48,6 +48,8 @@ public class PackageDiagnosticsComponent : IComponent
         {
             _logger.LogError(ex, "LightningPayments diagnostics failed during startup probe.");
         }
+
+        return Task.CompletedTask;
     }
 
     private void ProbeLocation(IFileProvider fp, string basePath, string label)
@@ -162,7 +164,10 @@ public class PackageDiagnosticsComponent : IComponent
     private static string Truncate(string? value, int max)
         => string.IsNullOrEmpty(value) ? string.Empty : (value!.Length <= max ? value : value.Substring(0, max));
 
-    public void Terminate() { }
+    public Task TerminateAsync(bool isRestarting, CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
 }
 
 

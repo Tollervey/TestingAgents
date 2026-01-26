@@ -1,4 +1,4 @@
-﻿using Umbraco.Community.Bitcoin.LightningPayments.Core.Data.Models;
+using Umbraco.Community.Bitcoin.LightningPayments.Core.Data.Models;
 using Umbraco.Community.Bitcoin.LightningPayments.Core.Infrastructure;
 using System.Collections.Concurrent;
 
@@ -59,7 +59,8 @@ namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Payment
             {
                 if (_paymentStatesByHash.TryGetValue(paymentHash, out var state))
                 {
-                    if (state.Status == PaymentStatus.Paid) return Task.FromResult(PaymentConfirmationResult.AlreadyConfirmed);
+                    if (state.Status == PaymentStatus.Paid)
+                        return Task.FromResult(PaymentConfirmationResult.AlreadyConfirmed);
                     if (state.Status == PaymentStatus.Pending)
                     {
                         state.Status = PaymentStatus.Paid;

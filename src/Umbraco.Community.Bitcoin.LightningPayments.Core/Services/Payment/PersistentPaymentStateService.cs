@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Umbraco.Community.Bitcoin.LightningPayments.Core.Data;
 using Umbraco.Community.Bitcoin.LightningPayments.Core.Data.Models;
 using Umbraco.Community.Bitcoin.LightningPayments.Core.Infrastructure;

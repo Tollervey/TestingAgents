@@ -1,9 +1,8 @@
-﻿namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Configuration
+namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Configuration;
+
+public class Constants
 {
-    public class Constants
-    {
-        public const string ApiName = "ourumbracobitcoinlightningpayments";
-    }
+    public const string ApiName = "ourumbracobitcoinlightningpayments";
 }
 
 

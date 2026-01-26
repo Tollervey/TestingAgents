@@ -1,4 +1,4 @@
-﻿using Breez.Sdk.Liquid;
+using Breez.Sdk.Liquid;
 
 namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Breez
 {

@@ -1,4 +1,4 @@
-﻿namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Breez
+namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Breez
 {
     using System;
     using System.Collections.Generic;

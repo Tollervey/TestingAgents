@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration.UserSecrets;
 using Microsoft.Extensions.Hosting;
@@ -109,6 +109,7 @@ public class LightningSetupController : ManagementApiControllerBase
             {
                 lp["ConnectionString"] = JsonDocument.Parse(JsonSerializer.Serialize(req.ConnectionString.Trim())).RootElement.Clone();
             }
+
             if (!string.IsNullOrWhiteSpace(normalizedNetwork))
             {
                 lp["Network"] = JsonDocument.Parse(JsonSerializer.Serialize(normalizedNetwork)).RootElement.Clone();
@@ -139,7 +140,10 @@ public class LightningSetupController : ManagementApiControllerBase
     [HttpPost("Runtime")]
     public async Task<IActionResult> SaveRuntime([FromServices] IRuntimeSettingsService runtime, [FromBody] RuntimeFeatureFlags flags, CancellationToken ct)
     {
-        if (flags is null) return BadRequest(new { error = "invalid_request", message = "Flags payload is required." });
+        if (flags is null)
+        {
+            return BadRequest(new { error = "invalid_request", message = "Flags payload is required." });
+        }
         await runtime.SaveAsync(flags, ct);
         return Ok(new { status = "saved" });
     }

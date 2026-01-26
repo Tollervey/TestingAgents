@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Payment;
 
 namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Health;

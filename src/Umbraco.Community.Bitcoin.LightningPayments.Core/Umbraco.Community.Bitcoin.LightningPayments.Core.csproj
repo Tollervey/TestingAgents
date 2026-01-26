@@ -8,7 +8,8 @@
     <!-- Generate XML documentation for NuGet consumers -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- Suppress missing XML docs warnings to keep builds clean while shipping docs -->
-    <NoWarn>$(NoWarn);1591</NoWarn>
+    <!-- Suppress IDE style rules that require bulk refactoring (can be addressed incrementally) -->
+    <NoWarn>$(NoWarn);1591;IDE0011;IDE0161;IDE0065;IDE1006</NoWarn>
     <!-- Enable .NET analyzers and use the latest analysis level -->
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisLevel>latest</AnalysisLevel>

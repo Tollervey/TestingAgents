@@ -1,42 +1,40 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Invoice;
-using Umbraco.Cms.Web.Common.Controllers;
 
-namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Api.Integration
+namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Api.Integration;
+
+/// <summary>
+/// Serves .well-known endpoints related to Lightning, such as LNURL-P discovery.
+/// </summary>
+[ApiController]
+[RequireHttps]
+public class WellKnownController : ControllerBase
 {
+    private readonly ILogger<WellKnownController> _logger;
+    private readonly IInvoiceHelper _invoiceHelper;
+
     /// <summary>
-    /// Serves .well-known endpoints related to Lightning, such as LNURL-P discovery.
+    /// Initializes a new instance of the <see cref="WellKnownController"/> class.
     /// </summary>
-    [RequireHttps]
-    public class WellKnownController : UmbracoApiControllerBase
+    public WellKnownController(
+        ILogger<WellKnownController> logger,
+        IInvoiceHelper invoiceHelper)
     {
-        private readonly ILogger<WellKnownController> _logger;
-        private readonly IInvoiceHelper _invoiceHelper;
+        _logger = logger;
+        _invoiceHelper = invoiceHelper;
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="WellKnownController"/> class.
-        /// </summary>
-        public WellKnownController(
-            ILogger<WellKnownController> logger,
-            IInvoiceHelper invoiceHelper)
-        {
-            _logger = logger;
-            _invoiceHelper = invoiceHelper;
-        }
-
-        /// <summary>
-        /// LNURL-Pay discovery endpoint for Lightning address-style lookups.
-        /// </summary>
-        /// <param name="name">The Lightning address user name segment.</param>
-        /// <param name="contentId">Optional content id to scope the paywall configuration.</param>
-        /// <returns>Standard LNURL-Pay metadata response.</returns>
-        [HttpGet("/.well-known/lnurlp/{name}")]
-        public IActionResult GetLightningAddress(string name, [FromQuery] int contentId)
-        {
-            // Delegate to shared helper that encapsulates Umbraco access and cookie handling
-            return _invoiceHelper.BuildLnurlPayInfo(contentId, Request, "/api/public/lightning/GetLnurlInvoice", _logger);
-        }
+    /// <summary>
+    /// LNURL-Pay discovery endpoint for Lightning address-style lookups.
+    /// </summary>
+    /// <param name="name">The Lightning address user name segment.</param>
+    /// <param name="contentId">Optional content id to scope the paywall configuration.</param>
+    /// <returns>Standard LNURL-Pay metadata response.</returns>
+    [HttpGet("/.well-known/lnurlp/{name}")]
+    public IActionResult GetLightningAddress(string name, [FromQuery] int contentId)
+    {
+        // Delegate to shared helper that encapsulates Umbraco access and cookie handling
+        return _invoiceHelper.BuildLnurlPayInfo(contentId, Request, "/api/public/lightning/GetLnurlInvoice", _logger);
     }
 }
-

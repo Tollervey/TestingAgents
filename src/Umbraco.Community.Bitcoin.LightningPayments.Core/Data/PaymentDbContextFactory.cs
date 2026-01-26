@@ -1,23 +1,20 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Data
+namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Data;
+
+/// <summary>
+/// Design-time factory for EF Core tooling (migrations) to create <see cref="PaymentDbContext"/>.
+/// </summary>
+public class PaymentDbContextFactory : IDesignTimeDbContextFactory<PaymentDbContext>
 {
     /// <summary>
-    /// Design-time factory for EF Core tooling (migrations) to create <see cref="PaymentDbContext"/>.
+    /// Creates a new <see cref="PaymentDbContext"/> instance for design-time operations.
     /// </summary>
-    public class PaymentDbContextFactory : IDesignTimeDbContextFactory<PaymentDbContext>
+    public PaymentDbContext CreateDbContext(string[] args)
     {
-        /// <summary>
-        /// Creates a new <see cref="PaymentDbContext"/> instance for design-time operations.
-        /// </summary>
-        public PaymentDbContext CreateDbContext(string[] args)
-        {
-            var optionsBuilder = new DbContextOptionsBuilder<PaymentDbContext>();
-            optionsBuilder.UseSqlite("Data Source=payment.db"); // Default for design time
-            return new PaymentDbContext(optionsBuilder.Options);
-        }
+        var optionsBuilder = new DbContextOptionsBuilder<PaymentDbContext>();
+        optionsBuilder.UseSqlite("Data Source=payment.db"); // Default for design time
+        return new PaymentDbContext(optionsBuilder.Options);
     }
 }
-
-

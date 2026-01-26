@@ -1,4 +1,4 @@
-﻿using Breez.Sdk.Liquid;
+using Breez.Sdk.Liquid;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -200,11 +200,12 @@ namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Breez
                 {
                     LightningPaymentsSettings.LightningNetwork.Mainnet => LiquidNetwork.Mainnet,
                     LightningPaymentsSettings.LightningNetwork.Testnet => LiquidNetwork.Testnet,
-                    LightningPaymentsSettings.LightningNetwork.Regtest => LiquidNetwork.Regtest
+                    LightningPaymentsSettings.LightningNetwork.Regtest => LiquidNetwork.Regtest,
+                    _ => throw new InvalidOperationException($"Unsupported network: {_settings.Network}")
                 };
                 activity?.SetTag("network", network.ToString());
 
-                var config = _wrapper.DefaultConfig(network, _settings.BreezApiKey);
+                var config = _wrapper.DefaultConfig(network, _settings.BreezApiKey ?? throw new InvalidOperationException("BreezApiKey is required"));
                 if (config == null)
                 {
                     throw new InvalidOperationException("Failed to initialize Breez SDK configuration: DefaultConfig returned null.");

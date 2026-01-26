@@ -1,4 +1,4 @@
-﻿namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Features.TipJar.Models
+namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Features.TipJar.Models
 {
     /// <summary>
     /// View model for the TipJar partial, providing configuration and content details.

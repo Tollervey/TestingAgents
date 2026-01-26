@@ -47,9 +47,12 @@ public class PaymentsController : OurUmbracoBitcoinLightningPaymentsApiControlle
         CancellationToken ct = default)
     {
         // Validate take
-        if (take > 100) take = 100;
-        if (take < 1) take = 20;
-        if (skip < 0) skip = 0;
+        if (take > 100)
+        { take = 100; }
+        if (take < 1)
+        { take = 20; }
+        if (skip < 0)
+        { skip = 0; }
 
         var query = _dbContext.PaymentStates.AsNoTracking();
 

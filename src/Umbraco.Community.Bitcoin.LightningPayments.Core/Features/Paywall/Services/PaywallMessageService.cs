@@ -1,58 +1,57 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 
-namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Features.Paywall.Services
+namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Features.Paywall.Services;
+
+/// <summary>
+/// Implementation of IPaywallMessageService for POC paywall message handling.
+/// </summary>
+public class PaywallMessageService : IPaywallMessageService
 {
-    /// <summary>
-    /// Implementation of IPaywallMessageService for POC paywall message handling.
-    /// </summary>
-    public class PaywallMessageService : IPaywallMessageService
+    private readonly ILogger<PaywallMessageService> _logger;
+    private static string? _customMessage = "Default paywall message";
+
+    public PaywallMessageService(ILogger<PaywallMessageService> logger)
     {
-        private readonly ILogger<PaywallMessageService> _logger;
-        private static string? _customMessage = "Default paywall message";
+        _logger = logger;
+    }
 
-        public PaywallMessageService(ILogger<PaywallMessageService> logger)
+    /// <summary>
+    /// Gets the default paywall message.
+    /// </summary>
+    public string GetDefaultMessage() => "Default paywall message";
+
+    /// <summary>
+    /// Gets the paywall message.
+    /// </summary>
+    public string GetMessage() => _customMessage ?? GetDefaultMessage();
+
+    /// <summary>
+    /// Sets the paywall message.
+    /// </summary>
+    public void SetMessage(string? message)
+    {
+        if (IsValidMessage(message))
         {
-            _logger = logger;
+            _customMessage = message;
+            _logger.LogInformation("Paywall message updated to: {Message}", message);
         }
+    }
 
-        /// <summary>
-        /// Gets the default paywall message.
-        /// </summary>
-        public string GetDefaultMessage() => "Default paywall message";
-
-        /// <summary>
-        /// Gets the paywall message.
-        /// </summary>
-        public string GetMessage() => _customMessage ?? GetDefaultMessage();
-
-        /// <summary>
-        /// Sets the paywall message.
-        /// </summary>
-        public void SetMessage(string? message)
+    /// <summary>
+    /// Validates a paywall message (e.g., not null/empty, length check).
+    /// </summary>
+    public bool IsValidMessage(string? message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
         {
-            if (IsValidMessage(message))
-            {
-                _customMessage = message;
-                _logger.LogInformation("Paywall message updated to: {Message}", message);
-            }
+            _logger.LogWarning("Paywall message is null or empty.");
+            return false;
         }
-
-        /// <summary>
-        /// Validates a paywall message (e.g., not null/empty, length check).
-        /// </summary>
-        public bool IsValidMessage(string? message)
+        if (message.Length > 500) // Arbitrary limit for POC
         {
-            if (string.IsNullOrWhiteSpace(message))
-            {
-                _logger.LogWarning("Paywall message is null or empty.");
-                return false;
-            }
-            if (message.Length > 500) // Arbitrary limit for POC
-            {
-                _logger.LogWarning("Paywall message exceeds maximum length of 500 characters.");
-                return false;
-            }
-            return true;
+            _logger.LogWarning("Paywall message exceeds maximum length of 500 characters.");
+            return false;
         }
+        return true;
     }
 }

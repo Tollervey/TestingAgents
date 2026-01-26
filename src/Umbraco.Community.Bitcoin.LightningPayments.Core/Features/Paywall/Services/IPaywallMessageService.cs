@@ -1,28 +1,27 @@
-﻿namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Features.Paywall.Services
+namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Features.Paywall.Services;
+
+/// <summary>
+/// Service for handling paywall message operations.
+/// </summary>
+public interface IPaywallMessageService
 {
     /// <summary>
-    /// Service for handling paywall message operations.
+    /// Gets the default paywall message.
     /// </summary>
-    public interface IPaywallMessageService
-    {
-        /// <summary>
-        /// Gets the default paywall message.
-        /// </summary>
-        string GetDefaultMessage();
+    string GetDefaultMessage();
 
-        /// <summary>
-        /// Gets the paywall message.
-        /// </summary>
-        string GetMessage();
+    /// <summary>
+    /// Gets the paywall message.
+    /// </summary>
+    string GetMessage();
 
-        /// <summary>
-        /// Sets the paywall message.
-        /// </summary>
-        void SetMessage(string message);
+    /// <summary>
+    /// Sets the paywall message.
+    /// </summary>
+    void SetMessage(string message);
 
-        /// <summary>
-        /// Validates a paywall message.
-        /// </summary>
-        bool IsValidMessage(string message);
-    }
+    /// <summary>
+    /// Validates a paywall message.
+    /// </summary>
+    bool IsValidMessage(string message);
 }
