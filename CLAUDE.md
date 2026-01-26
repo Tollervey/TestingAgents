@@ -111,6 +111,11 @@
 | `breezsdk-reviewer` | Haiku | BreezSDK code review, SDK pattern compliance |
 | `breezsdk-ux` | Sonnet | BreezSDK UX guidelines, payment flow design |
 | `breezsdk-test-engineer` | Sonnet | BreezSDK testing patterns, mock strategies |
+| `umbraco-architect` | Opus | Umbraco architecture, Document Type design, package architecture |
+| `umbraco-backend-developer` | Sonnet | Umbraco C# development, Composers, Services, Notification Handlers |
+| `umbraco-frontend-developer` | Sonnet | Umbraco backoffice UI, Lit/TypeScript, UUI components |
+| `umbraco-backend-reviewer` | Haiku | Umbraco C# code review, pattern compliance |
+| `umbraco-frontend-reviewer` | Haiku | Umbraco frontend review, accessibility compliance |
 
 ### Agent Tools & Permissions
 
@@ -128,6 +133,11 @@
 | `breezsdk-reviewer` | Read, Grep, Glob | ❌ Read-only |
 | `breezsdk-ux` | Read, Grep, Glob | ❌ Read-only |
 | `breezsdk-test-engineer` | Read, Write, Edit, Bash, Glob, Grep | ✅ Yes |
+| `umbraco-architect` | Read, Glob, Grep | ❌ Read-only |
+| `umbraco-backend-developer` | Read, Write, Edit, Bash, Glob, Grep | ✅ Yes |
+| `umbraco-frontend-developer` | Read, Write, Edit, Bash, Glob, Grep | ✅ Yes |
+| `umbraco-backend-reviewer` | Read, Glob, Grep | ❌ Read-only |
+| `umbraco-frontend-reviewer` | Read, Glob, Grep | ❌ Read-only |
 
 ### Agent & Plugin Utilization by Phase
 
@@ -138,12 +148,12 @@ This is the **authoritative** mapping of which agents and plugins apply to each 
 | `/speckit.constitution` | solution-architect | — | awesome-claude-skills | No |
 | `/speckit.specify` | solution-architect | — | — | No |
 | `/speckit.clarify` | solution-architect | — | — | No |
-| `/speckit.plan` | solution-architect, database-architect, breezsdk-architect | — | superpowers, awesome-claude-skills | No |
+| `/speckit.plan` | solution-architect, database-architect, breezsdk-architect, umbraco-architect | — | superpowers, awesome-claude-skills | No |
 | `/speckit.tasks` | (orchestrator) | — | — | No |
 | `/speckit.checklist` | (orchestrator) | — | — | No |
 | `/speckit.analyze` | code-reviewer | — | engineering-workflow-plugin | No |
-| `/speckit.implement` | backend-developer, test-engineer, frontend-developer, breezsdk-developer, breezsdk-test-engineer | security-auditor, code-reviewer | superpowers, dotnet-claude-code-skills | ✅ Yes |
-| Post-implement | — | code-reviewer, security-auditor, breezsdk-reviewer, breezsdk-ux | dev-agent-skills, engineering-workflow-plugin | ✅ Yes |
+| `/speckit.implement` | backend-developer, test-engineer, frontend-developer, breezsdk-developer, breezsdk-test-engineer, umbraco-backend-developer, umbraco-frontend-developer | security-auditor, code-reviewer | superpowers, dotnet-claude-code-skills | ✅ Yes |
+| Post-implement | — | code-reviewer, security-auditor, breezsdk-reviewer, breezsdk-ux, umbraco-backend-reviewer, umbraco-frontend-reviewer | dev-agent-skills, engineering-workflow-plugin | ✅ Yes |
 
 ### Parallel Execution
 Tasks marked `[P]` in tasks.md can run concurrently:
@@ -158,6 +168,20 @@ For operations >5 minutes:
 - `Ctrl+B` to background long-running tasks
 - `/tasks` to monitor progress
 - Maximum 5 concurrent background agents
+
+**When to use background agents:**
+- Long-running tasks (>2 minutes expected)
+- Multiple independent tasks (3+) that can run in parallel
+
+**When to use foreground agents:**
+- Quick tasks (<2 minutes)
+- When you need results immediately
+- When task count is ≤2 (parallelism benefit is minimal)
+
+**Timeout strategy:**
+- Use 120000ms (2 min) timeout for simple implementation tasks
+- Use 300000ms (5 min) timeout for complex multi-file changes
+- If agent times out 3x consecutively, read the output file directly with Read tool
 
 ### Context Management
 - `/compact` after completing each user story or wave
@@ -228,6 +252,81 @@ Per Constitution Article III:
 4. Refactor with test safety net
 
 **No production code without failing tests first.**
+
+### Test Timing Guidelines (CRITICAL)
+
+**Core Principle**: Tests should verify BEHAVIOR, not exact timing. Production delay values are configuration, not logic worth testing.
+
+#### Slow Test Anti-Patterns
+
+| Scenario | BAD (Slow) | GOOD (Fast) |
+|----------|------------|-------------|
+| Timeout behavior | `Task.Delay(30s)` then assert timeout | Use short timeout (100ms), verify TimeoutRejectedException |
+| Retry policies | Use production policy with 2s delays | Create test policy with 50ms delays |
+| Exponential backoff | Wait for 2s + 4s + 8s = 14s | Use 50ms + 100ms + 200ms = 350ms |
+| Circuit breaker | 16 second break duration | 1-2 second break duration |
+| Reconnection | Assert exact timing (jitter fails) | Assert retry count or state transitions |
+| Transient states | Observe mid-transition | Collect state history via events |
+
+#### Fast Test Policy Pattern (Polly)
+
+When testing resilience policies, create test-specific versions with short delays:
+
+```csharp
+// SLOW: Using production policy (2s base delay, 14s total for 3 retries)
+await ResiliencePolicies.ConnectPolicy.ExecuteAsync(...);
+
+// FAST: Create test policy with 50ms base delay (350ms total)
+private static ResiliencePipeline CreateFastTestPolicy() =>
+    new ResiliencePipelineBuilder()
+        .AddRetry(new RetryStrategyOptions
+        {
+            MaxRetryAttempts = 3,           // Same count as production
+            Delay = TimeSpan.FromMilliseconds(50),  // Fast delay for tests
+            BackoffType = DelayBackoffType.Exponential,
+            UseJitter = true
+        })
+        .Build();
+```
+
+#### What to Test vs What to Skip
+
+| Test This (Behavior) | Skip This (Configuration) |
+|---------------------|---------------------------|
+| Retry count is correct | Exact delay values (2s, 4s, 8s) |
+| Backoff pattern (exponential vs constant) | Production timeout duration |
+| Jitter is applied (delays vary) | Precise timing measurements |
+| Exception propagation after retries | Waiting for real timeouts |
+
+**Rule**: If a test takes >2 seconds due to waiting, create a fast test policy with short delays.
+
+### Test Execution Best Practices
+
+**Avoid full test suite runs during development:**
+- Use `--filter "FullyQualifiedName~ClassName"` for targeted tests
+- Run new feature tests in isolation first
+- Full suite runs can hang on CI-dependent or integration tests
+
+**If tests hang, check for:**
+- Blocking calls (`.Wait()`, `.Result`) - use `await` instead
+- Infinite loops in async code
+- Missing CancellationToken handling
+- Tests waiting for real timeouts instead of short test timeouts
+
+### Static State in Tests
+
+When testing classes with static state (Meters, ActivitySources, ConcurrentDictionaries):
+- Use unique identifiers per test (e.g., `$"test-{Guid.NewGuid():N}"`)
+- Don't assert exact counts - filter by your unique identifier
+- Static state persists across test runs in the same process
+
+### API Verification Before Writing Tests
+
+1. Verify the API exists in the target framework
+2. Check if it's a standard API or requires an extension package
+3. For OpenTelemetry: `Activity` is `System.Diagnostics`, extensions are in `OpenTelemetry.Api`
+4. Prefer standard APIs over extension methods for broader compatibility
+5. Example: Use `activity.AddEvent()` instead of `activity.RecordException()` (extension method)
 
 ### Branch Strategy
 - Feature branches for new work

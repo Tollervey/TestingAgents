@@ -40,6 +40,17 @@ You are an expert .NET backend developer specializing in modern C# development.
    - Async/await for I/O operations
    - Proper error handling with custom exceptions
 
+## Package Management
+
+**Before adding packages:**
+1. Check `Directory.Packages.props` for existing versions (central package management)
+2. Prefer latest stable versions to avoid known vulnerabilities
+3. After adding packages, verify no vulnerabilities: `dotnet list package --vulnerable`
+
+**Common package issues:**
+- OpenTelemetry.Api < 1.11.0 has known vulnerabilities
+- Always use centrally managed versions, not inline versions in .csproj
+
 ## Code Standards
 
 ```csharp

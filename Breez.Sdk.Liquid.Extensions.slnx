@@ -1,0 +1,21 @@
+<Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/BlazorApp/BlazorApp.csproj" />
+    <Project Path="samples/ConsoleApp/ConsoleApp.csproj" />
+    <Project Path="samples/WebApi/WebApi.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Breez.Sdk.Liquid.Extensions.AspNetCore/Breez.Sdk.Liquid.Extensions.AspNetCore.csproj" />
+    <Project Path="src/Breez.Sdk.Liquid.Extensions.Core/Breez.Sdk.Liquid.Extensions.Core.csproj" />
+    <Project Path="src/Breez.Sdk.Liquid.Extensions.PostgreSql/Breez.Sdk.Liquid.Extensions.PostgreSql.csproj" />
+    <Project Path="src/Breez.Sdk.Liquid.Extensions.Sqlite/Breez.Sdk.Liquid.Extensions.Sqlite.csproj" />
+    <Project Path="src/Breez.Sdk.Liquid.Extensions.SqlServer/Breez.Sdk.Liquid.Extensions.SqlServer.csproj" />
+    <Project Path="src/Breez.Sdk.Liquid.Extensions.Umbraco/Breez.Sdk.Liquid.Extensions.Umbraco.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Breez.Sdk.Liquid.Extensions.AspNetCore.Tests/Breez.Sdk.Liquid.Extensions.AspNetCore.Tests.csproj" />
+    <Project Path="tests/Breez.Sdk.Liquid.Extensions.Core.Tests/Breez.Sdk.Liquid.Extensions.Core.Tests.csproj" />
+    <Project Path="tests/Breez.Sdk.Liquid.Extensions.Integration.Tests/Breez.Sdk.Liquid.Extensions.Integration.Tests.csproj" />
+    <Project Path="tests/Breez.Sdk.Liquid.Extensions.TestUtilities/Breez.Sdk.Liquid.Extensions.TestUtilities.csproj" />
+  </Folder>
+</Solution>

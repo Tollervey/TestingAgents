@@ -1,0 +1,201 @@
+openapi: 3.1.0
+info:
+  title: BreezSDK Extensions Webhook API
+  description: |
+    Webhook endpoint specification for receiving BreezSDK payment notifications.
+
+    ## Security
+
+    All webhook requests include HMAC-SHA256 signature validation. The signature
+    is computed over the raw request body using the shared secret configured in
+    `BreezSdkOptions.WebhookSecret`.
+
+    ## Headers
+
+    | Header | Description |
+    |--------|-------------|
+    | `X-Breez-Signature` | HMAC-SHA256 signature (format: `sha256=<hex>`) |
+    | `X-Breez-Timestamp` | Unix timestamp when the webhook was sent |
+    | `X-Breez-Event-Id` | Unique identifier for this webhook delivery |
+    | `Content-Type` | Always `application/json` |
+
+    ## Signature Validation
+
+    ```csharp
+    var payload = await request.ReadAsStringAsync();
+    var signature = request.Headers["X-Breez-Signature"];
+    var isValid = WebhookValidator.ValidateSignature(payload, signature, secret);
+    ```
+  version: 1.0.0
+  contact:
+    name: BreezSDK Extensions
+  license:
+    name: MIT
+
+servers:
+  - url: https://{host}/api/breez
+    variables:
+      host:
+        default: localhost:5001
+        description: Application host
+
+paths:
+  /webhook:
+    post:
+      operationId: receiveWebhook
+      summary: Receive payment webhook
+      description: |
+        Endpoint for receiving BreezSDK payment event notifications.
+
+        This endpoint validates the HMAC signature before processing.
+        Invalid signatures return 401 Unauthorized.
+      security:
+        - hmacSignature: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayload'
+            examples:
+              paymentReceived:
+                summary: Payment received notification
+                value:
+                  eventType: payment_received
+                  paymentHash: "abc123def456..."
+                  amountSat: 5000
+                  timestamp: "2026-01-24T10:30:00Z"
+                  preimage: "789xyz..."
+              paymentFailed:
+                summary: Payment failed notification
+                value:
+                  eventType: payment_failed
+                  paymentHash: "abc123def456..."
+                  timestamp: "2026-01-24T10:30:00Z"
+                  errorCode: 3002
+                  errorMessage: "Payment route not found"
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookResponse'
+        '400':
+          description: Invalid request body
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Invalid or missing signature
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: Internal server error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+components:
+  securitySchemes:
+    hmacSignature:
+      type: apiKey
+      in: header
+      name: X-Breez-Signature
+      description: |
+        HMAC-SHA256 signature of the request body.
+        Format: `sha256=<hex-encoded-signature>`
+
+  schemas:
+    WebhookPayload:
+      type: object
+      required:
+        - eventType
+        - paymentHash
+        - timestamp
+      properties:
+        eventType:
+          type: string
+          enum:
+            - invoice_created
+            - payment_received
+            - payment_confirmed
+            - payment_failed
+            - invoice_expired
+          description: Type of payment event
+        paymentHash:
+          type: string
+          pattern: '^[a-fA-F0-9]{64}$'
+          description: Payment hash (64 hex characters)
+        amountSat:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Amount in satoshis
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 UTC timestamp
+        preimage:
+          type: string
+          pattern: '^[a-fA-F0-9]{64}$'
+          description: Payment preimage (for confirmed payments)
+        feeSat:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Fee paid in satoshis
+        errorCode:
+          type: integer
+          description: BreezErrorCode (for failed payments)
+        errorMessage:
+          type: string
+          description: Human-readable error message
+        correlationId:
+          type: string
+          maxLength: 64
+          description: Correlation ID for distributed tracing
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+          description: Custom metadata from the payment
+
+    WebhookResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Whether the webhook was processed successfully
+        message:
+          type: string
+          description: Optional status message
+
+    ProblemDetails:
+      type: object
+      description: RFC 7807 Problem Details
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI reference identifying the problem type
+        title:
+          type: string
+          description: Short, human-readable summary
+        status:
+          type: integer
+          description: HTTP status code
+        detail:
+          type: string
+          description: Human-readable explanation
+        instance:
+          type: string
+          format: uri
+          description: URI reference identifying the specific occurrence
+        traceId:
+          type: string
+          description: Correlation ID for this request

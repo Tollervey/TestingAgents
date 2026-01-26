@@ -1,0 +1,32 @@
+version: 2
+updates:
+  # NuGet dependencies
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    groups:
+      microsoft-extensions:
+        patterns:
+          - "Microsoft.Extensions.*"
+      entity-framework:
+        patterns:
+          - "Microsoft.EntityFrameworkCore*"
+      opentelemetry:
+        patterns:
+          - "OpenTelemetry*"
+      testing:
+        patterns:
+          - "xunit*"
+          - "Moq*"
+          - "coverlet*"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5

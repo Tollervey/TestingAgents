@@ -1,0 +1,111 @@
+@page "/create-invoice"
+@inject IBreezSdkService BreezService
+
+<PageTitle>Create Invoice</PageTitle>
+
+<h1>Create Lightning Invoice</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <EditForm Model="@model" OnValidSubmit="@HandleSubmit">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Amount (sats)</label>
+                        <InputNumber id="amount" class="form-control" @bind-Value="model.AmountSat" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <InputText id="description" class="form-control" @bind-Value="model.Description" />
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" disabled="@loading">
+                        @if (loading)
+                        {
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        }
+                        Create Invoice
+                    </button>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+
+    @if (invoice is not null)
+    {
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    Invoice Created
+                </div>
+                <div class="card-body">
+                    <p><strong>Payment Hash:</strong></p>
+                    <code class="d-block mb-2" style="word-break: break-all;">@invoice.PaymentHash</code>
+
+                    <p><strong>Invoice:</strong></p>
+                    <textarea class="form-control mb-2" rows="4" readonly>@invoice.Destination</textarea>
+
+                    <p><strong>Amount:</strong> @invoice.AmountSat sats</p>
+                    <p><strong>Expires:</strong> @invoice.ExpiresAt.ToLocalTime()</p>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(error))
+    {
+        <div class="col-md-6">
+            <div class="alert alert-danger" role="alert">
+                @error
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private InvoiceModel model = new();
+    private Invoice? invoice;
+    private string? error;
+    private bool loading;
+
+    private async Task HandleSubmit()
+    {
+        loading = true;
+        error = null;
+        invoice = null;
+
+        try
+        {
+            var result = await BreezService.CreateInvoiceAsync(
+                (ulong)model.AmountSat,
+                model.Description);
+
+            if (result.IsSuccess)
+            {
+                invoice = result.Value;
+            }
+            else
+            {
+                error = $"{result.Error!.Code}: {result.Error.Message}";
+            }
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private class InvoiceModel
+    {
+        public long AmountSat { get; set; } = 1000;
+        public string? Description { get; set; }
+    }
+}
