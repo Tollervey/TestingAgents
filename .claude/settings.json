@@ -1,0 +1,83 @@
+{
+  "$schema": "https://raw.githubusercontent.com/anthropics/claude-code/main/schemas/settings.json",
+  "description": "Claude Code 2.1.19 settings for Spec-Kit integration",
+
+  "plansDirectory": ".specify/plans",
+
+  "showTurnDuration": true,
+
+  "statusLine": {
+    "showContextPercentage": true,
+    "fields": ["context_window.used_percentage", "context_window.remaining_percentage"]
+  },
+
+  "mcpServers": {
+    "umbraco-docs": {
+      "url": "https://docs.umbraco.com/~gitbook/mcp",
+      "transport": "sse",
+      "autoSearch": "auto:3",
+      "description": "Umbraco v17 LTS documentation via GitBook MCP"
+    }
+  },
+
+  "autoCompact": {
+    "enabled": true,
+    "threshold": 80,
+    "warningThreshold": 70
+  },
+
+  "taskManagement": {
+    "enabled": true,
+    "dependencyTracking": true,
+    "maxConcurrentBackgroundAgents": 5
+  },
+
+  "plugins": {
+    "pinToCommit": true,
+    "recommended": [
+      {
+        "name": "superpowers",
+        "repo": "obra/superpowers-marketplace",
+        "phases": ["/speckit.plan", "/speckit.implement"]
+      },
+      {
+        "name": "dotnet-claude-code-skills",
+        "repo": "anthropics/dotnet-claude-code-skills",
+        "phases": ["/speckit.implement"]
+      },
+      {
+        "name": "engineering-workflow-plugin",
+        "repo": "anthropics/engineering-workflow-plugin",
+        "phases": ["/speckit.analyze", "post-implement"]
+      },
+      {
+        "name": "dev-agent-skills",
+        "repo": "anthropics/dev-agent-skills",
+        "phases": ["post-implement"]
+      },
+      {
+        "name": "awesome-claude-skills",
+        "repo": "anthropics/awesome-claude-skills",
+        "phases": ["/speckit.plan", "/speckit.constitution"]
+      }
+    ]
+  },
+
+  "sessionManagement": {
+    "enableForking": true,
+    "forkingUseCases": [
+      "Research phase - explore multiple architecture options",
+      "Plan phase - compare different technical approaches",
+      "Implement phase - test alternative implementations"
+    ]
+  },
+
+  "agentDefaults": {
+    "timeoutMs": {
+      "simple": 120000,
+      "complex": 300000,
+      "background": 600000
+    },
+    "maxRetries": 3
+  }
+}
