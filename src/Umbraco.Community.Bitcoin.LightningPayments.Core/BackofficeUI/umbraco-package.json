@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/umbraco-package.json",
+  "name": "Lightning Payments",
+  "version": "1.0.0",
+  "extensions": [
+    {
+      "type": "section",
+      "alias": "Lightning.Payments.Section",
+      "name": "Lightning Payments",
+      "meta": {
+        "label": "Lightning Payments",
+        "pathname": "lightning-payments"
+      }
+    }
+  ]
+}

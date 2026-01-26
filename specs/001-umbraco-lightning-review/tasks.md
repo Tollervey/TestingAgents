@@ -45,25 +45,25 @@
 
 ### Database Entities (from data-model.md)
 
-- [ ] T009 Create `Bolt12Offer` entity in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Data/Models/Bolt12Offer.cs`
-- [ ] T010 [P] Create `RefundTransaction` entity and `RefundStatus` enum in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Data/Models/RefundTransaction.cs`
-- [ ] T011 [P] Create `PaymentNotification` entity with `NotificationType`, `NotificationEvent`, `NotificationStatus` enums in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Data/Models/PaymentNotification.cs`
-- [ ] T012 [P] Create `ExchangeRate` entity in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Data/Models/ExchangeRate.cs`
-- [ ] T013 Update `PaymentState` entity to add `Bolt12OfferId` FK and navigation properties in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Data/Models/PaymentState.cs`
-- [ ] T014 Update `PaymentDbContext` with new DbSets and entity configurations in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Data/PaymentDbContext.cs`
-- [ ] T015 Create EF Core migration `AddBolt12NotificationsRefunds` in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Data/Migrations/`
+- [x] T009 Create `Bolt12Offer` entity in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Data/Models/Bolt12Offer.cs`
+- [x] T010 [P] Create `RefundTransaction` entity and `RefundStatus` enum in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Data/Models/RefundTransaction.cs`
+- [x] T011 [P] Create `PaymentNotification` entity with `NotificationType`, `NotificationEvent`, `NotificationStatus` enums in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Data/Models/PaymentNotification.cs`
+- [x] T012 [P] Create `ExchangeRate` entity in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Data/Models/ExchangeRate.cs`
+- [x] T013 Update `PaymentState` entity to add `Bolt12OfferId` FK and navigation properties in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Data/Models/PaymentState.cs`
+- [x] T014 Update `PaymentDbContext` with new DbSets and entity configurations in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Data/PaymentDbContext.cs`
+- [x] T015 Create EF Core migration `AddBolt12NotificationsRefunds` in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Data/Migrations/`
 
 ### Shared API DTOs
 
-- [ ] T016 [P] Create `ProblemDetails` response DTO in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Shared/ProblemDetails.cs`
-- [ ] T017 [P] Create `FiatAmount` DTO in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Shared/FiatAmount.cs`
+- [x] T016 [P] Create `ProblemDetails` response DTO in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Shared/ProblemDetails.cs`
+- [x] T017 [P] Create `FiatAmount` DTO in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Shared/FiatAmount.cs`
 
 ### Frontend Infrastructure
 
-- [ ] T018 Create BackofficeUI project structure with `package.json`, `tsconfig.json`, `vite.config.ts` in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/BackofficeUI/`
-- [ ] T019 Create `umbraco-package.json` manifest in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/BackofficeUI/`
-- [ ] T020 [P] Create shared TypeScript types in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/BackofficeUI/src/shared/types.ts`
-- [ ] T021 [P] Create `lightning-api-client.ts` API wrapper in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/BackofficeUI/src/shared/lightning-api-client.ts`
+- [x] T018 Create BackofficeUI project structure with `package.json`, `tsconfig.json`, `vite.config.ts` in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/BackofficeUI/`
+- [x] T019 Create `umbraco-package.json` manifest in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/BackofficeUI/`
+- [x] T020 [P] Create shared TypeScript types in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/BackofficeUI/src/shared/types.ts`
+- [x] T021 [P] Create `lightning-api-client.ts` API wrapper in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/BackofficeUI/src/shared/lightning-api-client.ts`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 

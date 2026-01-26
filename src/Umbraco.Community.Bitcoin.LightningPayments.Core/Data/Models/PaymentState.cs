@@ -1,4 +1,6 @@
-﻿namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Data.Models
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Data.Models
 {
     /// <summary>
     /// Represents the status of a payment.
@@ -44,6 +46,27 @@
         /// The kind of the payment (Paywall or Tip).
         /// </summary>
         public PaymentKind Kind { get; set; }
+
+        /// <summary>
+        /// Optional: Bolt12 offer this payment was received against.
+        /// </summary>
+        public Guid? Bolt12OfferId { get; set; }
+
+        /// <summary>
+        /// Navigation to the associated offer.
+        /// </summary>
+        [ForeignKey(nameof(Bolt12OfferId))]
+        public virtual Bolt12Offer? Bolt12Offer { get; set; }
+
+        /// <summary>
+        /// Refunds issued against this payment.
+        /// </summary>
+        public virtual ICollection<RefundTransaction> Refunds { get; set; } = new List<RefundTransaction>();
+
+        /// <summary>
+        /// Notifications sent for this payment.
+        /// </summary>
+        public virtual ICollection<PaymentNotification> Notifications { get; set; } = new List<PaymentNotification>();
     }
 }
 
