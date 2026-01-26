@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"const cp = require('child_process'); const fs = require('fs'); let ctx = []; const branch = cp.execSync('git branch --show-current 2>nul || echo no-git', {encoding:'utf8'}).trim(); ctx.push('Branch: ' + branch); ctx.push('Constitution: .specify/memory/constitution.md'); ctx.push('Skills: .claude/skills/'); ctx.push('Agents: solution-architect (Opus), backend-developer (Sonnet), frontend-developer (Sonnet), test-engineer (Sonnet), database-architect (Sonnet), security-auditor (Haiku), code-reviewer (Haiku)'); ctx.push('TDD Required: Yes (Constitution Article III)'); const plugins = ['superpowers', 'dotnet-claude-code-skills', 'engineering-workflow-plugin', 'dev-agent-skills', 'awesome-claude-skills']; ctx.push('External Plugins: ' + plugins.join(', ') + ' (see .claude/skills/external-plugins.md)'); console.log(JSON.stringify({hookSpecificOutput: {hookEventName: 'SessionStart', additionalContext: 'Spec-Kit Project | ' + ctx.join(' | ')}}));\""
+            "command": "node -e \"const cp = require('child_process'); const fs = require('fs'); let ctx = []; const branch = cp.execSync('git branch --show-current 2>nul || echo no-git', {encoding:'utf8'}).trim(); ctx.push('Branch: ' + branch); ctx.push('Constitution: .specify/memory/constitution.md'); ctx.push('Skills: .claude/skills/'); ctx.push('Agents: solution-architect (Opus), backend-developer (Sonnet), frontend-developer (Sonnet), test-engineer (Sonnet), database-architect (Sonnet), security-auditor (Haiku), code-reviewer (Haiku)'); ctx.push('TDD Required: Yes (Constitution Article III)'); const plugins = ['superpowers', 'dotnet-claude-code-skills', 'engineering-workflow-plugin', 'dev-agent-skills', 'awesome-claude-skills']; ctx.push('External Plugins: ' + plugins.join(', ') + ' (see .claude/skills/external-plugins.md)'); ctx.push('Claude Code 2.1.19: Session forking, native task management, plugin pinning available'); console.log(JSON.stringify({hookSpecificOutput: {hookEventName: 'SessionStart', additionalContext: 'Spec-Kit Project | ' + ctx.join(' | ')}}));\""
           }
         ]
       }
@@ -47,7 +47,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"const fs = require('fs'); const input = fs.readFileSync(0, 'utf8'); const data = JSON.parse(input); const cmd = data.tool_input?.command || ''; const dangerous = /(rm\\s+-rf\\s+[\\/\\.]|Remove-Item.*-Recurse.*-Force.*[\\/\\.]|DROP\\s+DATABASE|TRUNCATE\\s+TABLE|DELETE\\s+FROM\\s+\\w+\\s*;?\\s*$|git\\s+push.*--force|git\\s+reset\\s+--hard)/i; if (dangerous.test(cmd)) { console.error(JSON.stringify({hookSpecificOutput: {hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: 'BLOCKED: Destructive command. Create checkpoint first.'}})); process.exit(2); } if (/(ef\\s+database\\s+update|ef\\s+migrations\\s+remove)/i.test(cmd)) { console.log(JSON.stringify({systemMessage: 'Migration command. Ensure backup exists (Constitution IV).'})); }\""
+            "command": "node -e \"const fs = require('fs'); const input = fs.readFileSync(0, 'utf8'); const data = JSON.parse(input); const cmd = data.tool_input?.command || ''; const dangerous = /(rm\\s+-rf\\s+[\\/\\.]|Remove-Item.*-Recurse.*-Force.*[\\/\\.]|DROP\\s+DATABASE|TRUNCATE\\s+TABLE|DELETE\\s+FROM\\s+\\w+\\s*;?\\s*$|git\\s+push.*--force|git\\s+reset\\s+--hard)/i; if (dangerous.test(cmd)) { console.error(JSON.stringify({hookSpecificOutput: {hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: 'BLOCKED: Destructive command. Create checkpoint first.'}})); process.exit(2); } if (/(ef\\s+database\\s+update|ef\\s+migrations\\s+remove)/i.test(cmd)) { console.log(JSON.stringify({hookSpecificOutput: {hookEventName: 'PreToolUse', additionalContext: 'CONSTITUTION IV GATE: Database migration detected. Verify backup exists before proceeding. Consider creating checkpoint.'}})); }\""
           }
         ]
       },
@@ -56,7 +56,16 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"const fs = require('fs'); const input = fs.readFileSync(0, 'utf8'); const data = JSON.parse(input); const filePath = data.tool_input?.file_path || data.tool_input?.filePath || ''; if (/constitution\\.md$/i.test(filePath)) { console.log(JSON.stringify({systemMessage: 'CONSTITUTIONAL AMENDMENT. Document in Amendment Log.'})); } else if (/\\.csproj$/.test(filePath)) { console.log(JSON.stringify({systemMessage: 'Project file change. Verify Clean Architecture (Constitution I.1).'})); }\""
+            "command": "node -e \"const fs = require('fs'); const input = fs.readFileSync(0, 'utf8'); const data = JSON.parse(input); const filePath = data.tool_input?.file_path || data.tool_input?.filePath || ''; if (/constitution\\.md$/i.test(filePath)) { console.log(JSON.stringify({hookSpecificOutput: {hookEventName: 'PreToolUse', additionalContext: 'CONSTITUTIONAL AMENDMENT: This file governs all development. Document changes in Amendment Log. Increment version per semver.'}})); } else if (/\\.csproj$/.test(filePath)) { console.log(JSON.stringify({hookSpecificOutput: {hookEventName: 'PreToolUse', additionalContext: 'PROJECT FILE: Verify Clean Architecture compliance (Constitution I.1). Check dependency direction: Infrastructure -> Application -> Domain.'}})); } else if (/tasks\\.md$/i.test(filePath)) { console.log(JSON.stringify({hookSpecificOutput: {hookEventName: 'PreToolUse', additionalContext: 'TASK FILE: Use native TodoWrite for task tracking. Mark completed tasks as [X]. Respect [P] parallel markers and depends_on constraints.'}})); }\""
+          }
+        ]
+      },
+      {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const fs = require('fs'); const input = fs.readFileSync(0, 'utf8'); const data = JSON.parse(input); const agentType = data.tool_input?.subagent_type || ''; const background = data.tool_input?.run_in_background || false; if (background) { console.log(JSON.stringify({hookSpecificOutput: {hookEventName: 'PreToolUse', additionalContext: 'BACKGROUND AGENT: Monitor with /tasks. Inline responses visible in notifications (v2.1.7+). Max 5 concurrent background agents.'}})); } else if (['solution-architect', 'breezsdk-architect', 'umbraco-architect'].includes(agentType)) { console.log(JSON.stringify({hookSpecificOutput: {hookEventName: 'PreToolUse', additionalContext: 'ARCHITECT AGENT (Opus): Read-only analysis. Use for complex reasoning. Consider session forking for exploring alternatives.'}})); }\""
           }
         ]
       }
@@ -96,7 +105,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"const fs = require('fs'); const input = fs.readFileSync(0, 'utf8'); const data = JSON.parse(input); const msg = data.message || ''; if (/context.*large/i.test(msg)) { console.log(JSON.stringify({systemMessage: 'Context large. Run /compact.'})); }\""
+            "command": "node -e \"const fs = require('fs'); const input = fs.readFileSync(0, 'utf8'); const data = JSON.parse(input); const msg = data.message || ''; const usedPct = data.context_window?.used_percentage || 0; if (usedPct > 85) { console.log(JSON.stringify({hookSpecificOutput: {hookEventName: 'Notification', additionalContext: 'CRITICAL: Context at ' + usedPct + '%. Run /compact immediately to avoid truncation.'}})); } else if (usedPct > 70) { console.log(JSON.stringify({hookSpecificOutput: {hookEventName: 'Notification', additionalContext: 'WARNING: Context at ' + usedPct + '%. Consider /compact after current wave completes.'}})); } else if (/context.*large/i.test(msg)) { console.log(JSON.stringify({hookSpecificOutput: {hookEventName: 'Notification', additionalContext: 'Context growing. Monitor with status line (context_window.used_percentage). Run /compact between waves.'}})); } if (/agent.*complete/i.test(msg) || /task.*finish/i.test(msg)) { console.log(JSON.stringify({hookSpecificOutput: {hookEventName: 'Notification', additionalContext: 'Agent completed. Inline response visible in notification (v2.1.7+). Use /tasks to check remaining work.'}})); }\""
+          }
+        ]
+      }
+    ],
+    "ContextCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"console.log(JSON.stringify({hookSpecificOutput: {hookEventName: 'ContextCompact', additionalContext: 'Context compacted. Resume from current wave. Checkpoints preserved. Consider session forking if exploring alternatives.'}}));\""
           }
         ]
       }

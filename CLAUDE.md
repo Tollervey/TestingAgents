@@ -95,6 +95,29 @@
 
 ## Claude Code Execution
 
+### Claude Code 2.1.19 Features
+
+This project leverages the following Claude Code 2.1.19 capabilities:
+
+| Feature | Version | Use Case | Configuration |
+|---------|---------|----------|---------------|
+| **Native Task Management** | v2.1.16 | Dependency tracking, progress monitoring | Via TodoWrite tool |
+| **Session Forking** | v2.1.19 | Explore alternatives without losing main path | During `/speckit.plan` research |
+| **Plugin Pinning** | v2.1.14 | Deterministic plugin versions | Pin to Git commit SHA |
+| **plansDirectory** | v2.1.9 | Custom plan file location | `.claude/settings.json` |
+| **${CLAUDE_SESSION_ID}** | v2.1.9 | Session traceability in artifacts | Embed in generated files |
+| **MCP Auto-Search** | v2.1.7 | Automatic documentation lookup | `auto:3` threshold |
+| **Inline Agent Responses** | v2.1.7 | Monitor background agents easily | Via `/tasks` command |
+| **Context Percentage** | v2.1.6 | Monitor context usage | Status line + hooks |
+| **$ARGUMENTS[n]** | v2.1.19 | Indexed command arguments | In custom commands |
+| **additionalContext** | v2.1.9 | Enhanced hook context injection | In PreToolUse hooks |
+
+**Key Configurations** (see `.claude/settings.json`):
+- Plan files stored in `.specify/plans/`
+- Auto-compact warning at 70%, critical at 80%
+- Max 5 concurrent background agents
+- MCP auto-search enabled for documentation
+
 ### Available Agents
 
 | Agent | Model | Invoke For |
@@ -160,8 +183,11 @@ Tasks marked `[P]` in tasks.md can run concurrently:
 ```
 & Use backend-developer to implement T004 (User entity)
 & Use backend-developer to implement T005 (Product entity)
+/tasks  # Monitor with inline responses (v2.1.7)
 ```
 Always respect `depends_on` — never start blocked tasks.
+
+**Native Dependency Tracking** (v2.1.16): Use TodoWrite to register tasks with dependencies. Blocked tasks automatically wait for their dependencies to complete.
 
 ### Background Execution
 For operations >5 minutes:
@@ -184,9 +210,18 @@ For operations >5 minutes:
 - If agent times out 3x consecutively, read the output file directly with Read tool
 
 ### Context Management
+
+**Context Percentage Monitoring** (v2.1.6+):
+- Monitor via status line: `context_window.used_percentage`
+- Warning threshold: 70% (consider planning compaction)
+- Critical threshold: 80% (run `/compact` immediately)
+- Auto-notification via hooks when thresholds exceeded
+
+**Best Practices**:
 - `/compact` after completing each user story or wave
 - Delegate to sub-agents for tasks >30k tokens
 - Sub-agents return summaries, not full outputs
+- Use session forking for exploratory work (preserves main context)
 
 ### Checkpoints
 Create checkpoints before:
@@ -202,6 +237,11 @@ Use `/rewind` for recovery.
 | `/speckit.implement` | Before each wave starts |
 | `/speckit.analyze` | Not needed (read-only) |
 
+**Session Forking vs Checkpoints** (v2.1.19):
+- **Checkpoints**: Roll back code changes while preserving conversation
+- **Session Forking**: Explore alternatives in parallel, compare results, keep main path intact
+- **Use Forking When**: Exploring multiple approaches, testing risky changes, architecture comparisons
+
 ### Wave Execution Strategy
 
 > **Canonical reference**: See `.claude/skills/dotnet-implementation-execution.md` for detailed patterns.
@@ -210,8 +250,9 @@ Use `/rewind` for recovery.
 1. **Wave 1 (Infrastructure)**: Execute SEQUENTIALLY, checkpoint after completion
 2. **Wave 2+ (Domain/Application)**: Execute `[P]` marked tasks in PARALLEL
 3. **Quality Gate**: Run `code-reviewer` + `security-auditor` after each wave
-4. **Context Management**: `/compact` between waves if context >150k tokens
+4. **Context Management**: `/compact` between waves if context >70% (warning) or >80% (critical)
 5. **Validation**: Verify all wave tasks complete before proceeding to next wave
+6. **Session Forking** (v2.1.19): Fork before risky refactoring or experimental approaches
 
 **Quick Example**:
 ```
@@ -340,6 +381,8 @@ When testing classes with static state (Meters, ActivitySources, ConcurrentDicti
 - **Agents**: `.claude/agents/` — Specialized sub-agent definitions
 - **Constitution**: `.specify/memory/constitution.md` — Governance principles
 - **Plugins**: `.claude/skills/external-plugins.md` — Third-party plugin integration guide
+- **Settings**: `.claude/settings.json` — Claude Code 2.1.19 configuration (plans directory, MCP, thresholds)
+- **Hooks**: `.claude/hooks.json` — Automatic enforcement and context injection
 
 ---
 
@@ -356,4 +399,7 @@ External plugins extend Claude Code capabilities. See `.claude/skills/external-p
 | `awesome-claude-skills` | Software architecture, design patterns | `/speckit.plan`, `/speckit.constitution` |
 
 **Installation**: `/plugin marketplace add <owner>/<plugin-name>`
+**Pinned Installation** (v2.1.14): `/plugin marketplace add <owner>/<plugin-name>@<commit-sha>`
 **List installed**: `/plugins`
+
+> **Recommended**: Pin plugins to specific commits for reproducible builds. See `.claude/skills/external-plugins.md` for pinning guide.

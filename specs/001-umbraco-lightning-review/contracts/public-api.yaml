@@ -1,0 +1,473 @@
+openapi: 3.0.3
+info:
+  title: Lightning Payments Public API
+  description: Public-facing API for Lightning payment interactions (anonymous access)
+  version: 1.0.0
+
+servers:
+  - url: /api/public/lightning
+    description: Public API base
+
+tags:
+  - name: Paywall
+    description: Paywall payment flow
+  - name: TipJar
+    description: Tip payment flow
+  - name: Status
+    description: Payment status
+  - name: Exchange
+    description: Exchange rate information
+
+paths:
+  /paywall/invoice:
+    post:
+      tags: [Paywall]
+      operationId: createPaywallInvoice
+      summary: Create invoice for paywalled content
+      description: |
+        Creates a Lightning invoice for accessing paywalled content.
+        Supports tiered pricing with different durations.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaywallInvoiceRequest'
+      responses:
+        '200':
+          description: Invoice created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Content not found or not paywalled
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /paywall/status/{sessionId}:
+    get:
+      tags: [Paywall]
+      operationId: getPaywallStatus
+      summary: Check if user has paid for content
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: contentId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Payment status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaywallStatus'
+
+  /tip/invoice:
+    post:
+      tags: [TipJar]
+      operationId: createTipInvoice
+      summary: Create invoice for tip
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTipInvoiceRequest'
+      responses:
+        '200':
+          description: Invoice created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /payment/{paymentHash}/status:
+    get:
+      tags: [Status]
+      operationId: getPaymentStatus
+      summary: Get payment status
+      parameters:
+        - name: paymentHash
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentStatus'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /exchange-rates:
+    get:
+      tags: [Exchange]
+      operationId: getExchangeRates
+      summary: Get current Bitcoin exchange rates
+      description: |
+        Returns Bitcoin exchange rates for configured fiat currencies.
+        Rates are cached for up to 5 minutes.
+      parameters:
+        - name: currencies
+          in: query
+          description: Comma-separated currency codes (default USD,EUR,GBP)
+          schema:
+            type: string
+            default: USD,EUR,GBP
+      responses:
+        '200':
+          description: Exchange rates
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExchangeRatesResponse'
+        '503':
+          description: Exchange rate service unavailable
+
+  /convert:
+    get:
+      tags: [Exchange]
+      operationId: convertAmount
+      summary: Convert satoshis to fiat
+      parameters:
+        - name: sats
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: currency
+          in: query
+          required: true
+          schema:
+            type: string
+            maxLength: 3
+      responses:
+        '200':
+          description: Converted amount
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversionResponse'
+        '503':
+          description: Exchange rate service unavailable
+
+  /events:
+    get:
+      tags: [Status]
+      operationId: subscribeEvents
+      summary: Subscribe to payment events (SSE)
+      description: |
+        Server-Sent Events endpoint for real-time payment notifications.
+        Connect with EventSource API to receive payment confirmation events.
+      parameters:
+        - name: sessionId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                example: |
+                  event: payment-succeeded
+                  data: {"paymentHash":"abc123","amountSat":1000}
+
+  /features:
+    get:
+      tags: [Status]
+      operationId: getFeatureFlags
+      summary: Get enabled features
+      description: Returns which payment features are enabled
+      responses:
+        '200':
+          description: Feature flags
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeatureFlags'
+
+  /offers/{offerString}/info:
+    get:
+      tags: [Paywall]
+      operationId: getOfferInfo
+      summary: Get BOLT12 offer information
+      parameters:
+        - name: offerString
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Offer details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfferInfo'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  responses:
+    BadRequest:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+    TooManyRequests:
+      description: Rate limit exceeded
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+  schemas:
+    CreatePaywallInvoiceRequest:
+      type: object
+      required:
+        - contentId
+        - sessionId
+        - tier
+      properties:
+        contentId:
+          type: integer
+          description: Umbraco content node ID
+        sessionId:
+          type: string
+          description: User session identifier
+        tier:
+          type: string
+          enum: [1h, 8h, 24h, 7d]
+          description: Access duration tier
+        idempotencyKey:
+          type: string
+          description: Optional key to prevent duplicate invoices
+
+    CreateTipInvoiceRequest:
+      type: object
+      required:
+        - amountSat
+        - sessionId
+      properties:
+        amountSat:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 10000000
+        sessionId:
+          type: string
+        message:
+          type: string
+          maxLength: 200
+          description: Optional tip message
+
+    InvoiceResponse:
+      type: object
+      required:
+        - paymentHash
+        - invoice
+        - amountSat
+        - expiresAt
+      properties:
+        paymentHash:
+          type: string
+          description: Unique payment identifier
+        invoice:
+          type: string
+          description: BOLT11 invoice string
+        amountSat:
+          type: integer
+          format: int64
+        amountFiat:
+          $ref: '#/components/schemas/FiatAmount'
+        expiresAt:
+          type: string
+          format: date-time
+        qrCodeDataUrl:
+          type: string
+          description: Base64 QR code image
+
+    PaywallStatus:
+      type: object
+      required:
+        - contentId
+        - hasPaid
+      properties:
+        contentId:
+          type: integer
+        hasPaid:
+          type: boolean
+        paidAt:
+          type: string
+          format: date-time
+          nullable: true
+        accessExpiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        tier:
+          type: string
+          nullable: true
+
+    PaymentStatus:
+      type: object
+      required:
+        - paymentHash
+        - status
+      properties:
+        paymentHash:
+          type: string
+        status:
+          type: string
+          enum: [pending, confirmed, failed, expired]
+        amountSat:
+          type: integer
+          format: int64
+        confirmedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    ExchangeRatesResponse:
+      type: object
+      required:
+        - rates
+        - fetchedAt
+      properties:
+        rates:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+          example:
+            USD: 45000.00
+            EUR: 41500.00
+            GBP: 35000.00
+        fetchedAt:
+          type: string
+          format: date-time
+        source:
+          type: string
+          default: CoinGecko
+        isStale:
+          type: boolean
+          description: True if rates are >5 minutes old
+
+    ConversionResponse:
+      type: object
+      required:
+        - sats
+        - currency
+        - fiatAmount
+      properties:
+        sats:
+          type: integer
+          format: int64
+        currency:
+          type: string
+        fiatAmount:
+          type: number
+          format: double
+        formattedAmount:
+          type: string
+          description: Locale-formatted amount (e.g., "$0.45")
+        ratePerBtc:
+          type: number
+          format: double
+        isStale:
+          type: boolean
+
+    FiatAmount:
+      type: object
+      properties:
+        currency:
+          type: string
+        amount:
+          type: number
+          format: double
+        formatted:
+          type: string
+        isStale:
+          type: boolean
+
+    FeatureFlags:
+      type: object
+      properties:
+        paywallEnabled:
+          type: boolean
+        tipJarEnabled:
+          type: boolean
+        bolt12Enabled:
+          type: boolean
+        fiatDisplayEnabled:
+          type: boolean
+        defaultFiatCurrency:
+          type: string
+
+    OfferInfo:
+      type: object
+      required:
+        - offerString
+        - description
+        - isActive
+      properties:
+        offerString:
+          type: string
+        description:
+          type: string
+        amountSat:
+          type: integer
+          format: int64
+          nullable: true
+        amountFiat:
+          $ref: '#/components/schemas/FiatAmount'
+        isActive:
+          type: boolean
+
+    ProblemDetails:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        errorCode:
+          type: string

@@ -8,7 +8,20 @@ description: Execute the implementation plan by processing and executing all tas
 $ARGUMENTS
 ```
 
+**Indexed Arguments** (v2.1.19):
+- `$ARGUMENTS[0]` — Feature name or specific wave (e.g., "wave-2")
+- `$ARGUMENTS[1]` — Additional options (e.g., "skip-tests", "dry-run")
+
 You **MUST** consider the user input before proceeding (if not empty).
+
+## Claude Code 2.1.19 Features
+
+This command leverages the following Claude Code 2.1.19 capabilities:
+- **Native Task Management** (v2.1.16): Dependency tracking via TodoWrite
+- **Session Forking** (v2.1.19): Safe exploration of risky implementations
+- **Inline Agent Responses** (v2.1.7): Monitor background agents without reading transcripts
+- **Context Percentage Monitoring** (v2.1.6): Auto-compact at 80% threshold
+- **Plugin Pinning** (v2.1.14): Deterministic plugin versions
 
 ## Outline
 
@@ -119,6 +132,26 @@ You **MUST** consider the user input before proceeding (if not empty).
    - **Task details**: ID, description, file paths, parallel markers [P]
    - **Execution flow**: Order and dependency requirements
 
+5a. **Register tasks with Native Task Management** (v2.1.16):
+   - Use TodoWrite to register all tasks from tasks.md
+   - Include dependency relationships for automatic blocking
+   - Format tasks with status tracking:
+
+   ```
+   Use TodoWrite to create task list:
+   - T001: Create project structure (status: pending)
+   - T002: Setup dependencies (status: pending, depends_on: T001)
+   - T003: Configure database (status: pending, depends_on: T002)
+   - T004 [P]: Create User entity (status: pending, depends_on: T003)
+   - T005 [P]: Create Product entity (status: pending, depends_on: T003)
+   ```
+
+   **Benefits**:
+   - Automatic dependency blocking (tasks wait for depends_on completion)
+   - Visual progress tracking via /tasks command
+   - Inline response previews for background agents
+   - Persistent state across context compaction
+
 6. **Checkpoint Strategy** (CRITICAL for recovery):
 
    **When to Create Checkpoints**:
@@ -204,11 +237,13 @@ You **MUST** consider the user input before proceeding (if not empty).
    & Use backend-developer to implement T004 (User entity)
    & Use backend-developer to implement T005 (Product entity)
    & Use backend-developer to implement T006 (Order entity)
-   /tasks  # Monitor progress
+   /tasks  # Monitor progress with inline responses (v2.1.7)
    ```
    - Only parallelize tasks marked with [P]
-   - Respect `depends_on` constraints
+   - Respect `depends_on` constraints (native dependency tracking v2.1.16)
    - Maximum 5 concurrent background agents
+   - **Inline Response Monitoring** (v2.1.7): Agent final responses appear directly in task notifications - no need to read transcript files
+   - Use `/tasks` to see real-time status and inline summaries
 
    **Quality Gate After Each Wave**:
    ```
@@ -223,10 +258,34 @@ You **MUST** consider the user input before proceeding (if not empty).
    dotnet build --warnaserror
    ```
 
-   **Context Management Between Waves**:
-   - Run `/compact` if context exceeds 150k tokens
+   **Context Management Between Waves** (v2.1.6+):
+   - Monitor context via status line: `context_window.used_percentage`
+   - Run `/compact` when context exceeds 70% (warning) or 80% (critical)
    - Delegate large tasks (>30k tokens) to sub-agents
    - Sub-agents return summaries, not full outputs
+   - Context thresholds configured in `.claude/settings.json`
+
+   **Session Forking for Risky Changes** (v2.1.19):
+   ```
+   # Before attempting complex refactoring or risky implementation
+   Fork session to test risky approach
+
+   # In forked session:
+   - Attempt the risky implementation
+   - Run tests to verify
+   - If successful: note the approach for main session
+   - If failed: discard fork, main session unaffected
+
+   # Back in main session:
+   - Apply successful approach with confidence
+   - Or choose alternative based on fork learnings
+   ```
+
+   **When to Fork**:
+   - Database schema changes with data migration
+   - Major refactoring affecting multiple components
+   - Experimental implementation approaches
+   - Changes to shared infrastructure code
 
 8. Execute implementation following the task plan:
    - **Phase-by-phase execution**: Complete each phase before moving to the next
