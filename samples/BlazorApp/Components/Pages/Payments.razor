@@ -1,0 +1,113 @@
+@page "/payments"
+@inject IBreezSdkService BreezService
+
+<PageTitle>Payment History</PageTitle>
+
+<h1>Payment History</h1>
+
+<div class="mb-3">
+    <button class="btn btn-outline-primary" @onclick="LoadPayments" disabled="@loading">
+        @if (loading)
+        {
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        }
+        Refresh
+    </button>
+</div>
+
+@if (payments.Count == 0 && !loading)
+{
+    <div class="alert alert-info">
+        No payments found. Create an invoice to get started.
+    </div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Payment Hash</th>
+                <th>Status</th>
+                <th>Amount (sats)</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var payment in payments)
+            {
+                <tr>
+                    <td>
+                        <code title="@payment.PaymentHash">
+                            @payment.PaymentHash[..16]...
+                        </code>
+                    </td>
+                    <td>
+                        <span class="badge @GetStatusBadgeClass(payment.Status)">
+                            @payment.Status
+                        </span>
+                    </td>
+                    <td>@payment.AmountSat</td>
+                    <td>@payment.CreatedAt.ToLocalTime().ToString("g")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <nav>
+        <ul class="pagination">
+            <li class="page-item @(offset == 0 ? "disabled" : "")">
+                <button class="page-link" @onclick="PreviousPage" disabled="@(offset == 0)">Previous</button>
+            </li>
+            <li class="page-item @(payments.Count < pageSize ? "disabled" : "")">
+                <button class="page-link" @onclick="NextPage" disabled="@(payments.Count < pageSize)">Next</button>
+            </li>
+        </ul>
+    </nav>
+}
+
+@code {
+    private IReadOnlyList<PaymentState> payments = Array.Empty<PaymentState>();
+    private bool loading;
+    private int offset;
+    private const int pageSize = 10;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPayments();
+    }
+
+    private async Task LoadPayments()
+    {
+        loading = true;
+        try
+        {
+            payments = await BreezService.GetPaymentHistoryAsync(offset, pageSize);
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task NextPage()
+    {
+        offset += pageSize;
+        await LoadPayments();
+    }
+
+    private async Task PreviousPage()
+    {
+        offset = Math.Max(0, offset - pageSize);
+        await LoadPayments();
+    }
+
+    private string GetStatusBadgeClass(PaymentStatus status) => status switch
+    {
+        PaymentStatus.Pending => "bg-warning text-dark",
+        PaymentStatus.Succeeded => "bg-success",
+        PaymentStatus.Failed => "bg-danger",
+        PaymentStatus.Expired => "bg-secondary",
+        PaymentStatus.Refunded => "bg-info",
+        _ => "bg-secondary"
+    };
+}

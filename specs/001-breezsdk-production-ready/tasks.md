@@ -327,22 +327,24 @@ Based on plan.md structure:
 
 **Purpose**: Final quality improvements, documentation, and packaging
 
-- [ ] T122 [P] Create ADR for package structure decision in `docs/adr/001-package-structure.md`
-- [ ] T123 [P] Create migration guide from Umbraco-coupled code in `docs/migration-guide.md`
-- [ ] T124 [P] Run security audit with security-auditor agent
-- [ ] T125 [P] Run code review with code-reviewer agent for constitution compliance
-- [ ] T126 [P] Run breezsdk-reviewer agent for SDK pattern compliance
-- [ ] T127 Validate quickstart.md scenarios work end-to-end
-- [ ] T128 Configure CI/CD for NuGet package publishing
-- [ ] T129 Add XML documentation to all public APIs across all packages
-- [ ] T130 Run final dotnet build, dotnet test, dotnet format validation
-- [ ] T131 [P] End-to-end testnet integration test in `tests/Breez.Sdk.Liquid.Extensions.Integration.Tests/EndToEnd/TestnetPaymentFlowTests.cs`
+- [x] T122 [P] Create ADR for package structure decision in `docs/adr/001-package-structure.md`
+- [x] T123 [P] Create migration guide from Umbraco-coupled code in `docs/migration-guide.md`
+- [x] T124 [P] Run security audit with security-auditor agent
+- [x] T125 [P] Run code review with code-reviewer agent for constitution compliance
+- [x] T126 [P] Run breezsdk-reviewer agent for SDK pattern compliance
+- [x] T127 Validate quickstart.md scenarios work end-to-end
+- [x] T128 Configure CI/CD for NuGet package publishing
+- [x] T129 Add XML documentation to all public APIs across all packages
+- [x] T130 Run final dotnet build, dotnet test, dotnet format validation
+- [x] T131 [P] End-to-end testnet integration test in `tests/Breez.Sdk.Liquid.Extensions.Integration.Tests/EndToEnd/TestnetPaymentFlowTests.cs`
 
 ### Sample Applications (SC-009 Compliance)
 
-- [ ] T132 [P] Create Console sample application in `samples/ConsoleApp/`
-- [ ] T133 [P] Create ASP.NET Core Web API sample application in `samples/WebApi/`
-- [ ] T134 [P] Create Blazor sample application in `samples/BlazorApp/`
+- [x] T132 [P] Create Console sample application in `samples/ConsoleApp/`
+- [x] T133 [P] Create ASP.NET Core Web API sample application in `samples/WebApi/`
+- [x] T134 [P] Create Blazor sample application in `samples/BlazorApp/`
+
+**Checkpoint**: Phase 10 complete - all polish, documentation, and packaging tasks finished ✅
 
 ---
 

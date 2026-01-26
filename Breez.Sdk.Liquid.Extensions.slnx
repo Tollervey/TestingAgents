@@ -1,4 +1,9 @@
 <Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/BlazorApp/BlazorApp.csproj" />
+    <Project Path="samples/ConsoleApp/ConsoleApp.csproj" />
+    <Project Path="samples/WebApi/WebApi.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/Breez.Sdk.Liquid.Extensions.AspNetCore/Breez.Sdk.Liquid.Extensions.AspNetCore.csproj" />
     <Project Path="src/Breez.Sdk.Liquid.Extensions.Core/Breez.Sdk.Liquid.Extensions.Core.csproj" />

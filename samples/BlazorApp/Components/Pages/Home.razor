@@ -1,0 +1,54 @@
+@page "/"
+@inject IBreezSdkService BreezService
+
+<PageTitle>BreezSDK Sample</PageTitle>
+
+<h1>BreezSDK Lightning Payments</h1>
+
+<p>Welcome to the BreezSDK Extensions sample Blazor application.</p>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h5>Wallet Status</h5>
+    </div>
+    <div class="card-body">
+        <p><strong>Connected:</strong> @(isConnected ? "Yes" : "No")</p>
+        <p><strong>Balance:</strong> @balance sats</p>
+        <button class="btn btn-primary" @onclick="RefreshStatus" disabled="@loading">
+            @if (loading)
+            {
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            }
+            Refresh
+        </button>
+    </div>
+</div>
+
+@code {
+    private bool isConnected;
+    private ulong balance;
+    private bool loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshStatus();
+    }
+
+    private async Task RefreshStatus()
+    {
+        loading = true;
+        try
+        {
+            isConnected = await BreezService.IsConnectedAsync();
+            var balanceResult = await BreezService.GetBalanceAsync();
+            if (balanceResult.IsSuccess)
+            {
+                balance = balanceResult.Value;
+            }
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+}

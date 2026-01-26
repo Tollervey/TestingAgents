@@ -1,0 +1,151 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ master, main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ master, main ]
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        dotnet-version: ['8.0.x', '9.0.x']
+      fail-fast: false
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET ${{ matrix.dotnet-version }}
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ matrix.dotnet-version }}
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.NUGET_PACKAGES }}
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json', '**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Restore dependencies
+      run: dotnet restore Breez.Sdk.Liquid.Extensions.sln
+
+    - name: Build
+      run: dotnet build Breez.Sdk.Liquid.Extensions.sln --no-restore --configuration Release --warnaserror
+
+    - name: Test
+      run: dotnet test Breez.Sdk.Liquid.Extensions.sln --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage
+
+    - name: Upload coverage reports
+      if: matrix.os == 'ubuntu-latest' && matrix.dotnet-version == '8.0.x'
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        directory: ./coverage
+        fail_ci_if_error: false
+
+    - name: Check formatting
+      if: matrix.os == 'ubuntu-latest' && matrix.dotnet-version == '8.0.x'
+      run: dotnet format Breez.Sdk.Liquid.Extensions.sln --verify-no-changes --verbosity diagnostic
+
+  pack:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Extract version from tag
+      id: version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+    - name: Restore dependencies
+      run: dotnet restore Breez.Sdk.Liquid.Extensions.sln
+
+    - name: Build Release
+      run: dotnet build Breez.Sdk.Liquid.Extensions.sln --no-restore --configuration Release -p:Version=${{ steps.version.outputs.VERSION }}
+
+    - name: Pack NuGet packages
+      run: |
+        dotnet pack src/Breez.Sdk.Liquid.Extensions.Core/Breez.Sdk.Liquid.Extensions.Core.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.VERSION }} --output ./nupkgs
+        dotnet pack src/Breez.Sdk.Liquid.Extensions.AspNetCore/Breez.Sdk.Liquid.Extensions.AspNetCore.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.VERSION }} --output ./nupkgs
+        dotnet pack src/Breez.Sdk.Liquid.Extensions.SqlServer/Breez.Sdk.Liquid.Extensions.SqlServer.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.VERSION }} --output ./nupkgs
+        dotnet pack src/Breez.Sdk.Liquid.Extensions.PostgreSql/Breez.Sdk.Liquid.Extensions.PostgreSql.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.VERSION }} --output ./nupkgs
+        dotnet pack src/Breez.Sdk.Liquid.Extensions.Sqlite/Breez.Sdk.Liquid.Extensions.Sqlite.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.VERSION }} --output ./nupkgs
+        dotnet pack src/Breez.Sdk.Liquid.Extensions.Umbraco/Breez.Sdk.Liquid.Extensions.Umbraco.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.VERSION }} --output ./nupkgs
+
+    - name: Upload NuGet packages artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: nupkgs
+        path: ./nupkgs/*.nupkg
+
+  publish:
+    needs: pack
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+    - name: Download NuGet packages
+      uses: actions/download-artifact@v4
+      with:
+        name: nupkgs
+        path: ./nupkgs
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Publish to NuGet.org
+      run: |
+        for package in ./nupkgs/*.nupkg; do
+          dotnet nuget push "$package" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        done
+
+  release:
+    needs: publish
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Download NuGet packages
+      uses: actions/download-artifact@v4
+      with:
+        name: nupkgs
+        path: ./nupkgs
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ./nupkgs/*.nupkg
+        generate_release_notes: true
+        draft: false
+        prerelease: ${{ contains(github.ref, '-') }}
