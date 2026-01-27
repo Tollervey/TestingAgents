@@ -830,6 +830,276 @@ Describe 'Copy-SpecKit' {
 
     Context 'US4: Post-copy output' {
         # T024: Summary with file counts and next-steps checklist
+
+        Context 'Write-CopySummary' {
+            It 'displays FilesCopied count in summary output' {
+                $mockResult = [PSCustomObject]@{
+                    FilesCopied          = 15
+                    FilesSkipped         = 0
+                    FilesOverwritten     = 0
+                    DirectoriesCreated   = 5
+                    PlaceholderDirectories = 4
+                    Warnings             = @()
+                }
+
+                $captured = & {
+                    $script:capturedLines = @()
+                    function Write-Host {
+                        param([object]$Object, $ForegroundColor, [switch]$NoNewline)
+                        $script:capturedLines += "$Object"
+                    }
+                    Write-CopySummary -CopyResult $mockResult
+                    $script:capturedLines
+                }
+
+                $joined = $captured -join "`n"
+                $joined | Should -Match '15' -Because 'Summary should display FilesCopied count of 15'
+            }
+
+            It 'displays DirectoriesCreated count in summary output' {
+                $mockResult = [PSCustomObject]@{
+                    FilesCopied          = 10
+                    FilesSkipped         = 0
+                    FilesOverwritten     = 0
+                    DirectoriesCreated   = 7
+                    PlaceholderDirectories = 4
+                    Warnings             = @()
+                }
+
+                $captured = & {
+                    $script:capturedLines = @()
+                    function Write-Host {
+                        param([object]$Object, $ForegroundColor, [switch]$NoNewline)
+                        $script:capturedLines += "$Object"
+                    }
+                    Write-CopySummary -CopyResult $mockResult
+                    $script:capturedLines
+                }
+
+                $joined = $captured -join "`n"
+                $joined | Should -Match '7' -Because 'Summary should display DirectoriesCreated count of 7'
+            }
+
+            It 'displays PlaceholderDirectories count in summary output' {
+                $mockResult = [PSCustomObject]@{
+                    FilesCopied          = 10
+                    FilesSkipped         = 0
+                    FilesOverwritten     = 0
+                    DirectoriesCreated   = 5
+                    PlaceholderDirectories = 4
+                    Warnings             = @()
+                }
+
+                $captured = & {
+                    $script:capturedLines = @()
+                    function Write-Host {
+                        param([object]$Object, $ForegroundColor, [switch]$NoNewline)
+                        $script:capturedLines += "$Object"
+                    }
+                    Write-CopySummary -CopyResult $mockResult
+                    $script:capturedLines
+                }
+
+                $joined = $captured -join "`n"
+                $joined | Should -Match 'Placeholders' -Because 'Summary should show placeholder directories label'
+                $joined | Should -Match '4' -Because 'Summary should display PlaceholderDirectories count of 4'
+            }
+
+            It 'displays FilesSkipped count when skipped files exist' {
+                $mockResult = [PSCustomObject]@{
+                    FilesCopied          = 10
+                    FilesSkipped         = 3
+                    FilesOverwritten     = 0
+                    DirectoriesCreated   = 5
+                    PlaceholderDirectories = 4
+                    Warnings             = @()
+                }
+
+                $captured = & {
+                    $script:capturedLines = @()
+                    function Write-Host {
+                        param([object]$Object, $ForegroundColor, [switch]$NoNewline)
+                        $script:capturedLines += "$Object"
+                    }
+                    Write-CopySummary -CopyResult $mockResult
+                    $script:capturedLines
+                }
+
+                $joined = $captured -join "`n"
+                $joined | Should -Match 'skipped.*3|3.*skipped' -Because 'Summary should display FilesSkipped count when > 0'
+            }
+
+            It 'does not display FilesSkipped line when no files were skipped' {
+                $mockResult = [PSCustomObject]@{
+                    FilesCopied          = 10
+                    FilesSkipped         = 0
+                    FilesOverwritten     = 0
+                    DirectoriesCreated   = 5
+                    PlaceholderDirectories = 4
+                    Warnings             = @()
+                }
+
+                $captured = & {
+                    $script:capturedLines = @()
+                    function Write-Host {
+                        param([object]$Object, $ForegroundColor, [switch]$NoNewline)
+                        $script:capturedLines += "$Object"
+                    }
+                    Write-CopySummary -CopyResult $mockResult
+                    $script:capturedLines
+                }
+
+                $joined = $captured -join "`n"
+                $joined | Should -Not -Match '[Ss]kipped' -Because 'Summary should not show skipped line when count is 0'
+            }
+
+            It 'displays FilesOverwritten count when overwritten files exist' {
+                $mockResult = [PSCustomObject]@{
+                    FilesCopied          = 8
+                    FilesSkipped         = 0
+                    FilesOverwritten     = 5
+                    DirectoriesCreated   = 3
+                    PlaceholderDirectories = 4
+                    Warnings             = @()
+                }
+
+                $captured = & {
+                    $script:capturedLines = @()
+                    function Write-Host {
+                        param([object]$Object, $ForegroundColor, [switch]$NoNewline)
+                        $script:capturedLines += "$Object"
+                    }
+                    Write-CopySummary -CopyResult $mockResult
+                    $script:capturedLines
+                }
+
+                $joined = $captured -join "`n"
+                $joined | Should -Match 'overwritten.*5|5.*overwritten' -Because 'Summary should display FilesOverwritten count when > 0'
+            }
+
+            It 'displays Warnings count when warnings exist' {
+                $mockResult = [PSCustomObject]@{
+                    FilesCopied          = 10
+                    FilesSkipped         = 0
+                    FilesOverwritten     = 0
+                    DirectoriesCreated   = 5
+                    PlaceholderDirectories = 4
+                    Warnings             = @('Domain module not found: nonexistent', 'Some other warning')
+                }
+
+                $captured = & {
+                    $script:capturedLines = @()
+                    function Write-Host {
+                        param([object]$Object, $ForegroundColor, [switch]$NoNewline)
+                        $script:capturedLines += "$Object"
+                    }
+                    Write-CopySummary -CopyResult $mockResult
+                    $script:capturedLines
+                }
+
+                $joined = $captured -join "`n"
+                $joined | Should -Match '[Ww]arnings.*2|2.*[Ww]arnings' -Because 'Summary should display Warnings count when > 0'
+            }
+        }
+
+        Context 'Write-NextSteps' {
+            BeforeAll {
+                $script:NextStepsOutput = & {
+                    $script:capturedLines = @()
+                    function Write-Host {
+                        param([object]$Object, $ForegroundColor, [switch]$NoNewline)
+                        $script:capturedLines += "$Object"
+                    }
+                    Write-NextSteps
+                    $script:capturedLines
+                }
+                $script:NextStepsJoined = $script:NextStepsOutput -join "`n"
+            }
+
+            It 'outputs Next Steps header' {
+                $script:NextStepsJoined | Should -Match 'Next Steps' -Because 'Next steps section should have a header'
+            }
+
+            It 'includes step 1: Create CLAUDE.project.md' {
+                $script:NextStepsJoined | Should -Match '1\..*CLAUDE\.project\.md' -Because 'Step 1 should reference CLAUDE.project.md'
+            }
+
+            It 'includes step 2: Run /speckit.constitution' {
+                $script:NextStepsJoined | Should -Match '2\..*constitution' -Because 'Step 2 should reference speckit.constitution'
+            }
+
+            It 'includes step 3: Review settings.json' {
+                $script:NextStepsJoined | Should -Match '3\..*settings\.json' -Because 'Step 3 should reference settings.json'
+            }
+
+            It 'includes step 4: Create settings.local.json' {
+                $script:NextStepsJoined | Should -Match '4\..*settings\.local\.json' -Because 'Step 4 should reference settings.local.json'
+            }
+
+            It 'includes step 5: Review hooks.json' {
+                $script:NextStepsJoined | Should -Match '5\..*hooks\.json' -Because 'Step 5 should reference hooks.json'
+            }
+
+            It 'includes step 6: Start with /speckit.specify' {
+                $script:NextStepsJoined | Should -Match '6\..*speckit\.specify' -Because 'Step 6 should reference speckit.specify'
+            }
+
+            It 'outputs exactly 6 numbered steps' {
+                $numberedSteps = $script:NextStepsOutput | Where-Object { $_ -match '^\s*\d+\.' }
+                $numberedSteps.Count | Should -Be 6 -Because 'There should be exactly 6 numbered next-steps'
+            }
+        }
+
+        Context 'US4: Post-copy integration' {
+            BeforeAll {
+                $script:SourceRoot = New-MockSpecKitSource
+                $script:DestRoot = Join-Path $TestDrive 'us4-integration-dest'
+                $script:Manifest = Build-FileManifest -SourcePath $script:SourceRoot
+                $script:CopyResult = Invoke-SpecKitCopy -Manifest $script:Manifest -SourcePath $script:SourceRoot -DestinationPath $script:DestRoot
+            }
+
+            It 'CopyResult contains FilesCopied > 0 after successful copy' {
+                $script:CopyResult.FilesCopied | Should -BeGreaterThan 0
+            }
+
+            It 'CopyResult contains DirectoriesCreated >= 0 after successful copy' {
+                $script:CopyResult.DirectoriesCreated | Should -BeGreaterOrEqual 0
+            }
+
+            It 'CopyResult contains PlaceholderDirectories = 4 after successful copy' {
+                $script:CopyResult.PlaceholderDirectories | Should -Be 4
+            }
+
+            It 'CopyResult contains FilesSkipped = 0 for fresh destination' {
+                $script:CopyResult.FilesSkipped | Should -Be 0
+            }
+
+            It 'CopyResult contains FilesOverwritten = 0 for fresh destination' {
+                $script:CopyResult.FilesOverwritten | Should -Be 0
+            }
+
+            It 'CopyResult contains Duration as TimeSpan' {
+                $script:CopyResult.Duration | Should -BeOfType [TimeSpan]
+            }
+
+            It 'Write-CopySummary accepts the real CopyResult without error' {
+                {
+                    & {
+                        function Write-Host { param([object]$Object, $ForegroundColor, [switch]$NoNewline) }
+                        Write-CopySummary -CopyResult $script:CopyResult
+                    }
+                } | Should -Not -Throw
+            }
+
+            It 'Write-NextSteps executes without error' {
+                {
+                    & {
+                        function Write-Host { param([object]$Object, $ForegroundColor, [switch]$NoNewline) }
+                        Write-NextSteps
+                    }
+                } | Should -Not -Throw
+            }
+        }
     }
 
     #endregion

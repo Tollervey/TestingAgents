@@ -1,6 +1,6 @@
 ﻿{
-    "sessionId":  "549b751d-a36b-4510-9337-5b1c19bf595d",
-    "startTime":  "2026-01-27T22:39:53.1691673+00:00",
+    "sessionId":  "668ff77d-ea39-4771-bd14-52cbcb83ecf7",
+    "startTime":  "2026-01-27T22:52:34.0937676+00:00",
     "parallelGroups":  {
 
                        },
@@ -12,11 +12,11 @@
     "invocations":  [
 
                     ],
-    "endTime":  "2026-01-27T22:39:58.6118281+00:00",
+    "endTime":  "2026-01-27T22:54:31.6484417+00:00",
     "models":  {
 
                },
-    "phase":  "copy-speckit-phase4",
+    "phase":  "phase6-post-copy-guidance",
     "categories":  {
 
                    },

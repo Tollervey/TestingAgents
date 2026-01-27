@@ -132,12 +132,12 @@
 
 > **TDD REQUIRED: Write tests FIRST, verify they FAIL (RED), then implement until GREEN**
 
-- [ ] T024 [P] [US4] Write Pester tests for post-copy output: summary shows file counts (copied, skipped, directories created, placeholders), next-steps checklist includes all 6 items from quickstart.md in .specify/scripts/powershell/Copy-SpecKit.tests.ps1
+- [x] T024 [P] [US4] Write Pester tests for post-copy output: summary shows file counts (copied, skipped, directories created, placeholders), next-steps checklist includes all 6 items from quickstart.md in .specify/scripts/powershell/Copy-SpecKit.tests.ps1
 
 ### Implementation for User Story 4
 
-- [ ] T025 [US4] Implement post-copy summary section with file counts and statistics formatted with rich console output in .specify/scripts/powershell/Copy-SpecKit.ps1
-- [ ] T026 [US4] Implement next-steps checklist output with 6 numbered steps (CLAUDE.project.md, constitution, settings.json, settings.local.json, hooks.json, first feature) in .specify/scripts/powershell/Copy-SpecKit.ps1
+- [x] T025 [US4] Implement post-copy summary section with file counts and statistics formatted with rich console output in .specify/scripts/powershell/Copy-SpecKit.ps1
+- [x] T026 [US4] Implement next-steps checklist output with 6 numbered steps (CLAUDE.project.md, constitution, settings.json, settings.local.json, hooks.json, first feature) in .specify/scripts/powershell/Copy-SpecKit.ps1
 
 **Checkpoint**: User Story 4 complete. Post-copy guidance is displayed.
 
