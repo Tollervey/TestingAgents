@@ -78,14 +78,14 @@
 
 ### Validation for User Story 2 (Content Scanning)
 
-- [ ] T019 [US2] Write a validation script at `specs/001-generic-speckit-reuse/validate-domain-isolation.ps1` that: (1) verifies no Tier 1 file references domain agent filenames (breezsdk-*, umbraco-*), (2) verifies domain agents are only documented in `CLAUDE.project.md`, (3) verifies `hooks.json` contains no hardcoded domain agent names, (4) verifies `settings.local.json` contains no project-specific WebFetch domain permissions, (5) scans domain agent files for cross-references to other domain agent families (e.g., breezsdk-* referencing umbraco-* or vice versa) to ensure each domain family can be removed independently per Edge Case #2. Run for RED baseline.
+- [x] T019 [US2] Write a validation script at `specs/001-generic-speckit-reuse/validate-domain-isolation.ps1` that: (1) verifies no Tier 1 file references domain agent filenames (breezsdk-*, umbraco-*), (2) verifies domain agents are only documented in `CLAUDE.project.md`, (3) verifies `hooks.json` contains no hardcoded domain agent names, (4) verifies `settings.local.json` contains no project-specific WebFetch domain permissions, (5) scans domain agent files for cross-references to other domain agent families (e.g., breezsdk-* referencing umbraco-* or vice versa) to ensure each domain family can be removed independently per Edge Case #2. Run for RED baseline.
 
 ### Implementation for User Story 2
 
-- [ ] T020 [US2] Update `CLAUDE.project.md` (T001) — Add domain agent documentation (breezsdk-*, umbraco-* agent tables, tools/permissions, utilization phases) moved from CLAUDE.md in T003. Ensure all domain agent docs are self-contained in this file.
-- [ ] T021 [P] [US2] Update `.claude/hooks.json` — Remove domain agent names from SessionStart agent list. Remove `dotnet-implementation-execution.md` skill reference (use `implementation-execution.md`). Remove domain-specific SubagentStart guidance per plan.md D2.
-- [ ] T022 [P] [US2] Update `.claude/settings.json` and `.claude/settings.local.json` — (1) Remove project-specific MCP server configurations (e.g., umbraco-docs) from `settings.json` per FR-007. (2) Remove project-specific WebFetch domain permissions from `settings.local.json` per FR-008. (3) Document both MCP server and WebFetch domain configuration in `CLAUDE.project.md` with instructions for project-specific setup per plan.md D3.
-- [ ] T023 [US2] Run `specs/001-generic-speckit-reuse/validate-domain-isolation.ps1` — Verify zero domain agent references in Tier 1 files (GREEN validation).
+- [x] T020 [US2] Update `CLAUDE.project.md` (T001) — Add domain agent documentation (breezsdk-*, umbraco-* agent tables, tools/permissions, utilization phases) moved from CLAUDE.md in T003. Ensure all domain agent docs are self-contained in this file.
+- [x] T021 [P] [US2] Update `.claude/hooks.json` — Remove domain agent names from SessionStart agent list. Remove `dotnet-implementation-execution.md` skill reference (use `implementation-execution.md`). Remove domain-specific SubagentStart guidance per plan.md D2.
+- [x] T022 [P] [US2] Update `.claude/settings.json` and `.claude/settings.local.json` — (1) Remove project-specific MCP server configurations (e.g., umbraco-docs) from `settings.json` per FR-007. (2) Remove project-specific WebFetch domain permissions from `settings.local.json` per FR-008. (3) Document both MCP server and WebFetch domain configuration in `CLAUDE.project.md` with instructions for project-specific setup per plan.md D3.
+- [x] T023 [US2] Run `specs/001-generic-speckit-reuse/validate-domain-isolation.ps1` — Verify zero domain agent references in Tier 1 files (GREEN validation).
 
 **Checkpoint**: Domain agents are fully optional. Removing them breaks nothing in core configuration.
 
