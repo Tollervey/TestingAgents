@@ -83,6 +83,105 @@ $MetricsDir = Join-Path $PSScriptRoot "..\..\metrics"
 $MetricsFile = Join-Path $MetricsDir "agent-metrics.json"
 $SettingsFile = Join-Path $MetricsDir "settings.json"
 
+$script:ModelVersionCacheFile = Join-Path $MetricsDir "model-versions.json"
+
+function Resolve-ModelVersions {
+    <#
+    .SYNOPSIS
+        Resolves model aliases (opus, sonnet, haiku) to full model IDs
+        by querying the Claude CLI, then caches results to disk.
+    .DESCRIPTION
+        Calls `claude --model <alias> --print --output-format json` for each
+        alias and extracts the full model ID from the modelUsage key.
+        Results are cached in .specify/metrics/model-versions.json.
+        Cache is reused if it exists and is less than 7 days old.
+        Pass -Force to refresh regardless of cache age.
+    #>
+    [CmdletBinding()]
+    param(
+        [switch]$Force
+    )
+
+    # Check cache first
+    if (-not $Force -and (Test-Path $script:ModelVersionCacheFile)) {
+        $cacheAge = (Get-Date) - (Get-Item $script:ModelVersionCacheFile).LastWriteTime
+        if ($cacheAge.TotalDays -lt 7) {
+            try {
+                $cached = Get-Content $script:ModelVersionCacheFile -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+                $result = @{}
+                foreach ($prop in $cached.PSObject.Properties) {
+                    $result[$prop.Name] = $prop.Value
+                }
+                return $result
+            } catch {
+                # Cache corrupted, fall through to resolve
+            }
+        }
+    }
+
+    $aliases = @('opus', 'sonnet', 'haiku')
+    $versions = @{}
+
+    # Check if claude CLI is available
+    $claudeCmd = Get-Command 'claude' -ErrorAction SilentlyContinue
+    if (-not $claudeCmd) {
+        Write-Verbose "Claude CLI not found. Model versions unavailable."
+        return $versions
+    }
+
+    foreach ($alias in $aliases) {
+        try {
+            $jsonOutput = & claude --model $alias --print --output-format json "Reply with only the word OK" 2>$null
+            if ($jsonOutput) {
+                $parsed = $jsonOutput | ConvertFrom-Json -ErrorAction Stop
+                if ($parsed.modelUsage) {
+                    $modelId = $parsed.modelUsage.PSObject.Properties | Select-Object -First 1 -ExpandProperty Name
+                    if ($modelId) {
+                        $versions[$alias] = $modelId
+                    }
+                }
+            }
+        } catch {
+            Write-Verbose "Failed to resolve model version for $alias : $_"
+        }
+    }
+
+    # Cache results
+    if ($versions.Count -gt 0) {
+        if (-not (Test-Path $MetricsDir)) {
+            New-Item -ItemType Directory -Path $MetricsDir -Force | Out-Null
+        }
+        $versions | ConvertTo-Json | Set-Content $script:ModelVersionCacheFile -Encoding UTF8
+        Write-Verbose "Model versions cached to $($script:ModelVersionCacheFile)"
+    }
+
+    return $versions
+}
+
+function Get-ModelDisplayName {
+    <#
+    .SYNOPSIS
+        Returns a display name including the model version for reporting.
+        Uses cached model versions resolved from the Claude CLI.
+    #>
+    param(
+        [Parameter(Mandatory)]
+        [string]$ModelName
+    )
+
+    # Lazy-load version cache
+    if (-not $script:ModelVersionsLoaded) {
+        $script:ModelVersionsCache = Resolve-ModelVersions
+        $script:ModelVersionsLoaded = $true
+    }
+
+    $version = $script:ModelVersionsCache[$ModelName.ToLower()]
+    if ($version) {
+        return "$ModelName ($version)"
+    }
+    return $ModelName
+}
+
 function Get-MetricsSettings {
     <#
     .SYNOPSIS
@@ -632,7 +731,8 @@ function Record-AgentMetric {
     $metrics.invocations += $invocation
 
     $metrics | ConvertTo-Json -Depth 10 | Set-Content $MetricsFile -Encoding UTF8
-    Write-Host "Recorded: $Agent/$ModelName ($CompletionStatus) - ${Tokens} tokens, $([math]::Round($Duration/1000, 1))s" -ForegroundColor Cyan
+    $modelDisplay = Get-ModelDisplayName -ModelName $ModelName
+    Write-Host "Recorded: $Agent/$modelDisplay ($CompletionStatus) - ${Tokens} tokens, $([math]::Round($Duration/1000, 1))s" -ForegroundColor Cyan
 }
 
 function Format-Duration {
@@ -701,19 +801,20 @@ function Generate-Report {
         Write-Host ""
 
         # Table header
-        $modelHeader = "{0,-12} {1,12} {2,14} {3,14} {4,10}" -f "Model", "Invocations", "Tokens", "Cost Weight", "Cost %"
+        $modelHeader = "{0,-40} {1,12} {2,14} {3,14} {4,10}" -f "Model", "Invocations", "Tokens", "Cost Weight", "Cost %"
         Write-Host "  $modelHeader" -ForegroundColor Cyan
-        Write-Host "  $("-" * 66)" -ForegroundColor DarkGray
+        Write-Host "  $("-" * 94)" -ForegroundColor DarkGray
 
         # Sort models by cost percentage (highest first)
         $sortedModels = $metrics.models.PSObject.Properties | Sort-Object { $_.Value.costPercent } -Descending
 
         foreach ($modelProp in $sortedModels) {
             $name = $modelProp.Name
+            $displayName = Get-ModelDisplayName -ModelName $name
             $data = $modelProp.Value
 
-            $modelRow = "{0,-12} {1,12} {2,14:N0} {3,14} {4,10}" -f `
-                $name, `
+            $modelRow = "{0,-40} {1,12} {2,14:N0} {3,14} {4,10}" -f `
+                $displayName, `
                 $data.count, `
                 $data.totalTokens, `
                 "$($data.costWeight)x", `
@@ -1382,9 +1483,9 @@ function Compare-Sessions {
         Write-Host "-----------------------------------------------------------------------" -ForegroundColor DarkGray
         Write-Host ""
 
-        $mdlHeader = "{0,-10} {1,8} {2,8} {3,8} {4,8} {5,14}" -f "Model", "S1 Cnt", "S1 Cost%", "S2 Cnt", "S2 Cost%", "Change"
+        $mdlHeader = "{0,-40} {1,8} {2,8} {3,8} {4,8} {5,14}" -f "Model", "S1 Cnt", "S1 Cost%", "S2 Cnt", "S2 Cost%", "Change"
         Write-Host "  $mdlHeader" -ForegroundColor Cyan
-        Write-Host "  $("-" * 60)" -ForegroundColor DarkGray
+        Write-Host "  $("-" * 90)" -ForegroundColor DarkGray
 
         # Collect all model names from both sessions
         $allModels = @()
@@ -1408,8 +1509,9 @@ function Compare-Sessions {
                 elseif ($m2Cost -lt $m1Cost) { [string]([char]0x2193) + " less usage" }
                 else { [string]([char]0x2192) + " stable" }
 
-            $mdlRow = "{0,-10} {1,8} {2,8} {3,8} {4,8} {5,14}" -f `
-                $modelName, $m1Count, "$($m1Cost)%", $m2Count, "$($m2Cost)%", $changeLabel
+            $displayName = Get-ModelDisplayName -ModelName $modelName
+            $mdlRow = "{0,-40} {1,8} {2,8} {3,8} {4,8} {5,14}" -f `
+                $displayName, $m1Count, "$($m1Cost)%", $m2Count, "$($m2Cost)%", $changeLabel
             Write-Host "  $mdlRow" -ForegroundColor White
         }
         Write-Host ""
@@ -1755,14 +1857,15 @@ function Generate-CumulativeReport {
         Write-Host "-------------------------------------------------------------------------------" -ForegroundColor DarkGray
         Write-Host ""
 
-        $mdlHeader = "{0,-12} {1,14} {2,14} {3,14} {4,10}" -f "Model", "Total Tokens", "Invocations", "Cost Weight", "Cost %"
+        $mdlHeader = "{0,-40} {1,14} {2,14} {3,14} {4,10}" -f "Model", "Total Tokens", "Invocations", "Cost Weight", "Cost %"
         Write-Host "  $mdlHeader" -ForegroundColor Cyan
-        Write-Host "  $("-" * 68)" -ForegroundColor DarkGray
+        Write-Host "  $("-" * 96)" -ForegroundColor DarkGray
 
         foreach ($mn in ($allModels.Keys | Sort-Object { $allModels[$_].costPercent } -Descending)) {
             $md = $allModels[$mn]
-            $mdlRow = "{0,-12} {1,14:N0} {2,14} {3,14} {4,10}" -f `
-                $mn, $md.totalTokens, $md.count, "$($md.costWeight)x", "$($md.costPercent)%"
+            $displayName = Get-ModelDisplayName -ModelName $mn
+            $mdlRow = "{0,-40} {1,14:N0} {2,14} {3,14} {4,10}" -f `
+                $displayName, $md.totalTokens, $md.count, "$($md.costWeight)x", "$($md.costPercent)%"
             Write-Host "  $mdlRow" -ForegroundColor White
         }
         Write-Host ""

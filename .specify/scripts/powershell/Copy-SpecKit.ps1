@@ -418,11 +418,262 @@ function Write-FileEntry {
     }
 }
 
+function Invoke-SpecKitCopy {
+    <#
+    .SYNOPSIS
+        Copies Spec-Kit framework files from source to destination based on a file manifest.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter()]
+        [object[]]$Manifest,
+
+        [Parameter(Mandatory)]
+        [string]$SourcePath,
+
+        [Parameter(Mandatory)]
+        [string]$DestinationPath,
+
+        [Parameter()]
+        [switch]$Preview,
+
+        [Parameter()]
+        [switch]$Force
+    )
+
+    $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+
+    # Initialize result
+    $result = [PSCustomObject]@{
+        Source               = $SourcePath
+        Destination          = $DestinationPath
+        FilesCopied          = 0
+        FilesSkipped         = 0
+        FilesOverwritten     = 0
+        DirectoriesCreated   = 0
+        PlaceholderDirectories = 0
+        Warnings             = @()
+        Errors               = @()
+        DomainsIncluded      = @()
+        DomainsAvailable     = @()
+        Duration             = [TimeSpan]::Zero
+        ExitCode             = 0
+        IsPreview            = [bool]$Preview
+        Success              = $true
+    }
+
+    # Validate source
+    $validation = Test-SpecKitSource -SourcePath $SourcePath -DestinationPath $DestinationPath
+    if (-not $validation.Valid) {
+        $result.ExitCode = 1
+        $result.Success = $false
+        $result.Errors = $validation.Errors
+        $stopwatch.Stop()
+        $result.Duration = $stopwatch.Elapsed
+        return $result
+    }
+
+    # Build manifest if not provided
+    if (-not $Manifest) {
+        $Manifest = Build-FileManifest -SourcePath $SourcePath
+    }
+
+    # Populate domain info
+    $domainModules = Get-DomainModules -SourcePath $SourcePath
+    $result.DomainsAvailable = @($domainModules | ForEach-Object { $_.Name })
+    $result.DomainsIncluded = @($Manifest | Where-Object { $_.Included -and $_.Domain } | ForEach-Object { $_.Domain } | Select-Object -Unique)
+
+    # Copy included files
+    $includedFiles = @($Manifest | Where-Object { $_.Included -eq $true })
+    $createdDirs = @{}
+
+    foreach ($entry in $includedFiles) {
+        $srcFile = Join-Path $SourcePath $entry.RelativePath
+        $destFile = Join-Path $DestinationPath $entry.RelativePath
+        $destDir = Split-Path $destFile -Parent
+
+        # Create directory if needed
+        if (-not $createdDirs.ContainsKey($destDir) -and -not (Test-Path $destDir)) {
+            try {
+                New-Item -ItemType Directory -Path $destDir -Force -ErrorAction Stop | Out-Null
+                $createdDirs[$destDir] = $true
+                $result.DirectoriesCreated++
+                Write-Verbose "Created directory: $destDir"
+            } catch {
+                $result.Errors += "Failed to create directory: $destDir - $($_.Exception.Message)"
+                $result.Success = $false
+                continue
+            }
+        }
+
+        # Copy file
+        try {
+            Copy-Item -Path $srcFile -Destination $destFile -Force -ErrorAction Stop
+            $result.FilesCopied++
+            Write-Verbose "Copied: $($entry.RelativePath)"
+        } catch {
+            $result.Errors += "Failed to copy $($entry.RelativePath): $($_.Exception.Message)"
+            $result.Success = $false
+        }
+    }
+
+    # Create placeholder directories
+    foreach ($placeholder in $script:PlaceholderDirectories) {
+        $placeholderPath = Join-Path $DestinationPath $placeholder
+        if (-not (Test-Path $placeholderPath)) {
+            try {
+                New-Item -ItemType Directory -Path $placeholderPath -Force -ErrorAction Stop | Out-Null
+                $result.PlaceholderDirectories++
+                Write-Verbose "Created placeholder directory: $placeholder"
+            } catch {
+                $result.Errors += "Failed to create placeholder directory: $placeholder - $($_.Exception.Message)"
+                $result.Success = $false
+            }
+        } else {
+            $result.PlaceholderDirectories++
+        }
+    }
+
+    $stopwatch.Stop()
+    $result.Duration = $stopwatch.Elapsed
+    return $result
+}
+
+#endregion Internal Functions
+
+function Write-CopySummary {
+    <#
+    .SYNOPSIS
+        Writes the copy operation summary to the console with rich formatting.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [PSCustomObject]$CopyResult,
+
+        [Parameter()]
+        [object[]]$Manifest
+    )
+
+    # Summary header
+    Write-Header -Title 'Summary'
+
+    Write-Host "  Files copied:        $($CopyResult.FilesCopied)" -ForegroundColor White
+    if ($CopyResult.FilesSkipped -gt 0) {
+        Write-Host "  Files skipped:       $($CopyResult.FilesSkipped)" -ForegroundColor Yellow
+    }
+    if ($CopyResult.FilesOverwritten -gt 0) {
+        Write-Host "  Files overwritten:   $($CopyResult.FilesOverwritten)" -ForegroundColor Yellow
+    }
+    Write-Host "  Directories created: $($CopyResult.DirectoriesCreated)" -ForegroundColor White
+    Write-Host "  Placeholders created:$($CopyResult.PlaceholderDirectories)" -ForegroundColor White
+    if ($CopyResult.Warnings.Count -gt 0) {
+        Write-Host "  Warnings:            $($CopyResult.Warnings.Count)" -ForegroundColor Yellow
+    }
+}
+
+function Write-NextSteps {
+    <#
+    .SYNOPSIS
+        Writes the post-copy next steps checklist.
+    #>
+    [CmdletBinding()]
+    param()
+
+    $separator = '-' * 39
+    Write-Host ''
+    Write-Host $separator -ForegroundColor White
+    Write-Host '  Next Steps' -ForegroundColor White
+    Write-Host $separator -ForegroundColor White
+    Write-Host '  1. Create CLAUDE.project.md with your project''s technology conventions' -ForegroundColor White
+    Write-Host '  2. Run /speckit.constitution to establish project governance' -ForegroundColor White
+    Write-Host '  3. Review .claude/settings.json and adjust for your project' -ForegroundColor White
+    Write-Host '  4. Create .claude/settings.local.json for local environment overrides' -ForegroundColor White
+    Write-Host '  5. Review .claude/hooks.json and adjust build/test commands' -ForegroundColor White
+    Write-Host '  6. Start with /speckit.specify to define your first feature' -ForegroundColor White
+    Write-Host ''
+}
+
 #endregion Internal Functions
 
 # --- Main entry point ---
 # Guard: only run main logic when executed directly, not when dot-sourced
 if ($MyInvocation.InvocationName -ne '.' -and $MyInvocation.InvocationName -ne 'Import-Module') {
-    # Main script execution will be wired up in T015
-    Write-Verbose "Copy-SpecKit.ps1 loaded. Main execution not yet implemented."
+    # Validate Destination parameter
+    if (-not $Destination) {
+        Write-Host 'ERROR: -Destination parameter is required.' -ForegroundColor Red
+        exit 1
+    }
+
+    # Determine mode label
+    $modeLabel = if ($Preview) { 'Preview' } elseif ($Force) { 'Force Copy' } else { 'Copy' }
+
+    # Display header
+    Write-Header -Title 'Spec-Kit Framework Scaffolding'
+    Write-Host "Source:      $Source" -ForegroundColor White
+    Write-Host "Destination: $Destination" -ForegroundColor White
+    Write-Host "Mode:        $modeLabel" -ForegroundColor White
+
+    # Discover and display available domains
+    $domainModules = Get-DomainModules -SourcePath $Source
+    if ($domainModules.Count -gt 0) {
+        Write-Host ''
+        Write-Host 'Available domain modules:' -ForegroundColor White
+        $arrow = [char]0x2192
+        foreach ($dm in $domainModules) {
+            Write-Host "  $arrow $($dm.Name) ($($dm.FileCount) files)" -ForegroundColor Cyan
+        }
+    }
+
+    # Build manifest and execute copy
+    $manifest = Build-FileManifest -SourcePath $Source -IncludeDomains $IncludeDomains
+    $copyResult = Invoke-SpecKitCopy -Manifest $manifest -SourcePath $Source -DestinationPath $Destination -Preview:$Preview -Force:$Force
+
+    if (-not $copyResult.Success) {
+        foreach ($err in $copyResult.Errors) {
+            Write-Host "ERROR: $err" -ForegroundColor Red
+        }
+        exit $copyResult.ExitCode
+    }
+
+    # Display file operations grouped by tier
+    $tiers = @(
+        @{ Name = 'Tier 1: Framework'; Filter = { $_.Tier -eq 'Framework' } }
+        @{ Name = 'Tier 2: Core Agents'; Filter = { $_.Tier -eq 'CoreAgent' } }
+        @{ Name = 'Tier 2: Core Skills'; Filter = { $_.Tier -eq 'CoreSkill' } }
+    )
+
+    foreach ($tier in $tiers) {
+        $tierFiles = @($manifest | Where-Object $tier.Filter | Where-Object { $_.Included })
+        if ($tierFiles.Count -gt 0) {
+            Write-Section -Title $tier.Name
+            foreach ($entry in $tierFiles) {
+                Write-FileEntry -Path $entry.RelativePath -Action 'Copied'
+            }
+        }
+    }
+
+    # Display domain files if included
+    if ($IncludeDomains) {
+        foreach ($domain in $IncludeDomains) {
+            $domainFiles = @($manifest | Where-Object { $_.Domain -eq $domain -and $_.Included })
+            if ($domainFiles.Count -gt 0) {
+                Write-Section -Title "Domain: $domain"
+                foreach ($entry in $domainFiles) {
+                    Write-FileEntry -Path $entry.RelativePath -Action 'Copied'
+                }
+            }
+        }
+    }
+
+    # Summary and next steps
+    Write-CopySummary -CopyResult $copyResult -Manifest $manifest
+    Write-NextSteps
+
+    # Return PassThru object if requested
+    if ($PassThru) {
+        $copyResult
+    }
+
+    exit $copyResult.ExitCode
 }

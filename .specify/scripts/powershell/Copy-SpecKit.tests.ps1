@@ -289,14 +289,326 @@ Describe 'Copy-SpecKit' {
 
     Context 'US1: Core copy operation' {
         # T010: All Tier 1 files copied, Tier 2 core agents copied, domain files excluded
+
+        BeforeAll {
+            $script:SourceRoot = New-MockSpecKitSource
+            $script:DestRoot = Join-Path $TestDrive 'us1-copy-dest'
+            $script:Manifest = Build-FileManifest -SourcePath $script:SourceRoot
+            $script:CopyResult = Invoke-SpecKitCopy -Manifest $script:Manifest -SourcePath $script:SourceRoot -DestinationPath $script:DestRoot
+        }
+
+        It 'copies all Tier 1 framework files to destination with correct relative paths' {
+            $frameworkEntries = $script:Manifest | Where-Object { $_.Tier -eq 'Framework' -and $_.Included -eq $true }
+            $frameworkEntries | Should -Not -BeNullOrEmpty
+
+            foreach ($entry in $frameworkEntries) {
+                $destPath = Join-Path $script:DestRoot $entry.RelativePath
+                $destPath | Should -Exist -Because "Framework file $($entry.RelativePath) should be copied"
+            }
+        }
+
+        It 'copies all 7 Tier 2 core agent files to destination' {
+            $coreAgents = @('backend-developer.md', 'code-reviewer.md', 'database-architect.md',
+                            'frontend-developer.md', 'security-auditor.md', 'solution-architect.md',
+                            'test-engineer.md')
+
+            foreach ($agent in $coreAgents) {
+                $destPath = Join-Path $script:DestRoot ".claude\agents\$agent"
+                $destPath | Should -Exist -Because "Core agent $agent should be copied"
+            }
+        }
+
+        It 'copies all Tier 2 core skill files to destination' {
+            $coreSkills = @('external-plugins.md', 'implementation-execution.md')
+
+            foreach ($skill in $coreSkills) {
+                $destPath = Join-Path $script:DestRoot ".claude\skills\$skill"
+                $destPath | Should -Exist -Because "Core skill $skill should be copied"
+            }
+        }
+
+        It 'does not copy domain agent files when Included=$false' {
+            $domainAgents = @('umbraco-architect.md', 'umbraco-backend-developer.md', 'umbraco-frontend-developer.md',
+                              'breezsdk-architect.md', 'breezsdk-developer.md')
+
+            foreach ($agent in $domainAgents) {
+                $destPath = Join-Path $script:DestRoot ".claude\agents\$agent"
+                $destPath | Should -Not -Exist -Because "Domain agent $agent should be excluded by default"
+            }
+        }
+
+        It 'does not copy domain skill files when Included=$false' {
+            $destPath = Join-Path $script:DestRoot '.claude\skills\breezsdk-knowledge.md'
+            $destPath | Should -Not -Exist -Because 'Domain skill should be excluded by default'
+        }
+
+        It 'creates destination subdirectories automatically' {
+            $expectedDirs = @(
+                '.claude\commands',
+                '.claude\agents',
+                '.claude\skills',
+                '.specify\templates',
+                '.specify\scripts\powershell'
+            )
+
+            foreach ($dir in $expectedDirs) {
+                $destDir = Join-Path $script:DestRoot $dir
+                $destDir | Should -Exist -Because "Directory $dir should be created automatically"
+            }
+        }
+
+        It 'returns CopyResult object with FilesCopied count' {
+            $script:CopyResult | Should -Not -BeNullOrEmpty
+            $script:CopyResult.PSObject.Properties.Name | Should -Contain 'FilesCopied'
+            $script:CopyResult.FilesCopied | Should -BeOfType [int]
+            $script:CopyResult.FilesCopied | Should -BeGreaterThan 0
+        }
+
+        It 'returns CopyResult with FilesCopied count matching included files in manifest' {
+            $includedCount = @($script:Manifest | Where-Object { $_.Included -eq $true }).Count
+            $script:CopyResult.FilesCopied | Should -Be $includedCount -Because 'FilesCopied should match included manifest entries'
+        }
+
+        It 'preserves file content during copy' {
+            # Test CLAUDE.md content
+            $sourcePath = Join-Path $script:SourceRoot 'CLAUDE.md'
+            $destPath = Join-Path $script:DestRoot 'CLAUDE.md'
+
+            $sourceContent = Get-Content -Path $sourcePath -Raw
+            $destContent = Get-Content -Path $destPath -Raw
+
+            $destContent | Should -Be $sourceContent -Because 'File content should be preserved during copy'
+        }
+
+        It 'preserves file content for nested files' {
+            # Test a command file
+            $relPath = '.claude\commands\speckit.plan.md'
+            $sourcePath = Join-Path $script:SourceRoot $relPath
+            $destPath = Join-Path $script:DestRoot $relPath
+
+            $sourceContent = Get-Content -Path $sourcePath -Raw
+            $destContent = Get-Content -Path $destPath -Raw
+
+            $destContent | Should -Be $sourceContent -Because 'Nested file content should be preserved'
+        }
+
+        It 'copies CLAUDE.md to destination root' {
+            $destPath = Join-Path $script:DestRoot 'CLAUDE.md'
+            $destPath | Should -Exist
+        }
+
+        It 'copies settings.json to .claude directory' {
+            $destPath = Join-Path $script:DestRoot '.claude\settings.json'
+            $destPath | Should -Exist
+        }
+
+        It 'copies hooks.json to .claude directory' {
+            $destPath = Join-Path $script:DestRoot '.claude\hooks.json'
+            $destPath | Should -Exist
+        }
+
+        It 'copies all command files to .claude/commands directory' {
+            $commands = @('speckit.plan.md', 'speckit.specify.md', 'speckit.implement.md')
+
+            foreach ($cmd in $commands) {
+                $destPath = Join-Path $script:DestRoot ".claude\commands\$cmd"
+                $destPath | Should -Exist -Because "Command file $cmd should be copied"
+            }
+        }
+
+        It 'copies template files to .specify/templates directory' {
+            $templates = @('spec-template.md', 'plan-template.md', 'tasks-template.md')
+
+            foreach ($template in $templates) {
+                $destPath = Join-Path $script:DestRoot ".specify\templates\$template"
+                $destPath | Should -Exist -Because "Template file $template should be copied"
+            }
+        }
+
+        It 'copies script files to .specify/scripts/powershell directory' {
+            $destPath = Join-Path $script:DestRoot '.specify\scripts\powershell\common.ps1'
+            $destPath | Should -Exist
+        }
     }
 
     Context 'US1: Placeholder directory creation' {
-        # T011: .specify/memory/, .specify/metrics/, .specify/plans/, specs/ created empty
+        BeforeAll {
+            $script:SourceRoot = New-MockSpecKitSource
+            $script:DestRoot = Join-Path $TestDrive 'us1-placeholder-dest'
+            $script:Manifest = Build-FileManifest -SourcePath $script:SourceRoot
+            $script:CopyResult = Invoke-SpecKitCopy -Manifest $script:Manifest -SourcePath $script:SourceRoot -DestinationPath $script:DestRoot
+        }
+
+        It 'creates .specify/memory/ placeholder directory at destination' {
+            $placeholderPath = Join-Path $script:DestRoot '.specify/memory'
+            Test-Path $placeholderPath -PathType Container | Should -BeTrue
+        }
+
+        It 'creates .specify/metrics/ placeholder directory at destination' {
+            $placeholderPath = Join-Path $script:DestRoot '.specify/metrics'
+            Test-Path $placeholderPath -PathType Container | Should -BeTrue
+        }
+
+        It 'creates .specify/plans/ placeholder directory at destination' {
+            $placeholderPath = Join-Path $script:DestRoot '.specify/plans'
+            Test-Path $placeholderPath -PathType Container | Should -BeTrue
+        }
+
+        It 'creates specs/ placeholder directory at destination' {
+            $placeholderPath = Join-Path $script:DestRoot 'specs'
+            Test-Path $placeholderPath -PathType Container | Should -BeTrue
+        }
+
+        It 'creates placeholder directories that are empty (no files)' {
+            $allPlaceholderFiles = @()
+            foreach ($placeholder in @('.specify/memory', '.specify/metrics', '.specify/plans', 'specs')) {
+                $placeholderPath = Join-Path $script:DestRoot $placeholder
+                $files = @(Get-ChildItem -Path $placeholderPath -File -ErrorAction SilentlyContinue)
+                $allPlaceholderFiles += $files
+            }
+            $allPlaceholderFiles.Count | Should -Be 0
+        }
+
+        It 'reports PlaceholderDirectories count of 4 in CopyResult' {
+            $script:CopyResult.PlaceholderDirectories | Should -Be 4
+        }
+
+        It 'creates placeholder directories even when destination path does not exist initially' {
+            $freshDestRoot = Join-Path $TestDrive 'brand-new-destination'
+            Test-Path $freshDestRoot | Should -BeFalse
+
+            $freshManifest = Build-FileManifest -SourcePath $script:SourceRoot
+            $freshResult = Invoke-SpecKitCopy -Manifest $freshManifest -SourcePath $script:SourceRoot -DestinationPath $freshDestRoot
+
+            $freshResult.PlaceholderDirectories | Should -Be 4
+            foreach ($placeholder in @('.specify/memory', '.specify/metrics', '.specify/plans', 'specs')) {
+                $placeholderPath = Join-Path $freshDestRoot $placeholder
+                Test-Path $placeholderPath -PathType Container | Should -BeTrue
+            }
+        }
     }
 
     Context 'US1: Error handling' {
         # T012: Source not found, missing structure exit codes
+
+        BeforeAll {
+            $script:DestRoot = Join-Path $TestDrive 'us1-error-dest'
+            New-Item -ItemType Directory -Path $script:DestRoot -Force | Out-Null
+        }
+
+        It 'Invoke-SpecKitCopy returns ExitCode=1 when source path does not exist' {
+            $nonExistent = Join-Path $TestDrive 'nonexistent-source'
+            $result = Invoke-SpecKitCopy -SourcePath $nonExistent -DestinationPath $script:DestRoot
+
+            $result.ExitCode | Should -Be 1
+            $result.Success | Should -BeFalse
+            $result.Errors | Should -Not -BeNullOrEmpty
+            $result.Errors | Should -Match 'Source path does not exist'
+        }
+
+        It 'Invoke-SpecKitCopy returns error messages for missing source' {
+            $nonExistent = Join-Path $TestDrive 'missing-source'
+            $result = Invoke-SpecKitCopy -SourcePath $nonExistent -DestinationPath $script:DestRoot
+
+            $result.Errors.Count | Should -BeGreaterThan 0
+            $result.Errors[0] | Should -Match "Source path does not exist: .+$([regex]::Escape('missing-source'))"
+        }
+
+        It 'Invoke-SpecKitCopy returns ExitCode=1 for missing required structure' {
+            $incomplete = Join-Path $TestDrive 'incomplete-source'
+            New-Item -ItemType Directory -Path $incomplete -Force | Out-Null
+            # Only create .claude directory, missing .specify and CLAUDE.md
+            New-Item -ItemType Directory -Path (Join-Path $incomplete '.claude') -Force | Out-Null
+
+            $result = Invoke-SpecKitCopy -SourcePath $incomplete -DestinationPath $script:DestRoot
+
+            $result.ExitCode | Should -Be 1
+            $result.Success | Should -BeFalse
+            $result.Errors | Should -Not -BeNullOrEmpty
+            $result.Errors[0] | Should -Match 'Missing.*\.specify.*CLAUDE\.md'
+        }
+
+        It 'Invoke-SpecKitCopy returns detailed error listing all missing items' {
+            $incomplete = Join-Path $TestDrive 'incomplete-detailed'
+            New-Item -ItemType Directory -Path $incomplete -Force | Out-Null
+            # Create only .claude, missing both .specify and CLAUDE.md
+            New-Item -ItemType Directory -Path (Join-Path $incomplete '.claude') -Force | Out-Null
+
+            $result = Invoke-SpecKitCopy -SourcePath $incomplete -DestinationPath $script:DestRoot
+
+            $errorText = $result.Errors -join ' '
+            $errorText | Should -Match '\.specify'
+            $errorText | Should -Match 'CLAUDE\.md'
+        }
+
+        It 'Invoke-SpecKitCopy returns ExitCode=1 when source and destination are the same' {
+            $samePath = Join-Path $TestDrive 'same-path'
+            New-Item -ItemType Directory -Path $samePath -Force | Out-Null
+
+            $result = Invoke-SpecKitCopy -SourcePath $samePath -DestinationPath $samePath
+
+            $result.ExitCode | Should -Be 1
+            $result.Success | Should -BeFalse
+            $result.Errors | Should -Contain "Source and destination paths are the same: $samePath"
+        }
+
+        It 'No files are copied to destination when validation fails' {
+            $badSource = Join-Path $TestDrive 'bad-source-no-copy'
+            $dest = Join-Path $TestDrive 'should-be-empty'
+            New-Item -ItemType Directory -Path $dest -Force | Out-Null
+
+            $result = Invoke-SpecKitCopy -SourcePath $badSource -DestinationPath $dest
+
+            $result.ExitCode | Should -Be 1
+            $result.FilesCopied | Should -Be 0
+            # Verify destination has no new files (only the directory itself exists)
+            $files = @(Get-ChildItem -Path $dest -Recurse -File -ErrorAction SilentlyContinue)
+            $files.Count | Should -Be 0
+        }
+
+        It 'Invoke-SpecKitCopy returns ExitCode=1 when .claude directory is missing' {
+            $noClaude = Join-Path $TestDrive 'no-claude-dir'
+            New-Item -ItemType Directory -Path $noClaude -Force | Out-Null
+            New-Item -ItemType Directory -Path (Join-Path $noClaude '.specify') -Force | Out-Null
+            Set-Content -Path (Join-Path $noClaude 'CLAUDE.md') -Value '# test'
+
+            $result = Invoke-SpecKitCopy -SourcePath $noClaude -DestinationPath $script:DestRoot
+
+            $result.ExitCode | Should -Be 1
+            $result.Errors[0] | Should -Match '\.claude'
+        }
+
+        It 'Invoke-SpecKitCopy returns ExitCode=1 when .specify directory is missing' {
+            $noSpecify = Join-Path $TestDrive 'no-specify-dir'
+            New-Item -ItemType Directory -Path $noSpecify -Force | Out-Null
+            New-Item -ItemType Directory -Path (Join-Path $noSpecify '.claude') -Force | Out-Null
+            Set-Content -Path (Join-Path $noSpecify 'CLAUDE.md') -Value '# test'
+
+            $result = Invoke-SpecKitCopy -SourcePath $noSpecify -DestinationPath $script:DestRoot
+
+            $result.ExitCode | Should -Be 1
+            $result.Errors[0] | Should -Match '\.specify'
+        }
+
+        It 'Invoke-SpecKitCopy returns ExitCode=1 when CLAUDE.md file is missing' {
+            $noClaudeMd = Join-Path $TestDrive 'no-claude-md'
+            New-Item -ItemType Directory -Path $noClaudeMd -Force | Out-Null
+            New-Item -ItemType Directory -Path (Join-Path $noClaudeMd '.claude') -Force | Out-Null
+            New-Item -ItemType Directory -Path (Join-Path $noClaudeMd '.specify') -Force | Out-Null
+
+            $result = Invoke-SpecKitCopy -SourcePath $noClaudeMd -DestinationPath $script:DestRoot
+
+            $result.ExitCode | Should -Be 1
+            $result.Errors[0] | Should -Match 'CLAUDE\.md'
+        }
+
+        It 'Invoke-SpecKitCopy sets Success=$false when validation fails' {
+            $invalid = Join-Path $TestDrive 'invalid-validation'
+            $result = Invoke-SpecKitCopy -SourcePath $invalid -DestinationPath $script:DestRoot
+
+            $result.Success | Should -BeFalse
+            $result.ExitCode | Should -Be 1
+        }
     }
 
     #endregion

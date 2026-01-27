@@ -64,16 +64,16 @@
 
 > **TDD REQUIRED: Write tests FIRST, verify they FAIL (RED), then implement until GREEN**
 
-- [ ] T010 [P] [US1] Write Pester tests for core copy operation: all Tier 1 files copied preserving structure, all Tier 2 core agents copied, domain files excluded, destination directories auto-created in .specify/scripts/powershell/Copy-SpecKit.tests.ps1
-- [ ] T011 [P] [US1] Write Pester tests for placeholder directory creation: .specify/memory/, .specify/metrics/, .specify/plans/, specs/ created empty at destination (FR-007) in .specify/scripts/powershell/Copy-SpecKit.tests.ps1
-- [ ] T012 [P] [US1] Write Pester tests for error handling: source not found exits with code 1, missing source structure exits with code 1 and lists missing items (FR-014, FR-018) in .specify/scripts/powershell/Copy-SpecKit.tests.ps1
+- [x] T010 [P] [US1] Write Pester tests for core copy operation: all Tier 1 files copied preserving structure, all Tier 2 core agents copied, domain files excluded, destination directories auto-created in .specify/scripts/powershell/Copy-SpecKit.tests.ps1
+- [x] T011 [P] [US1] Write Pester tests for placeholder directory creation: .specify/memory/, .specify/metrics/, .specify/plans/, specs/ created empty at destination (FR-007) in .specify/scripts/powershell/Copy-SpecKit.tests.ps1
+- [x] T012 [P] [US1] Write Pester tests for error handling: source not found exits with code 1, missing source structure exits with code 1 and lists missing items (FR-014, FR-018) in .specify/scripts/powershell/Copy-SpecKit.tests.ps1
 
 ### Implementation for User Story 1
 
-- [ ] T013 [US1] Implement main copy engine function (Invoke-SpecKitCopy) that iterates FileEntry manifest, creates directories via New-Item, copies files via Copy-Item, and returns CopyResult object in .specify/scripts/powershell/Copy-SpecKit.ps1
-- [ ] T014 [US1] Implement placeholder directory creation for .specify/memory/, .specify/metrics/, .specify/plans/, specs/ (FR-007) in .specify/scripts/powershell/Copy-SpecKit.ps1
-- [ ] T015 [US1] Wire up main script entry point: parameter processing, source validation call, manifest building, copy engine call, exit code setting (FR-001, FR-002, FR-018) in .specify/scripts/powershell/Copy-SpecKit.ps1
-- [ ] T016 [US1] Implement copy operation summary output showing files copied, directories created, grouped by tier with rich formatting (FR-020) in .specify/scripts/powershell/Copy-SpecKit.ps1
+- [x] T013 [US1] Implement main copy engine function (Invoke-SpecKitCopy) that iterates FileEntry manifest, creates directories via New-Item, copies files via Copy-Item, and returns CopyResult object in .specify/scripts/powershell/Copy-SpecKit.ps1
+- [x] T014 [US1] Implement placeholder directory creation for .specify/memory/, .specify/metrics/, .specify/plans/, specs/ (FR-007) in .specify/scripts/powershell/Copy-SpecKit.ps1
+- [x] T015 [US1] Wire up main script entry point: parameter processing, source validation call, manifest building, copy engine call, exit code setting (FR-001, FR-002, FR-018) in .specify/scripts/powershell/Copy-SpecKit.ps1
+- [x] T016 [US1] Implement copy operation summary output showing files copied, directories created, grouped by tier with rich formatting (FR-020) in .specify/scripts/powershell/Copy-SpecKit.ps1
 
 **Checkpoint**: User Story 1 complete. Script copies all framework files to a new destination with directory structure preserved. MVP is functional.
 
