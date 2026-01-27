@@ -550,7 +550,8 @@ public class BreezSdkMetricsTests : IDisposable
     [Fact]
     public async Task Metrics_ShouldBeThreadSafe_WhenRecordingConcurrently()
     {
-        // Arrange
+        // Arrange - Use unique network prefix to avoid interference from other tests
+        var uniquePrefix = $"thread-safe-{Guid.NewGuid():N}";
         var tasks = new List<Task>();
         var iterationsPerThread = 100;
         var threadCount = 10;
@@ -563,10 +564,10 @@ public class BreezSdkMetricsTests : IDisposable
             {
                 for (var j = 0; j < iterationsPerThread; j++)
                 {
-                    BreezSdkMetrics.RecordInvoiceCreated($"network-{threadIndex}", "success");
-                    BreezSdkMetrics.RecordPaymentReceived($"network-{threadIndex}", "success");
-                    BreezSdkMetrics.RecordPaymentFailed($"network-{threadIndex}", "error");
-                    BreezSdkMetrics.RecordOperationDuration("test_op", $"network-{threadIndex}", 50.0);
+                    BreezSdkMetrics.RecordInvoiceCreated($"{uniquePrefix}-{threadIndex}", "success");
+                    BreezSdkMetrics.RecordPaymentReceived($"{uniquePrefix}-{threadIndex}", "success");
+                    BreezSdkMetrics.RecordPaymentFailed($"{uniquePrefix}-{threadIndex}", "error");
+                    BreezSdkMetrics.RecordOperationDuration("test_op", $"{uniquePrefix}-{threadIndex}", 50.0);
                 }
             }));
         }
@@ -575,17 +576,22 @@ public class BreezSdkMetricsTests : IDisposable
         _listener.RecordObservableInstruments();
 
         // Assert - All measurements should be recorded without data corruption
+        // Filter by our unique prefix to avoid interference from other parallel tests
         var invoiceCount = _counterMeasurements.ContainsKey("breez.invoice.created")
-            ? _counterMeasurements["breez.invoice.created"].Count
+            ? _counterMeasurements["breez.invoice.created"]
+                .Count(m => m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString()?.StartsWith(uniquePrefix) == true))
             : 0;
         var paymentReceivedCount = _counterMeasurements.ContainsKey("breez.payment.received")
-            ? _counterMeasurements["breez.payment.received"].Count
+            ? _counterMeasurements["breez.payment.received"]
+                .Count(m => m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString()?.StartsWith(uniquePrefix) == true))
             : 0;
         var paymentFailedCount = _counterMeasurements.ContainsKey("breez.payment.failed")
-            ? _counterMeasurements["breez.payment.failed"].Count
+            ? _counterMeasurements["breez.payment.failed"]
+                .Count(m => m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString()?.StartsWith(uniquePrefix) == true))
             : 0;
         var operationDurationCount = _histogramMeasurements.ContainsKey("breez.operation.duration")
-            ? _histogramMeasurements["breez.operation.duration"].Count
+            ? _histogramMeasurements["breez.operation.duration"]
+                .Count(m => m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString()?.StartsWith(uniquePrefix) == true))
             : 0;
 
         var expectedCount = threadCount * iterationsPerThread;
