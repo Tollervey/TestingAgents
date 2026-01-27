@@ -89,12 +89,12 @@
 
 > **TDD REQUIRED: Write tests FIRST, verify they FAIL (RED), then implement until GREEN**
 
-- [ ] T017 [P] [US2] Write Pester tests for preview mode: no filesystem changes occur, output lists files grouped by tier with source/destination paths and inclusion/exclusion reasons in .specify/scripts/powershell/Copy-SpecKit.tests.ps1
+- [x] T017 [P] [US2] Write Pester tests for preview mode: no filesystem changes occur, output lists files grouped by tier with source/destination paths and inclusion/exclusion reasons in .specify/scripts/powershell/Copy-SpecKit.tests.ps1
 
 ### Implementation for User Story 2
 
-- [ ] T018 [US2] Implement preview mode logic in Invoke-SpecKitCopy that skips all filesystem operations and outputs planned operations grouped by tier (FR-008) in .specify/scripts/powershell/Copy-SpecKit.ps1
-- [ ] T019 [US2] Implement preview output formatting showing each file with source path, destination path, action (Copy/Skip/CreateDir), and tier classification in .specify/scripts/powershell/Copy-SpecKit.ps1
+- [x] T018 [US2] Implement preview mode logic in Invoke-SpecKitCopy that skips all filesystem operations and outputs planned operations grouped by tier (FR-008) in .specify/scripts/powershell/Copy-SpecKit.ps1
+- [x] T019 [US2] Implement preview output formatting showing each file with source path, destination path, action (Copy/Skip/CreateDir), and tier classification in .specify/scripts/powershell/Copy-SpecKit.ps1
 
 **Checkpoint**: User Story 2 complete. Preview mode shows full operation plan without making changes.
 

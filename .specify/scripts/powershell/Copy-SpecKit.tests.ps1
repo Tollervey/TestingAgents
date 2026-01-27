@@ -617,6 +617,91 @@ Describe 'Copy-SpecKit' {
 
     Context 'US2: Preview mode' {
         # T017: No filesystem changes, output lists files by tier
+
+        BeforeAll {
+            $script:SourceRoot = New-MockSpecKitSource
+            $script:PreviewDest = Join-Path $TestDrive 'us2-preview-dest'
+            $script:Manifest = Build-FileManifest -SourcePath $script:SourceRoot
+            $script:PreviewResult = Invoke-SpecKitCopy -Manifest $script:Manifest -SourcePath $script:SourceRoot -DestinationPath $script:PreviewDest -Preview
+        }
+
+        It 'returns IsPreview=$true in CopyResult' {
+            $script:PreviewResult.IsPreview | Should -BeTrue
+        }
+
+        It 'returns FilesCopied=0 in preview mode' {
+            $script:PreviewResult.FilesCopied | Should -Be 0
+        }
+
+        It 'returns DirectoriesCreated=0 in preview mode' {
+            $script:PreviewResult.DirectoriesCreated | Should -Be 0
+        }
+
+        It 'returns PlaceholderDirectories=0 in preview mode' {
+            $script:PreviewResult.PlaceholderDirectories | Should -Be 0
+        }
+
+        It 'does not create the destination directory in preview mode' {
+            Test-Path $script:PreviewDest | Should -BeFalse
+        }
+
+        It 'does not create any files at destination in preview mode' {
+            $files = @(Get-ChildItem -Path $script:PreviewDest -Recurse -File -ErrorAction SilentlyContinue)
+            $files.Count | Should -Be 0
+        }
+
+        It 'returns ExitCode=0 in preview mode with valid source' {
+            $script:PreviewResult.ExitCode | Should -Be 0
+        }
+
+        It 'returns Success=$true in preview mode with valid source' {
+            $script:PreviewResult.Success | Should -BeTrue
+        }
+
+        It 'populates DomainsAvailable in preview mode' {
+            $script:PreviewResult.DomainsAvailable | Should -Not -BeNullOrEmpty
+            $script:PreviewResult.DomainsAvailable | Should -Contain 'umbraco'
+            $script:PreviewResult.DomainsAvailable | Should -Contain 'breezsdk'
+        }
+
+        It 'populates manifest with included file entries for preview reporting' {
+            $included = @($script:Manifest | Where-Object { $_.Included -eq $true })
+            $included.Count | Should -BeGreaterThan 0
+        }
+
+        It 'manifest includes tier classification for each entry' {
+            $script:Manifest | ForEach-Object {
+                $_.Tier | Should -Not -BeNullOrEmpty -Because "Every manifest entry should have a Tier classification"
+            }
+        }
+
+        It 'manifest includes reason for each entry' {
+            $script:Manifest | ForEach-Object {
+                $_.Reason | Should -Not -BeNullOrEmpty -Because "Every manifest entry should have an inclusion/exclusion reason"
+            }
+        }
+
+        It 'preview mode with existing destination does not modify existing files' {
+            $existingDest = Join-Path $TestDrive 'us2-existing-dest'
+            New-Item -ItemType Directory -Path $existingDest -Force | Out-Null
+            $markerFile = Join-Path $existingDest 'existing-file.txt'
+            Set-Content -Path $markerFile -Value 'original-content'
+
+            $manifest = Build-FileManifest -SourcePath $script:SourceRoot
+            Invoke-SpecKitCopy -Manifest $manifest -SourcePath $script:SourceRoot -DestinationPath $existingDest -Preview
+
+            $content = Get-Content -Path $markerFile -Raw
+            $content.Trim() | Should -Be 'original-content'
+        }
+
+        It 'preview mode returns validation errors when source is invalid' {
+            $badSource = Join-Path $TestDrive 'nonexistent-preview-source'
+            $result = Invoke-SpecKitCopy -SourcePath $badSource -DestinationPath (Join-Path $TestDrive 'preview-bad') -Preview
+
+            $result.ExitCode | Should -Be 1
+            $result.Success | Should -BeFalse
+            $result.IsPreview | Should -BeTrue
+        }
     }
 
     #endregion
