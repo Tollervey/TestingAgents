@@ -1,0 +1,37 @@
+﻿{
+    "sessionId":  "550302c6-b8eb-4a69-9c0b-3dfc3b7d8be7",
+    "startTime":  "2026-01-27T21:42:17.3195640+00:00",
+    "parallelGroups":  {
+
+                       },
+    "agents":  {
+
+               },
+    "featureBranch":  "002-speckit-copy-script",
+    "completionStatus":  "complete",
+    "invocations":  [
+
+                    ],
+    "endTime":  "2026-01-27T21:44:09.0475291+00:00",
+    "models":  {
+
+               },
+    "phase":  "tasks",
+    "categories":  {
+
+                   },
+    "schemaVersion":  "2.0.0",
+    "totals":  {
+                   "totalDurationMs":  0,
+                   "sequentialInvocations":  0,
+                   "parallelInvocations":  0,
+                   "totalInvocations":  0,
+                   "totalTimeouts":  0,
+                   "avgDurationMs":  0,
+                   "totalFailures":  0,
+                   "avgTokensPerInvocation":  0,
+                   "totalSuccesses":  0,
+                   "totalTokens":  0,
+                   "overallSuccessRate":  0
+               }
+}
