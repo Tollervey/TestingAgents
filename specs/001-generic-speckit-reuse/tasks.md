@@ -25,7 +25,7 @@
 
 **Purpose**: Create the new project-specific addendum file that will receive all moved content
 
-- [ ] T001 Create `CLAUDE.project.md` at repository root with structure for .NET conventions, domain agents, MCP server docs, and technology-specific content (see plan.md D1 content migration map)
+- [x] T001 Create `CLAUDE.project.md` at repository root with structure for .NET conventions, domain agents, MCP server docs, and technology-specific content (see plan.md D1 content migration map)
 
 ---
 
