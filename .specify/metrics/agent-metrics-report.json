@@ -1,6 +1,6 @@
 ﻿{
-    "sessionId":  "550302c6-b8eb-4a69-9c0b-3dfc3b7d8be7",
-    "startTime":  "2026-01-27T21:42:17.3195640+00:00",
+    "sessionId":  "4dc6e790-4c4c-4faa-9131-78263cd49925",
+    "startTime":  "2026-01-27T21:50:58.5251951+00:00",
     "parallelGroups":  {
 
                        },
@@ -12,11 +12,11 @@
     "invocations":  [
 
                     ],
-    "endTime":  "2026-01-27T21:44:09.0475291+00:00",
+    "endTime":  "2026-01-27T21:50:58.8460091+00:00",
     "models":  {
 
                },
-    "phase":  "tasks",
+    "phase":  "test-fix",
     "categories":  {
 
                    },

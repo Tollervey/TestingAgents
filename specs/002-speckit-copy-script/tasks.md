@@ -170,10 +170,10 @@
 **Purpose**: PassThru output, edge cases, Verbose logging, and final validation
 
 - [ ] T031 [P] Write Pester tests for -PassThru output: returns PSCustomObject with all CopyResult fields matching data-model.md schema in .specify/scripts/powershell/Copy-SpecKit.tests.ps1
-- [ ] T032 [P] Write Pester tests for edge cases: paths with spaces, cross-platform path separators, partial source installation warns but copies available files in .specify/scripts/powershell/Copy-SpecKit.tests.ps1
+- [ ] T032 [P] Write Pester tests for edge cases: paths with spaces handled correctly, Join-Path used for all path construction (FR-016), forward-slash display in output, partial source installation warns but copies available files, permission error on destination returns exit code 3 with clear message (mock UnauthorizedAccessException), verify -Verbose produces per-file operation log entries (FR-017) in .specify/scripts/powershell/Copy-SpecKit.tests.ps1
 - [ ] T033 Implement -PassThru switch that returns CopyResult PSCustomObject for pipeline usage (FR-019) in .specify/scripts/powershell/Copy-SpecKit.ps1
 - [ ] T034 Add Write-Verbose calls throughout all functions for detailed operation logging (FR-017) in .specify/scripts/powershell/Copy-SpecKit.ps1
-- [ ] T035 Add SupportsShouldProcess and -WhatIf support to CmdletBinding for PowerShell standard confirmation (per contracts/cli-interface.md) in .specify/scripts/powershell/Copy-SpecKit.ps1
+- [ ] T035 Add SupportsShouldProcess and -WhatIf/-Confirm support to CmdletBinding for standard PowerShell confirmation alongside -Preview rich manifest mode (per contracts/cli-interface.md) in .specify/scripts/powershell/Copy-SpecKit.ps1
 - [ ] T036 Run full Pester test suite and validate all tests pass via Invoke-Pester .specify/scripts/powershell/Copy-SpecKit.tests.ps1 -Output Detailed
 - [ ] T037 Run quickstart.md validation: execute all usage examples from quickstart.md against a temporary destination and verify expected behavior
 

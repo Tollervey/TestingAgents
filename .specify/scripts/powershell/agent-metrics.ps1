@@ -668,9 +668,9 @@ function Generate-Report {
     $phaseDuration = $endTime - $startTime
 
     Write-Host ""
-    Write-Host "═══════════════════════════════════════════════════════════════════════════════" -ForegroundColor Magenta
+    Write-Host "===============================================================================" -ForegroundColor Magenta
     Write-Host "                         AGENT METRICS REPORT                                  " -ForegroundColor Magenta
-    Write-Host "═══════════════════════════════════════════════════════════════════════════════" -ForegroundColor Magenta
+    Write-Host "===============================================================================" -ForegroundColor Magenta
     Write-Host ""
     Write-Host "Phase: $($metrics.phase)" -ForegroundColor White
     Write-Host "Duration: $($phaseDuration.ToString('hh\:mm\:ss'))" -ForegroundColor White
@@ -678,9 +678,9 @@ function Generate-Report {
     Write-Host ""
 
     # Summary Stats
-    Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "-------------------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "                              SUMMARY                                          " -ForegroundColor Yellow
-    Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "-------------------------------------------------------------------------------" -ForegroundColor DarkGray
 
     $totals = $metrics.totals
     $overallSuccessRate = if ($totals.totalInvocations -gt 0) {
@@ -695,9 +695,9 @@ function Generate-Report {
 
     # MODEL DISTRIBUTION (FR-003)
     if ($metrics.models -and $metrics.models.PSObject.Properties.Count -gt 0) {
-        Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host "-------------------------------------------------------------------------------" -ForegroundColor DarkGray
         Write-Host "                         MODEL DISTRIBUTION                                    " -ForegroundColor Yellow
-        Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host "-------------------------------------------------------------------------------" -ForegroundColor DarkGray
         Write-Host ""
 
         # Table header
@@ -726,9 +726,9 @@ function Generate-Report {
 
     # CATEGORY BREAKDOWN (FR-007)
     if ($metrics.categories -and $metrics.categories.PSObject.Properties.Count -gt 0) {
-        Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host "-------------------------------------------------------------------------------" -ForegroundColor DarkGray
         Write-Host "                         CATEGORY BREAKDOWN                                    " -ForegroundColor Yellow
-        Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host "-------------------------------------------------------------------------------" -ForegroundColor DarkGray
         Write-Host ""
 
         # Table header
@@ -767,9 +767,9 @@ function Generate-Report {
 
     # PARALLELIZATION METRICS (FR-009)
     if ($totals.parallelInvocations -gt 0 -or ($metrics.parallelGroups -and $metrics.parallelGroups.PSObject.Properties.Count -gt 0)) {
-        Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host "-------------------------------------------------------------------------------" -ForegroundColor DarkGray
         Write-Host "                      PARALLELIZATION METRICS                                  " -ForegroundColor Yellow
-        Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host "-------------------------------------------------------------------------------" -ForegroundColor DarkGray
         Write-Host ""
 
         $parallelPct = if ($totals.totalInvocations -gt 0) {
@@ -810,9 +810,9 @@ function Generate-Report {
     }
 
     # Agent Performance Table
-    Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "-------------------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "                         AGENT PERFORMANCE                                     " -ForegroundColor Yellow
-    Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "-------------------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host ""
 
     # Table header
@@ -847,9 +847,9 @@ function Generate-Report {
     Write-Host ""
 
     # Efficiency Indicators
-    Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "-------------------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "                        EFFICIENCY INDICATORS                                  " -ForegroundColor Yellow
-    Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "-------------------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host ""
 
     # Most used agent
@@ -886,9 +886,9 @@ function Generate-Report {
     $estimatedCost = [math]::Round($totals.totalTokens * 0.000003, 2)
     $tokenCount = $totals.totalTokens.ToString('N0')
     $costLine = "  Estimated Token Cost:     ~`${0} ({1} tokens)" -f $estimatedCost, $tokenCount
-    Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "-------------------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host $costLine -ForegroundColor Gray
-    Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "-------------------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host ""
 
     # Save updated metrics with end time
@@ -1679,9 +1679,9 @@ function Generate-CumulativeReport {
 
     # --- Display Report ---
     Write-Host ""
-    Write-Host "═══════════════════════════════════════════════════════════════════════════════" -ForegroundColor Magenta
+    Write-Host "===============================================================================" -ForegroundColor Magenta
     Write-Host "                    CUMULATIVE FEATURE REPORT                                  " -ForegroundColor Magenta
-    Write-Host "═══════════════════════════════════════════════════════════════════════════════" -ForegroundColor Magenta
+    Write-Host "===============================================================================" -ForegroundColor Magenta
     Write-Host ""
     Write-Host "Feature Branch: $Branch" -ForegroundColor White
     Write-Host "Period: $($periodStart.ToString('yyyy-MM-dd')) to $($periodEnd.ToString('yyyy-MM-dd'))" -ForegroundColor White
@@ -1689,9 +1689,9 @@ function Generate-CumulativeReport {
     Write-Host ""
 
     # PHASE BREAKDOWN
-    Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "-------------------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "                              PHASE BREAKDOWN                                  " -ForegroundColor Yellow
-    Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "-------------------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host ""
 
     $phaseHeader = "{0,-14} {1,10} {2,14} {3,14} {4,12} {5,10}" -f "Phase", "Sessions", "Invocations", "Tokens", "Duration", "Success"
@@ -1750,9 +1750,9 @@ function Generate-CumulativeReport {
             $m.costPercent = if ($totalWeighted -gt 0) { [math]::Round(($m.weightedTokens / $totalWeighted) * 100, 1) } else { 0 }
         }
 
-        Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host "-------------------------------------------------------------------------------" -ForegroundColor DarkGray
         Write-Host "                     CUMULATIVE MODEL DISTRIBUTION                             " -ForegroundColor Yellow
-        Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host "-------------------------------------------------------------------------------" -ForegroundColor DarkGray
         Write-Host ""
 
         $mdlHeader = "{0,-12} {1,14} {2,14} {3,14} {4,10}" -f "Model", "Total Tokens", "Invocations", "Cost Weight", "Cost %"
@@ -1784,9 +1784,9 @@ function Generate-CumulativeReport {
     }
 
     if ($allCategories.Count -gt 0) {
-        Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host "-------------------------------------------------------------------------------" -ForegroundColor DarkGray
         Write-Host "                     CUMULATIVE CATEGORY BREAKDOWN                             " -ForegroundColor Yellow
-        Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host "-------------------------------------------------------------------------------" -ForegroundColor DarkGray
         Write-Host ""
 
         $catHeader = "{0,-16} {1,14} {2,14} {3,10}" -f "Category", "Invocations", "Tokens", "% of Total"
@@ -1803,9 +1803,9 @@ function Generate-CumulativeReport {
     }
 
     # FEATURE SUMMARY
-    Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "-------------------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "                         FEATURE SUMMARY                                       " -ForegroundColor Yellow
-    Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "-------------------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host ""
     Write-Host ("  Total Development Time:       {0}" -f (Format-Duration $totalDurationMs))
     Write-Host ("  Total Agent Invocations:      {0}" -f $totalInvocations)
