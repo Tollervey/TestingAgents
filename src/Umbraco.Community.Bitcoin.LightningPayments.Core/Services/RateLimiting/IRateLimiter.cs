@@ -1,4 +1,4 @@
-﻿namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.RateLimiting
+namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.RateLimiting
 {
     public interface IRateLimiter
     {

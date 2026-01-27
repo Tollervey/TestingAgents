@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json.schemastore.org/umbraco-package.json",
+  "name": "Lightning Payments",
+  "version": "1.0.0",
+  "extensions": [
+    {
+      "type": "section",
+      "alias": "Lightning.Payments.Section",
+      "name": "Lightning Payments",
+      "meta": {
+        "label": "Lightning Payments",
+        "pathname": "lightning-payments"
+      }
+    },
+    {
+      "type": "dashboard",
+      "alias": "Lightning.Payments.Dashboard",
+      "name": "Lightning Payments Dashboard",
+      "element": "/App_Plugins/LightningPayments/dashboard/lightning-dashboard.element.js",
+      "weight": 10,
+      "meta": {
+        "label": "Dashboard",
+        "pathname": "dashboard"
+      },
+      "conditions": [
+        {
+          "alias": "Umb.Condition.SectionAlias",
+          "match": "Lightning.Payments.Section"
+        }
+      ]
+    },
+    {
+      "type": "propertyEditorUi",
+      "alias": "lightningPayments.paywall",
+      "name": "Lightning Paywall",
+      "element": "/App_Plugins/LightningPayments/property-editor/paywall-editor.element.js",
+      "meta": {
+        "label": "Lightning Paywall",
+        "icon": "icon-lock",
+        "group": "Lightning Payments",
+        "propertyEditorSchemaAlias": "Umbraco.JSON"
+      }
+    }
+  ]
+}

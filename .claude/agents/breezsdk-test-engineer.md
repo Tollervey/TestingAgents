@@ -19,10 +19,28 @@ You are a test engineering specialist for BreezSDK Liquid integrations, focusing
 - NEVER use `.Wait()` or `.Result` - these cause xUnit1031 errors and potential deadlocks
 - Use `await` for all async operations
 
-**Static State Isolation:**
+**Static State Isolation (MUST follow):**
 - Use unique identifiers (`Guid.NewGuid()`) in tests that touch static/shared state
 - Don't assert exact counts on shared collections - filter by your unique identifier
 - Static state (Meters, ActivitySources, ConcurrentDictionaries) persists across test runs
+- **Metrics tag values**: NEVER use hardcoded strings like `"testnet"`, `"mainnet"`, `"success"` as tag values when those tags are used to filter/count measurements. Use `$"descriptive-prefix-{Guid.NewGuid():N}"` instead, then filter assertions by that unique value.
+- **Assertion filtering**: When asserting on metrics collected via `MeterListener`, always `.Where()` filter by your unique tag value before asserting counts or values. Without filtering, other tests recording to the same static instrument pollute your results.
+
+```csharp
+// BAD: Hardcoded network tag — cross-test pollution via shared static Meter
+var network = "testnet";
+BreezSdkMetrics.RecordPaymentReceived(network, "success");
+var measurements = _counterMeasurements["breez.payment.received"];
+measurements.Should().HaveCount(1); // FLAKY — other tests also recorded to this instrument
+
+// GOOD: Unique network tag + filtered assertion
+var network = $"payment-test-{Guid.NewGuid():N}";
+BreezSdkMetrics.RecordPaymentReceived(network, "success");
+var measurements = _counterMeasurements["breez.payment.received"]
+    .Where(m => m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString() == network))
+    .ToList();
+measurements.Should().HaveCount(1); // STABLE — isolated from other tests
+```
 
 **Pattern Matching in Tests:**
 - When using switch expressions with inheritance, check derived types FIRST
@@ -330,6 +348,42 @@ private static ResiliencePipeline CreateFastTestPolicy() =>
         .Build();
 ```
 
+## Test Timing Guidelines (CRITICAL)
+
+**Core Principle**: Tests verify BEHAVIOR, not exact timing. Production delay values are configuration, not logic.
+
+### Slow Test Anti-Patterns
+
+| Scenario | BAD (Slow) | GOOD (Fast) |
+|----------|------------|-------------|
+| Timeout behavior | `Task.Delay(30s)` waiting for timeout | Use 100ms timeout, verify exception type |
+| Retry policies | Use production policy with 2s delays | Create test policy with 50ms delays |
+| Exponential backoff | Wait for 2s + 4s + 8s = 14s | Use 50ms + 100ms + 200ms = 350ms |
+| Circuit breaker | 16s break duration, 60s sampling | 1-2s break duration, 2-3s sampling |
+| Reconnection backoff | Assert exact timing (jitter fails) | Assert retry count or state transitions |
+| Connection state | Observe transient state mid-reconnection | Collect state history via events |
+
+### Fast Test Policy Pattern (Polly)
+
+When testing resilience policies, create test-specific versions with short delays:
+
+```csharp
+// SLOW: Using production policy (2s base delay)
+await ResiliencePolicies.ConnectPolicy.ExecuteAsync(...); // 14s for 3 retries!
+
+// FAST: Create test policy with 50ms base delay
+private static ResiliencePipeline CreateFastTestPolicy() =>
+    new ResiliencePipelineBuilder()
+        .AddRetry(new RetryStrategyOptions
+        {
+            MaxRetryAttempts = 3,           // Same count as production
+            Delay = TimeSpan.FromMilliseconds(50),  // Fast delay for tests
+            BackoffType = DelayBackoffType.Exponential,
+            UseJitter = true
+        })
+        .Build();
+```
+
 ### What to Test vs What to Skip
 
 | Test This (Behavior) | Skip This (Configuration) |
@@ -341,6 +395,51 @@ private static ResiliencePipeline CreateFastTestPolicy() =>
 | Event callback preservation | Real reconnection delays |
 
 **Rule**: If a test requires waiting >2 seconds, create a fast test policy with short delays.
+
+### Non-Transient Errors Must Not Be Retried
+
+Configuration validation, argument checks, and other deterministic failures must be thrown **before** entering the resilience pipeline. Otherwise, tests expecting fast validation failures wait through all retry delays (e.g., 2s + 4s + 8s = 14s).
+
+```csharp
+// BAD: ValidateConfiguration() throws ConfigurationException inside retry loop
+await ResiliencePolicies.ConnectPolicy.ExecuteAsync(async ct =>
+{
+    ValidateConfiguration(); // Retried 3 times with backoff!
+    await ConnectInternalAsync(ct);
+}, cancellationToken);
+
+// GOOD: Validate before entering the retry pipeline
+ValidateConfiguration(); // Fails fast — no retries for deterministic errors
+await ResiliencePolicies.ConnectPolicy.ExecuteAsync(async ct =>
+{
+    await ConnectInternalAsync(ct); // Only transient failures retried
+}, cancellationToken);
+```
+
+**For test engineers**: Make resilience pipelines injectable via constructor overload so tests can provide fast policies:
+```csharp
+// Test uses fast policy (50ms delays instead of 2s)
+_sut = new BreezSdkWrapper(options, logger, CreateFastConnectPolicy());
+```
+
+### Async Enumerable / Channel Cancellation Tests
+
+Never test cancellation inside a `foreach` body when the source may be empty — `MoveNextAsync()` blocks waiting for data, so the cancellation call is never reached and the test hangs.
+
+```csharp
+// BAD: Hangs — empty channel blocks on MoveNextAsync forever
+await foreach (var evt in channel.ReadAllAsync(cts.Token))
+{
+    cts.Cancel(); // Never reached
+}
+
+// GOOD: Ensure data exists so the loop body executes
+await channel.WriteAsync(testEvent, CancellationToken.None);
+await foreach (var evt in channel.ReadAllAsync(cts.Token))
+{
+    cts.Cancel(); // Reached because there's data
+}
+```
 
 ## Output Format
 

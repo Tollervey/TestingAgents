@@ -133,3 +133,4 @@ This agent verifies:
 - [ ] Liquid addresses abstracted from users
 - [ ] User-friendly error messages
 - [ ] Proper exception handling with context
+- [ ] **Tests use unique tag values** for static metrics (no hardcoded `"testnet"`/`"mainnet"` in metric tag assertions — use `Guid.NewGuid()` and `.Where()` filtering)

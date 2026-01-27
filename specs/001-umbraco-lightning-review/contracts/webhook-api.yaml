@@ -1,0 +1,395 @@
+openapi: 3.0.3
+info:
+  title: Lightning Payments Webhook API
+  description: |
+    Webhook payloads sent by the Lightning Payments system to configured endpoints.
+    All webhooks include HMAC-SHA256 signature verification.
+  version: 1.0.0
+
+webhooks:
+  payment.confirmed:
+    post:
+      summary: Payment confirmed
+      description: |
+        Sent when a Lightning payment has been confirmed.
+        This is the primary webhook for order fulfillment.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentConfirmedEvent'
+      responses:
+        '200':
+          description: Webhook processed successfully
+        '4XX':
+          description: Client error (will not retry)
+        '5XX':
+          description: Server error (will retry)
+
+  payment.failed:
+    post:
+      summary: Payment failed
+      description: Sent when a payment fails or is rejected
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentFailedEvent'
+      responses:
+        '200':
+          description: Webhook processed
+
+  payment.expired:
+    post:
+      summary: Invoice expired
+      description: Sent when a payment invoice expires without payment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentExpiredEvent'
+      responses:
+        '200':
+          description: Webhook processed
+
+  refund.initiated:
+    post:
+      summary: Refund initiated
+      description: Sent when an admin initiates a refund
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundInitiatedEvent'
+      responses:
+        '200':
+          description: Webhook processed
+
+  refund.completed:
+    post:
+      summary: Refund completed
+      description: Sent when a refund payment succeeds or fails
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundCompletedEvent'
+      responses:
+        '200':
+          description: Webhook processed
+
+components:
+  schemas:
+    WebhookEnvelope:
+      type: object
+      description: Common envelope for all webhook events
+      required:
+        - event
+        - timestamp
+        - webhookId
+        - data
+      properties:
+        event:
+          type: string
+          description: Event type identifier
+          example: payment.confirmed
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp of event
+        webhookId:
+          type: string
+          format: uuid
+          description: Unique identifier for this webhook delivery
+        attemptNumber:
+          type: integer
+          description: Retry attempt number (1 = first attempt)
+          default: 1
+        data:
+          type: object
+          description: Event-specific payload
+
+    PaymentConfirmedEvent:
+      allOf:
+        - $ref: '#/components/schemas/WebhookEnvelope'
+        - type: object
+          properties:
+            event:
+              const: payment.confirmed
+            data:
+              type: object
+              required:
+                - paymentHash
+                - amountSat
+                - confirmedAt
+              properties:
+                paymentHash:
+                  type: string
+                  description: Unique payment identifier
+                  example: "3df0ae..."
+                amountSat:
+                  type: integer
+                  format: int64
+                  description: Amount in satoshis
+                  example: 5000
+                amountFiat:
+                  type: object
+                  properties:
+                    currency:
+                      type: string
+                    amount:
+                      type: number
+                kind:
+                  type: string
+                  enum: [paywall, tip]
+                contentId:
+                  type: integer
+                  description: Umbraco content ID (null for tips)
+                  nullable: true
+                contentName:
+                  type: string
+                  description: Content node name
+                  nullable: true
+                userSessionId:
+                  type: string
+                  description: User session identifier
+                invoiceCreatedAt:
+                  type: string
+                  format: date-time
+                confirmedAt:
+                  type: string
+                  format: date-time
+                tier:
+                  type: string
+                  description: Paywall tier (1h, 8h, 24h, 7d)
+                  nullable: true
+                accessExpiresAt:
+                  type: string
+                  format: date-time
+                  description: When paywall access expires
+                  nullable: true
+                bolt12OfferId:
+                  type: string
+                  format: uuid
+                  description: If paid to a BOLT12 offer
+                  nullable: true
+
+    PaymentFailedEvent:
+      allOf:
+        - $ref: '#/components/schemas/WebhookEnvelope'
+        - type: object
+          properties:
+            event:
+              const: payment.failed
+            data:
+              type: object
+              required:
+                - paymentHash
+                - reason
+                - failedAt
+              properties:
+                paymentHash:
+                  type: string
+                amountSat:
+                  type: integer
+                  format: int64
+                reason:
+                  type: string
+                  description: Failure reason
+                errorCode:
+                  type: string
+                contentId:
+                  type: integer
+                  nullable: true
+                userSessionId:
+                  type: string
+                failedAt:
+                  type: string
+                  format: date-time
+
+    PaymentExpiredEvent:
+      allOf:
+        - $ref: '#/components/schemas/WebhookEnvelope'
+        - type: object
+          properties:
+            event:
+              const: payment.expired
+            data:
+              type: object
+              required:
+                - paymentHash
+                - expiredAt
+              properties:
+                paymentHash:
+                  type: string
+                amountSat:
+                  type: integer
+                  format: int64
+                contentId:
+                  type: integer
+                  nullable: true
+                invoiceCreatedAt:
+                  type: string
+                  format: date-time
+                expiredAt:
+                  type: string
+                  format: date-time
+
+    RefundInitiatedEvent:
+      allOf:
+        - $ref: '#/components/schemas/WebhookEnvelope'
+        - type: object
+          properties:
+            event:
+              const: refund.initiated
+            data:
+              type: object
+              required:
+                - refundId
+                - originalPaymentHash
+                - amountSat
+                - initiatedAt
+              properties:
+                refundId:
+                  type: string
+                  format: uuid
+                originalPaymentHash:
+                  type: string
+                amountSat:
+                  type: integer
+                  format: int64
+                reason:
+                  type: string
+                  nullable: true
+                initiatedByUserId:
+                  type: string
+                initiatedAt:
+                  type: string
+                  format: date-time
+
+    RefundCompletedEvent:
+      allOf:
+        - $ref: '#/components/schemas/WebhookEnvelope'
+        - type: object
+          properties:
+            event:
+              const: refund.completed
+            data:
+              type: object
+              required:
+                - refundId
+                - originalPaymentHash
+                - amountSat
+                - status
+                - completedAt
+              properties:
+                refundId:
+                  type: string
+                  format: uuid
+                originalPaymentHash:
+                  type: string
+                amountSat:
+                  type: integer
+                  format: int64
+                status:
+                  type: string
+                  enum: [succeeded, failed]
+                errorMessage:
+                  type: string
+                  nullable: true
+                  description: Error message if status is failed
+                refundPaymentHash:
+                  type: string
+                  nullable: true
+                  description: Payment hash of the outbound refund (if succeeded)
+                completedAt:
+                  type: string
+                  format: date-time
+
+    WebhookSignatureHeaders:
+      type: object
+      description: |
+        Headers included with all webhook requests for signature verification.
+
+        To verify:
+        1. Concatenate timestamp + "." + body
+        2. Compute HMAC-SHA256 with your webhook secret
+        3. Compare with X-Lightning-Signature (hex-encoded)
+
+        Example verification (C#):
+        ```csharp
+        var payload = $"{timestamp}.{body}";
+        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
+        var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
+        var expected = Convert.ToHexString(hash).ToLowerInvariant();
+        return CryptographicOperations.FixedTimeEquals(
+            Encoding.UTF8.GetBytes(signature),
+            Encoding.UTF8.GetBytes(expected));
+        ```
+      properties:
+        X-Lightning-Signature:
+          type: string
+          description: HMAC-SHA256 signature (hex-encoded, lowercase)
+          example: "a1b2c3d4e5..."
+        X-Lightning-Timestamp:
+          type: string
+          description: Unix timestamp (seconds) when webhook was generated
+          example: "1706270400"
+        X-Lightning-Webhook-Id:
+          type: string
+          format: uuid
+          description: Unique identifier for this delivery attempt
+        X-Lightning-Event:
+          type: string
+          description: Event type
+          example: "payment.confirmed"
+        X-Lightning-Attempt:
+          type: integer
+          description: Retry attempt number
+          example: 1
+
+  securitySchemes:
+    WebhookSignature:
+      type: apiKey
+      in: header
+      name: X-Lightning-Signature
+      description: |
+        HMAC-SHA256 signature of the request body.
+        Compute: HMAC-SHA256(secret, timestamp + "." + body)
+        Compare using constant-time comparison to prevent timing attacks.
+
+# Retry Policy Documentation
+x-retry-policy:
+  description: |
+    Webhook Retry Policy (per FR-014):
+
+    - Maximum attempts: 5
+    - Retry delays: Exponential backoff with jitter
+      - Attempt 1: Immediate
+      - Attempt 2: ~2 minutes
+      - Attempt 3: ~5 minutes
+      - Attempt 4: ~10 minutes
+      - Attempt 5: ~15 minutes
+      - Total window: ~32 minutes
+
+    - Success: HTTP 2xx response
+    - No retry: HTTP 4xx response (client error)
+    - Retry: HTTP 5xx response or timeout
+
+    - After 5 failed attempts, webhook is marked as permanently failed
+    - Failed webhooks can be manually retried from the admin dashboard
+
+x-idempotency:
+  description: |
+    Webhook Idempotency:
+
+    - Each webhook delivery has a unique webhookId (UUID)
+    - The same event may be delivered multiple times if retries occur
+    - Use webhookId to deduplicate on your end
+    - Store processed webhookIds and reject duplicates
+
+    Recommended implementation:
+    1. On receive, check if webhookId exists in processed set
+    2. If exists, return 200 (idempotent success)
+    3. If not, process event, add webhookId to processed set
+    4. Use TTL on processed set (24 hours recommended)

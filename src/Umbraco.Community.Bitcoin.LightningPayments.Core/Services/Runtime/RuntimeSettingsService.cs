@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Memory;
 using Umbraco.Community.Bitcoin.LightningPayments.Core.Configuration;
 using System.Text.Json;
 using Umbraco.Cms.Core.Services;
@@ -25,8 +25,10 @@ namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Runtime
 
         public Task<RuntimeFeatureFlags> GetAsync(CancellationToken ct = default)
         {
-            if (_cache.TryGetValue(Key, out RuntimeFeatureFlags cached) && cached != null)
+            if (_cache.TryGetValue(Key, out RuntimeFeatureFlags? cached) && cached != null)
+            {
                 return Task.FromResult(cached);
+            }
 
             var json = _kv.GetValue(Key);
             var flags = string.IsNullOrWhiteSpace(json)

@@ -1,4 +1,4 @@
-﻿using Umbraco.Community.Bitcoin.LightningPayments.Core.Data.Models;
+using Umbraco.Community.Bitcoin.LightningPayments.Core.Data.Models;
 
 namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Payment
 {

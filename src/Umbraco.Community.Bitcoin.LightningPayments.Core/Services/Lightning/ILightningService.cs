@@ -1,4 +1,4 @@
-﻿namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Lightning
+namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Lightning
 {
     public interface ILightningService
     {

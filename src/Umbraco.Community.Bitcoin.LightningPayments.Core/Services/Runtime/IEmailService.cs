@@ -1,4 +1,4 @@
-﻿namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Runtime
+namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Runtime
 {
     public interface IEmailService
     {

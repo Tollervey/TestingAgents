@@ -48,6 +48,26 @@ You **MUST** consider the user input before proceeding (if not empty).
    - If tasks.md is missing, suggest running `/speckit.tasks` first.
    - For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
+1a. **Initialize Agent Metrics Tracking** (if agents are invoked):
+
+   At the start of this phase, initialize metrics collection:
+   ```powershell
+   .\.specify\scripts\powershell\agent-metrics.ps1 -Action Init -PhaseName "checklist" -FeatureBranch "<current-branch>"
+   ```
+
+   When any agent completes during this phase, record its metrics:
+   ```powershell
+   .\.specify\scripts\powershell\agent-metrics.ps1 -Action Record `
+       -AgentName "<agent-name>" `
+       -Model "<model>" `
+       -TaskId "<task-id>" `
+       -Status "completed" `
+       -TokensUsed <tokens> `
+       -DurationMs <duration> `
+       -Category "analysis" `
+       -Description "<description>"
+   ```
+
 2. **Clarify intent (dynamic)**: Derive up to THREE initial contextual clarifying questions (no pre-baked catalog). They MUST:
    - Be generated from the user's phrasing + extracted signals from spec/plan/tasks
    - Only ask about information that materially changes checklist content
@@ -221,6 +241,13 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Depth level
    - Actor/timing
    - Any explicit user-specified must-have items incorporated
+
+8. **Generate Agent Metrics Report** (if metrics were initialized):
+
+   Before completing this phase, generate the performance report:
+   ```powershell
+   .\.specify\scripts\powershell\agent-metrics.ps1 -Action Report
+   ```
 
 **Important**: Each `/speckit.checklist` command invocation creates a checklist file using short, descriptive names unless file already exists. This allows:
 

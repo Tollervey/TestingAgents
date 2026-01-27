@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Text.Json;
@@ -62,7 +62,9 @@ namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Features.Realtime.Ser
             {
                 if (bucket.TryRemove(clientId, out var client))
                 {
-                    try { client?.Complete(); } catch { /* ignore */ }
+                    try
+                    { client?.Complete(); }
+                    catch { /* ignore */ }
                     _logger.LogInformation("SseHub: Removed client {ClientId} from session {SessionId}.", clientId, sessionId);
                 }
                 if (bucket.IsEmpty)
@@ -79,8 +81,10 @@ namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Features.Realtime.Ser
         /// </summary>
         public void Broadcast(string sessionId, string @event, object payload)
         {
-            if (sessionId == "*") { BroadcastAll(@event, payload); return; }
-            if (!_clientsBySession.TryGetValue(sessionId, out var bucket) || bucket.Count == 0) return;
+            if (sessionId == "*")
+            { BroadcastAll(@event, payload); return; }
+            if (!_clientsBySession.TryGetValue(sessionId, out var bucket) || bucket.Count == 0)
+                return;
             var frame = BuildFrame(@event, payload);
             foreach (var kvp in bucket)
             {
@@ -123,7 +127,8 @@ namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Features.Realtime.Ser
         /// </summary>
         public void SendHeartbeat(string sessionId)
         {
-            if (!_clientsBySession.TryGetValue(sessionId, out var bucket) || bucket.Count == 0) return;
+            if (!_clientsBySession.TryGetValue(sessionId, out var bucket) || bucket.Count == 0)
+                return;
             const string heartbeat = ":\n\n"; // SSE comment to keep connection alive
             foreach (var kvp in bucket)
             {

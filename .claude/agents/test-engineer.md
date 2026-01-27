@@ -20,10 +20,28 @@ You are a test engineering specialist focused on .NET testing best practices and
 - NEVER use `.Wait()` or `.Result` - these cause xUnit1031 errors and potential deadlocks
 - Use `await` for all async operations
 
-**Static State Isolation:**
+**Static State Isolation (MUST follow):**
 - Use unique identifiers (`Guid.NewGuid()`) in tests that touch static/shared state
 - Don't assert exact counts on shared collections - filter by your unique identifier
 - Static state (Meters, ActivitySources, ConcurrentDictionaries) persists across test runs
+- **Metrics tag values**: NEVER use hardcoded strings like `"testnet"`, `"mainnet"`, `"success"` as tag values when those tags are used to filter/count measurements. Use `$"descriptive-prefix-{Guid.NewGuid():N}"` instead, then filter assertions by that unique value.
+- **Assertion filtering**: When asserting on metrics collected via `MeterListener`, always `.Where()` filter by your unique tag value before asserting counts or values. Without filtering, other tests recording to the same instrument pollute your results.
+
+```csharp
+// BAD: Hardcoded tag value — other tests using "testnet" pollute this test's assertions
+var network = "testnet";
+BreezSdkMetrics.RecordInvoiceCreated(network, "success");
+var measurements = _counterMeasurements["breez.invoice.created"]; // Contains ALL tests' data!
+measurements.Should().HaveCount(1); // FLAKY — count depends on test execution order
+
+// GOOD: Unique tag value + filtered assertion — immune to test pollution
+var network = $"invoice-tags-test-{Guid.NewGuid():N}";
+BreezSdkMetrics.RecordInvoiceCreated(network, "success");
+var measurements = _counterMeasurements["breez.invoice.created"]
+    .Where(m => m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString() == network))
+    .ToList();
+measurements.Should().HaveCount(1); // STABLE — only sees this test's data
+```
 
 **Pattern Matching in Tests:**
 - When using switch expressions with inheritance, check derived types FIRST
@@ -181,6 +199,56 @@ private static ResiliencePipeline CreateFastTestPolicy() =>
 | Exception propagation | Waiting for real timeouts |
 
 **Rule**: If a test requires waiting >2 seconds, create a fast test policy with short delays.
+
+### Non-Transient Errors Must Not Be Retried
+
+When production code wraps operations in resilience policies, ensure non-transient errors (configuration validation, argument checks) are thrown **before** entering the retry pipeline. Otherwise tests that expect fast validation failures will wait through all retry delays.
+
+```csharp
+// BAD: Validation inside the retry pipeline — retries a deterministic failure
+public async Task ConnectAsync(CancellationToken ct)
+{
+    await RetryPolicy.ExecuteAsync(async token =>
+    {
+        ValidateConfiguration(); // Throws ConfigurationException on every retry!
+        await ConnectInternalAsync(token);
+    }, ct);
+}
+
+// GOOD: Validate before the pipeline, only retry transient operations
+public async Task ConnectAsync(CancellationToken ct)
+{
+    ValidateConfiguration(); // Fails fast, no retries
+    await RetryPolicy.ExecuteAsync(async token =>
+    {
+        await ConnectInternalAsync(token); // Only transient failures retried
+    }, ct);
+}
+```
+
+**Corollary for test engineers**: When writing tests for code that uses resilience policies:
+1. Ensure the production code validates non-transient inputs before the policy
+2. Make resilience pipelines injectable so tests can provide fast policies
+3. If the SUT uses a static/hardcoded policy, request a constructor overload accepting `ResiliencePipeline`
+
+### Async Enumerable Cancellation Test Anti-Pattern
+
+Never test cancellation by cancelling inside a `foreach` loop body when the source might be empty. An empty async enumerable blocks on `MoveNextAsync()` — the loop body never executes, and the test hangs.
+
+```csharp
+// BAD: Hangs if channel is empty — MoveNextAsync blocks waiting for data
+await foreach (var evt in channel.ReadAllAsync(cts.Token))
+{
+    cts.Cancel(); // Never reached if channel is empty!
+}
+
+// GOOD: Write data first so the loop body executes
+await channel.WriteAsync(testEvent, CancellationToken.None);
+await foreach (var evt in channel.ReadAllAsync(cts.Token))
+{
+    cts.Cancel(); // Executes because there's data to read
+}
+```
 
 ## Verification Command
 

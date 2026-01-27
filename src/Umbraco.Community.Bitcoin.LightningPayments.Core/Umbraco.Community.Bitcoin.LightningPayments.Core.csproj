@@ -8,7 +8,8 @@
     <!-- Generate XML documentation for NuGet consumers -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- Suppress missing XML docs warnings to keep builds clean while shipping docs -->
-    <NoWarn>$(NoWarn);1591</NoWarn>
+    <!-- Suppress IDE style rules that require bulk refactoring (can be addressed incrementally) -->
+    <NoWarn>$(NoWarn);1591;IDE0011;IDE0161;IDE0065;IDE1006</NoWarn>
     <!-- Enable .NET analyzers and use the latest analysis level -->
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisLevel>latest</AnalysisLevel>
@@ -19,23 +20,23 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Breez.Sdk.Liquid" Version="0.11.9" />
-    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="9.0.11" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.11" />
-    <!-- Commented out to avoid CodeAnalysis conflicts. Install temporarily when creating migrations. -->
-    <!-- <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11" PrivateAssets="All" /> -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.11" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.11" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.11" />
-    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions" Version="9.0.11" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.11" />
-    <PackageReference Include="Umbraco.Cms.Web.Website" Version="16.*" />
-    <PackageReference Include="Umbraco.Cms.Web.Common" Version="16.*" />
-    <PackageReference Include="Umbraco.Cms.Api.Common" Version="16.*" />
-    <PackageReference Include="Umbraco.Cms.Api.Management" Version="16.*" />
-    <PackageReference Include="Polly" Version="8.6.4" />
-    <PackageReference Include="OpenTelemetry.Api" Version="1.14.0" />
-    <PackageReference Include="MailKit" Version="4.14.1" />
+    <PackageReference Include="Breez.Sdk.Liquid" />
+    <PackageReference Include="Microsoft.Data.Sqlite.Core" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Umbraco.Cms.Web.Website" />
+    <PackageReference Include="Umbraco.Cms.Web.Common" />
+    <PackageReference Include="Umbraco.Cms.Api.Common" />
+    <PackageReference Include="Umbraco.Cms.Api.Management" />
+    <PackageReference Include="Polly" />
+    <PackageReference Include="OpenTelemetry.Api" />
+    <PackageReference Include="MailKit" />
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
   </ItemGroup>
 
   <ItemGroup>

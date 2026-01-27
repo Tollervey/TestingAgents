@@ -1,24 +1,23 @@
-﻿namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Configuration
+namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Configuration;
+
+/// <summary>
+/// Exposes runtime mode information (online vs offline) for Lightning Payments services.
+/// </summary>
+public interface ILightningPaymentsRuntimeMode
 {
     /// <summary>
-    /// Exposes runtime mode information (online vs offline) for Lightning Payments services.
+    /// Gets a value indicating whether offline mode is enabled.
     /// </summary>
-    public interface ILightningPaymentsRuntimeMode
-    {
-        /// <summary>
-        /// Gets a value indicating whether offline mode is enabled.
-        /// </summary>
-        bool IsOffline { get; }
-    }
+    bool IsOffline { get; }
+}
 
-    internal sealed class LightningPaymentsRuntimeMode : ILightningPaymentsRuntimeMode
-    {
-        public bool IsOffline { get; }
+internal sealed class LightningPaymentsRuntimeMode : ILightningPaymentsRuntimeMode
+{
+    public bool IsOffline { get; }
 
-        public LightningPaymentsRuntimeMode(bool isOffline)
-        {
-            IsOffline = isOffline;
-        }
+    public LightningPaymentsRuntimeMode(bool isOffline)
+    {
+        IsOffline = isOffline;
     }
 }
 

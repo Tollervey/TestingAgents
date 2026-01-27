@@ -280,6 +280,43 @@ Claude Code hooks (`.claude/hooks.json`) automatically enforce:
 
 ## Workflow Rules
 
+### Phase Completion Requirements (MANDATORY)
+
+**CRITICAL**: No implementation phase may be marked complete until these exit criteria pass:
+
+1. **Build Verification** (blocking):
+   ```bash
+   dotnet build <solution-file>  # Must exit with code 0
+   ```
+   - If build fails, fix ALL errors before completing the phase
+   - Pre-existing errors discovered during implementation MUST be fixed
+   - Do NOT suppress warnings as errors without explicit user approval
+
+2. **Test Verification** (blocking):
+   ```bash
+   dotnet test <solution-file> --no-build  # Must not regress
+   ```
+   - All previously passing tests must still pass
+   - New tests written in this phase must pass (GREEN phase of TDD)
+   - If tests fail, investigate and fix before completing
+
+3. **Regression Check**:
+   - Compare test count before/after implementation
+   - No decrease in passing test count allowed
+   - Document any tests that were intentionally modified
+
+**If pre-existing issues block the build:**
+1. Document the pre-existing issues found
+2. Fix them as part of the implementation phase
+3. Clearly separate pre-existing fixes from new implementation in commit messages
+4. Never suppress errors without documenting why
+
+**Exit Criteria Checklist** (verify before marking phase complete):
+- [ ] `dotnet build` exits with code 0
+- [ ] `dotnet test` shows no regressions
+- [ ] All new implementation code compiles
+- [ ] All new tests pass (TDD GREEN)
+
 ### Before Every Commit
 1. `dotnet build` — must pass
 2. `dotnet test` — must pass
@@ -341,6 +378,41 @@ private static ResiliencePipeline CreateFastTestPolicy() =>
 
 **Rule**: If a test takes >2 seconds due to waiting, create a fast test policy with short delays.
 
+#### Non-Transient Errors Before Resilience Pipelines
+
+Configuration validation and argument checks are deterministic — they fail the same way every time. These MUST be called **before** entering a retry pipeline, not inside it. Otherwise tests expecting fast validation failures wait through all retry delays.
+
+```csharp
+// BAD: Validation retried 3x with exponential backoff (2s + 4s + 8s = 14s!)
+await RetryPolicy.ExecuteAsync(async ct => {
+    ValidateConfiguration(); // Deterministic failure retried uselessly
+    await ConnectInternalAsync(ct);
+}, cancellationToken);
+
+// GOOD: Validate before the pipeline
+ValidateConfiguration(); // Fails fast
+await RetryPolicy.ExecuteAsync(async ct => {
+    await ConnectInternalAsync(ct); // Only transient failures retried
+}, cancellationToken);
+```
+
+**Corollary**: Make resilience pipelines injectable (constructor parameter) so tests can provide fast policies.
+
+#### Async Enumerable Cancellation Tests
+
+Never cancel inside a `foreach` loop body when the source may be empty. `MoveNextAsync()` blocks waiting for data — the loop body never executes, and the test hangs forever.
+
+```csharp
+// BAD: Hangs — empty channel blocks on MoveNextAsync
+await foreach (var evt in channel.ReadAllAsync(cts.Token))
+    cts.Cancel(); // Never reached if channel is empty!
+
+// GOOD: Write data first so the loop body executes
+await channel.WriteAsync(testEvent, CancellationToken.None);
+await foreach (var evt in channel.ReadAllAsync(cts.Token))
+    cts.Cancel(); // Reached because there's data
+```
+
 ### Test Execution Best Practices
 
 **Avoid full test suite runs during development:**
@@ -353,6 +425,7 @@ private static ResiliencePipeline CreateFastTestPolicy() =>
 - Infinite loops in async code
 - Missing CancellationToken handling
 - Tests waiting for real timeouts instead of short test timeouts
+- Reading from empty channels/streams with cancellation inside the loop body
 
 ### Static State in Tests
 
@@ -360,6 +433,30 @@ When testing classes with static state (Meters, ActivitySources, ConcurrentDicti
 - Use unique identifiers per test (e.g., `$"test-{Guid.NewGuid():N}"`)
 - Don't assert exact counts - filter by your unique identifier
 - Static state persists across test runs in the same process
+
+#### Metrics Test Pollution (Static Meters)
+
+Static `Meter` instruments (Counters, Histograms, ObservableGauges) are shared across all tests in the same process. Using hardcoded tag values (e.g., `"testnet"`, `"mainnet"`) causes **cross-test pollution** — one test's recorded measurements appear in another test's assertions, causing flaky count/value checks depending on execution order.
+
+**Fix**: Use `Guid.NewGuid()` for tag values that identify test-specific data, then **filter assertions** by that unique tag.
+
+```csharp
+// BAD: Hardcoded tag — polluted by other tests using the same value
+var network = "testnet";
+Metrics.RecordInvoiceCreated(network, "success");
+var measurements = _counterMeasurements["breez.invoice.created"];
+measurements.Should().HaveCount(1); // FLAKY
+
+// GOOD: Unique tag + filtered assertion
+var network = $"invoice-test-{Guid.NewGuid():N}";
+Metrics.RecordInvoiceCreated(network, "success");
+var measurements = _counterMeasurements["breez.invoice.created"]
+    .Where(m => m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString() == network))
+    .ToList();
+measurements.Should().HaveCount(1); // STABLE
+```
+
+**Rule**: Any test that records metrics via static instruments MUST use unique tag values and filter assertions by those values.
 
 ### API Verification Before Writing Tests
 

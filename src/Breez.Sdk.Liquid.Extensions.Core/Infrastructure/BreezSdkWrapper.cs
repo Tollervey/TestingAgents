@@ -28,6 +28,7 @@ public class BreezSdkWrapper : IBreezSdkWrapper
 {
     private readonly ILogger<BreezSdkWrapper> _logger;
     private readonly IOptions<BreezSdkOptions> _options;
+    private readonly ResiliencePipeline _connectPolicy;
 
     // SDK state management
     private bool _isConnected;
@@ -49,9 +50,26 @@ public class BreezSdkWrapper : IBreezSdkWrapper
     public BreezSdkWrapper(
         IOptions<BreezSdkOptions> options,
         ILogger<BreezSdkWrapper> logger)
+        : this(options, logger, ResiliencePolicies.ConnectPolicy)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BreezSdkWrapper"/> class with a custom connect policy.
+    /// </summary>
+    /// <param name="options">The BreezSDK configuration options.</param>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="connectPolicy">The resilience pipeline for connection operations.
+    /// Use a fast policy in tests to avoid production retry delays.</param>
+    /// <exception cref="ArgumentNullException">Thrown when any parameter is null.</exception>
+    public BreezSdkWrapper(
+        IOptions<BreezSdkOptions> options,
+        ILogger<BreezSdkWrapper> logger,
+        ResiliencePipeline connectPolicy)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _connectPolicy = connectPolicy ?? throw new ArgumentNullException(nameof(connectPolicy));
     }
 
     /// <inheritdoc />
@@ -106,6 +124,11 @@ public class BreezSdkWrapper : IBreezSdkWrapper
             return;
         }
 
+        // Validate configuration before entering the resilience pipeline.
+        // Configuration errors are deterministic and not transient — retrying them
+        // only adds unnecessary delay (the ConnectPolicy has exponential backoff).
+        ValidateConfiguration();
+
         TransitionState(ConnectionState.Connecting);
 
         _logger.LogInformation("Connecting to BreezSDK (Network: {Network}, OfflineMode: {OfflineMode})",
@@ -114,7 +137,7 @@ public class BreezSdkWrapper : IBreezSdkWrapper
         // Execute connection with resilience policy
         try
         {
-            await ResiliencePolicies.ConnectPolicy.ExecuteAsync(async ct =>
+            await _connectPolicy.ExecuteAsync(async ct =>
             {
                 await ConnectInternalAsync(ct);
             }, cancellationToken);
@@ -134,8 +157,8 @@ public class BreezSdkWrapper : IBreezSdkWrapper
     /// </summary>
     private async Task ConnectInternalAsync(CancellationToken cancellationToken)
     {
-        // Validate configuration
-        ValidateConfiguration();
+        // Configuration is validated in ConnectAsync before entering the resilience pipeline.
+        // Only transient operations (network calls, SDK init) belong inside the retry policy.
 
         // Simulate connection delay if configured
         if (_options.Value.OfflineSimulateDelayMs > 0)

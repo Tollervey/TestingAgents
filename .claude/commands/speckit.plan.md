@@ -34,6 +34,26 @@ This command leverages the following capabilities:
 
 1. **Setup**: Run `.specify/scripts/powershell/setup-plan.ps1 -Json` from repo root and parse JSON for FEATURE_SPEC, IMPL_PLAN, SPECS_DIR, BRANCH. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
+1a. **Initialize Agent Metrics Tracking** (if agents are invoked):
+
+   At the start of this phase, initialize metrics collection:
+   ```powershell
+   .\.specify\scripts\powershell\agent-metrics.ps1 -Action Init -PhaseName "plan" -FeatureBranch "<current-branch>"
+   ```
+
+   When any agent completes during this phase, record its metrics:
+   ```powershell
+   .\.specify\scripts\powershell\agent-metrics.ps1 -Action Record `
+       -AgentName "<agent-name>" `
+       -Model "<model>" `
+       -TaskId "<task-id>" `
+       -Status "completed" `
+       -TokensUsed <tokens> `
+       -DurationMs <duration> `
+       -Category "planning" `
+       -Description "<description>"
+   ```
+
 2. **Load context**: Read FEATURE_SPEC and `.specify/memory/constitution.md`. Load IMPL_PLAN template (already copied).
 
 3. **Execute plan workflow**: Follow the structure in IMPL_PLAN template to:
@@ -46,6 +66,13 @@ This command leverages the following capabilities:
    - Re-evaluate Constitution Check post-design
 
 4. **Stop and report**: Command ends after Phase 2 planning. Report branch, IMPL_PLAN path, and generated artifacts.
+
+5. **Generate Agent Metrics Report** (if metrics were initialized):
+
+   Before completing this phase, generate the performance report:
+   ```powershell
+   .\.specify\scripts\powershell\agent-metrics.ps1 -Action Report
+   ```
 
 ## Phases
 

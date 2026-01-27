@@ -1,4 +1,4 @@
-﻿using Breez.Sdk.Liquid;
+using Breez.Sdk.Liquid;
 
 namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Breez
 {
@@ -106,6 +106,11 @@ namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Breez
         /// Rescans on-chain swaps.
         /// </summary>
         Task RescanOnchainSwapsAsync(BindingLiquidSdk sdk, CancellationToken ct = default);
+
+        /// <summary>
+        /// Gets wallet information including balance and pending amounts.
+        /// </summary>
+        Task<GetInfoResponse> GetInfoAsync(BindingLiquidSdk sdk, CancellationToken ct = default);
 
         /// <summary>
         /// Fetches proposed fees for pending amountless payments.

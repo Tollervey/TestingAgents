@@ -1,0 +1,894 @@
+openapi: 3.0.3
+info:
+  title: Lightning Payments Management API
+  description: Admin-only API for managing Lightning payments in Umbraco backoffice
+  version: 1.0.0
+  contact:
+    name: Umbraco.Community.Bitcoin.LightningPayments
+
+servers:
+  - url: /umbraco/management/api/v1/lightning
+    description: Umbraco Management API base
+
+security:
+  - UmbracoManagementApi: []
+
+tags:
+  - name: Dashboard
+    description: Payment statistics and overview
+  - name: Payments
+    description: Payment management
+  - name: Bolt12
+    description: BOLT12 offer management
+  - name: Refunds
+    description: Refund operations (Admin only)
+  - name: Notifications
+    description: Notification configuration and status
+
+paths:
+  /dashboard/stats:
+    get:
+      tags: [Dashboard]
+      operationId: getDashboardStats
+      summary: Get payment dashboard statistics
+      description: Returns aggregated payment statistics for the dashboard
+      responses:
+        '200':
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardStats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /dashboard/chart:
+    get:
+      tags: [Dashboard]
+      operationId: getPaymentChart
+      summary: Get payment volume chart data
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [day, week, month]
+            default: week
+      responses:
+        '200':
+          description: Chart data points
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChartData'
+
+  /payments:
+    get:
+      tags: [Payments]
+      operationId: listPayments
+      summary: List payment history
+      parameters:
+        - name: skip
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: take
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, confirmed, failed, expired]
+        - name: kind
+          in: query
+          schema:
+            type: string
+            enum: [paywall, tip]
+        - name: search
+          in: query
+          description: Search by payment hash or content name
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentListResponse'
+
+  /payments/{paymentHash}:
+    get:
+      tags: [Payments]
+      operationId: getPayment
+      summary: Get payment details
+      parameters:
+        - $ref: '#/components/parameters/PaymentHash'
+      responses:
+        '200':
+          description: Payment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentDetails'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /offers:
+    get:
+      tags: [Bolt12]
+      operationId: listOffers
+      summary: List BOLT12 offers
+      parameters:
+        - name: activeOnly
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Offer list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Bolt12Offer'
+
+    post:
+      tags: [Bolt12]
+      operationId: createOffer
+      summary: Create a new BOLT12 offer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOfferRequest'
+      responses:
+        '201':
+          description: Offer created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bolt12Offer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /offers/{offerId}:
+    get:
+      tags: [Bolt12]
+      operationId: getOffer
+      summary: Get offer details
+      parameters:
+        - $ref: '#/components/parameters/OfferId'
+      responses:
+        '200':
+          description: Offer details with payment summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bolt12OfferDetails'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Bolt12]
+      operationId: deactivateOffer
+      summary: Deactivate an offer
+      parameters:
+        - $ref: '#/components/parameters/OfferId'
+      responses:
+        '204':
+          description: Offer deactivated
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /offers/{offerId}/payments:
+    get:
+      tags: [Bolt12]
+      operationId: listOfferPayments
+      summary: List payments received for an offer
+      parameters:
+        - $ref: '#/components/parameters/OfferId'
+        - name: skip
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: take
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Payments for this offer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentListResponse'
+
+  /refunds:
+    get:
+      tags: [Refunds]
+      operationId: listRefunds
+      summary: List all refunds
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, succeeded, failed]
+        - name: skip
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: take
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Refund list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefundListResponse'
+
+    post:
+      tags: [Refunds]
+      operationId: initiateRefund
+      summary: Initiate a refund (Admin only)
+      description: |
+        Initiates a refund for a previously received payment.
+        Requires Administrator role.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InitiateRefundRequest'
+      responses:
+        '201':
+          description: Refund initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefundTransaction'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '403':
+          description: Not authorized (Admin required)
+
+  /refunds/{refundId}:
+    get:
+      tags: [Refunds]
+      operationId: getRefund
+      summary: Get refund details
+      parameters:
+        - name: refundId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Refund details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefundTransaction'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /refunds/prepare:
+    post:
+      tags: [Refunds]
+      operationId: prepareRefund
+      summary: Prepare refund (get fee estimate)
+      description: Validates invoice and returns fee estimate before committing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrepareRefundRequest'
+      responses:
+        '200':
+          description: Refund preparation details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrepareRefundResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /notifications/config:
+    get:
+      tags: [Notifications]
+      operationId: getNotificationConfig
+      summary: Get notification configuration
+      responses:
+        '200':
+          description: Current notification settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationConfig'
+
+    put:
+      tags: [Notifications]
+      operationId: updateNotificationConfig
+      summary: Update notification configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationConfig'
+      responses:
+        '200':
+          description: Configuration updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationConfig'
+
+  /notifications:
+    get:
+      tags: [Notifications]
+      operationId: listNotifications
+      summary: List notification delivery history
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, sent, retrying, failed]
+        - name: skip
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: take
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Notification list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationListResponse'
+
+  /notifications/{notificationId}/retry:
+    post:
+      tags: [Notifications]
+      operationId: retryNotification
+      summary: Manually retry a failed notification
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '202':
+          description: Retry queued
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /wallet/balance:
+    get:
+      tags: [Dashboard]
+      operationId: getWalletBalance
+      summary: Get current wallet balance
+      responses:
+        '200':
+          description: Wallet balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletBalance'
+
+  /wallet/limits:
+    get:
+      tags: [Dashboard]
+      operationId: getWalletLimits
+      summary: Get Lightning receive/send limits
+      responses:
+        '200':
+          description: Wallet limits
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletLimits'
+
+components:
+  securitySchemes:
+    UmbracoManagementApi:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Umbraco backoffice authentication
+
+  parameters:
+    PaymentHash:
+      name: paymentHash
+      in: path
+      required: true
+      schema:
+        type: string
+        maxLength: 64
+
+    OfferId:
+      name: offerId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Unauthorized:
+      description: Not authenticated
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+    BadRequest:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+  schemas:
+    DashboardStats:
+      type: object
+      required:
+        - totalReceivedSat
+        - pendingCount
+        - dailyVolumeSat
+        - walletBalanceSat
+        - sdkConnected
+      properties:
+        totalReceivedSat:
+          type: integer
+          format: int64
+          description: Total satoshis received all time
+        pendingCount:
+          type: integer
+          description: Number of pending payments
+        dailyVolumeSat:
+          type: integer
+          format: int64
+          description: Satoshis received in last 24 hours
+        walletBalanceSat:
+          type: integer
+          format: int64
+          description: Current wallet balance
+        sdkConnected:
+          type: boolean
+          description: Whether BreezSDK is connected
+        lastPaymentAt:
+          type: string
+          format: date-time
+          description: Timestamp of most recent payment
+
+    ChartData:
+      type: object
+      required:
+        - period
+        - dataPoints
+      properties:
+        period:
+          type: string
+          enum: [day, week, month]
+        dataPoints:
+          type: array
+          items:
+            type: object
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+              amountSat:
+                type: integer
+                format: int64
+              count:
+                type: integer
+
+    PaymentListResponse:
+      type: object
+      required:
+        - items
+        - total
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentSummary'
+        total:
+          type: integer
+
+    PaymentSummary:
+      type: object
+      required:
+        - paymentHash
+        - amountSat
+        - status
+        - kind
+        - createdAt
+      properties:
+        paymentHash:
+          type: string
+        amountSat:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum: [pending, confirmed, failed, expired]
+        kind:
+          type: string
+          enum: [paywall, tip]
+        contentId:
+          type: integer
+        contentName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    PaymentDetails:
+      allOf:
+        - $ref: '#/components/schemas/PaymentSummary'
+        - type: object
+          properties:
+            userSessionId:
+              type: string
+            bolt12OfferId:
+              type: string
+              format: uuid
+            refunds:
+              type: array
+              items:
+                $ref: '#/components/schemas/RefundSummary'
+            notifications:
+              type: array
+              items:
+                $ref: '#/components/schemas/NotificationSummary'
+
+    Bolt12Offer:
+      type: object
+      required:
+        - offerId
+        - offerString
+        - description
+        - isActive
+        - createdAt
+      properties:
+        offerId:
+          type: string
+          format: uuid
+        offerString:
+          type: string
+        description:
+          type: string
+        amountSat:
+          type: integer
+          format: int64
+          nullable: true
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        deactivatedAt:
+          type: string
+          format: date-time
+          nullable: true
+        contentId:
+          type: integer
+          nullable: true
+
+    Bolt12OfferDetails:
+      allOf:
+        - $ref: '#/components/schemas/Bolt12Offer'
+        - type: object
+          properties:
+            paymentCount:
+              type: integer
+            totalReceivedSat:
+              type: integer
+              format: int64
+            confirmedCount:
+              type: integer
+
+    CreateOfferRequest:
+      type: object
+      required:
+        - description
+      properties:
+        description:
+          type: string
+          maxLength: 200
+        amountSat:
+          type: integer
+          format: int64
+          nullable: true
+          description: Leave null for variable amount offers
+        contentId:
+          type: integer
+          nullable: true
+
+    RefundTransaction:
+      type: object
+      required:
+        - refundId
+        - originalPaymentHash
+        - amountSat
+        - status
+        - initiatedAt
+        - initiatedByUserId
+      properties:
+        refundId:
+          type: string
+          format: uuid
+        originalPaymentHash:
+          type: string
+        amountSat:
+          type: integer
+          format: int64
+        destinationInvoice:
+          type: string
+        status:
+          type: string
+          enum: [pending, succeeded, failed]
+        errorMessage:
+          type: string
+          nullable: true
+        reason:
+          type: string
+          nullable: true
+        initiatedByUserId:
+          type: string
+        initiatedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        refundPaymentHash:
+          type: string
+          nullable: true
+
+    RefundSummary:
+      type: object
+      properties:
+        refundId:
+          type: string
+          format: uuid
+        amountSat:
+          type: integer
+          format: int64
+        status:
+          type: string
+        initiatedAt:
+          type: string
+          format: date-time
+
+    RefundListResponse:
+      type: object
+      required:
+        - items
+        - total
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RefundTransaction'
+        total:
+          type: integer
+
+    InitiateRefundRequest:
+      type: object
+      required:
+        - originalPaymentHash
+        - destinationInvoice
+      properties:
+        originalPaymentHash:
+          type: string
+        destinationInvoice:
+          type: string
+          description: BOLT11 invoice from customer
+        reason:
+          type: string
+          maxLength: 500
+
+    PrepareRefundRequest:
+      type: object
+      required:
+        - originalPaymentHash
+        - destinationInvoice
+      properties:
+        originalPaymentHash:
+          type: string
+        destinationInvoice:
+          type: string
+
+    PrepareRefundResponse:
+      type: object
+      required:
+        - originalAmountSat
+        - refundAmountSat
+        - feeSat
+        - walletBalanceSat
+        - canProceed
+      properties:
+        originalAmountSat:
+          type: integer
+          format: int64
+        refundAmountSat:
+          type: integer
+          format: int64
+        feeSat:
+          type: integer
+          format: int64
+        walletBalanceSat:
+          type: integer
+          format: int64
+        canProceed:
+          type: boolean
+        validationError:
+          type: string
+          nullable: true
+
+    NotificationConfig:
+      type: object
+      properties:
+        emailEnabled:
+          type: boolean
+        emailRecipients:
+          type: array
+          items:
+            type: string
+            format: email
+        webhookEnabled:
+          type: boolean
+        webhookUrl:
+          type: string
+          format: uri
+        webhookSecret:
+          type: string
+          writeOnly: true
+        events:
+          type: array
+          items:
+            type: string
+            enum: [payment.confirmed, payment.failed, refund.completed]
+
+    NotificationListResponse:
+      type: object
+      required:
+        - items
+        - total
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationSummary'
+        total:
+          type: integer
+
+    NotificationSummary:
+      type: object
+      properties:
+        notificationId:
+          type: string
+          format: uuid
+        paymentHash:
+          type: string
+        type:
+          type: string
+          enum: [email, webhook]
+        event:
+          type: string
+        status:
+          type: string
+          enum: [pending, sent, retrying, failed]
+        attemptCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        sentAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastError:
+          type: string
+          nullable: true
+
+    WalletBalance:
+      type: object
+      required:
+        - balanceSat
+        - pendingReceiveSat
+        - pendingSendSat
+      properties:
+        balanceSat:
+          type: integer
+          format: int64
+        pendingReceiveSat:
+          type: integer
+          format: int64
+        pendingSendSat:
+          type: integer
+          format: int64
+
+    WalletLimits:
+      type: object
+      required:
+        - receive
+        - send
+      properties:
+        receive:
+          type: object
+          properties:
+            minSat:
+              type: integer
+              format: int64
+            maxSat:
+              type: integer
+              format: int64
+        send:
+          type: object
+          properties:
+            minSat:
+              type: integer
+              format: int64
+            maxSat:
+              type: integer
+              format: int64
+
+    ProblemDetails:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        errorCode:
+          type: string

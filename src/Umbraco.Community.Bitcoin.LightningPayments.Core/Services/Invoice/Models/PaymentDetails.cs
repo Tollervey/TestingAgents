@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Invoice.Models
 {
