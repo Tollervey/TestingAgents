@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Umbraco.Community.Bitcoin.LightningPayments.Core.Configuration;
 using Umbraco.Community.Bitcoin.LightningPayments.Core.Infrastructure;
+using Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Exceptions;
 using Polly;
 using System.Diagnostics;
 using System.Net.Sockets;
@@ -504,6 +505,201 @@ namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Breez
                 _logger.LogWarning(ex, "Failed to fetch recommended on-chain fees.");
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Prepares a send payment to the given destination (BOLT11 invoice).
+        /// Returns fee estimation without executing the payment.
+        /// Uses the two-step pattern: prepare first to show fees, then execute.
+        /// </summary>
+        public async Task<PrepareSendResponse> PrepareSendPaymentAsync(string destination, CancellationToken ct = default)
+        {
+            using var activity = _activity.StartActivity(nameof(PrepareSendPaymentAsync));
+            activity?.SetTag("destination.length", destination.Length);
+
+            if (string.IsNullOrWhiteSpace(destination))
+            {
+                var ex = new InvalidInvoiceException("Destination cannot be empty.");
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                throw ex;
+            }
+
+            var sdk = await _sdkInstance.Value.WaitAsync(ct);
+            if (sdk == null)
+            {
+                var ex = new InvalidOperationException("Breez SDK is not connected.");
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                throw ex;
+            }
+
+            try
+            {
+                ct.ThrowIfCancellationRequested();
+                var request = new PrepareSendRequest(destination);
+                var response = await _wrapper.PrepareSendPaymentAsync(sdk, request, ct);
+
+                _logger.LogInformation("Send payment prepared successfully. Fees: {FeesSat} sat", response.feesSat);
+                activity?.SetTag("feesSat", response.feesSat);
+                activity?.SetStatus(ActivityStatusCode.Ok);
+
+                return response;
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                _logger.LogError(ex, "Failed to prepare send payment.");
+                throw new InvoiceException("Failed to prepare send payment.", ex);
+            }
+        }
+
+        /// <summary>
+        /// Executes a previously prepared send payment.
+        /// This completes the two-step send pattern after user confirmation of fees.
+        /// </summary>
+        public async Task<SendPaymentResponse> SendPaymentAsync(PrepareSendResponse prepareResponse, CancellationToken ct = default)
+        {
+            using var activity = _activity.StartActivity(nameof(SendPaymentAsync));
+            activity?.SetTag("feesSat", prepareResponse.feesSat);
+
+            if (prepareResponse == null)
+            {
+                var ex = new ArgumentNullException(nameof(prepareResponse));
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                throw ex;
+            }
+
+            var sdk = await _sdkInstance.Value.WaitAsync(ct);
+            if (sdk == null)
+            {
+                var ex = new InvalidOperationException("Breez SDK is not connected.");
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                throw ex;
+            }
+
+            try
+            {
+                ct.ThrowIfCancellationRequested();
+                var request = new SendPaymentRequest(prepareResponse);
+                var response = await _wrapper.SendPaymentAsync(sdk, request, ct);
+
+                _logger.LogInformation("Send payment executed successfully. Payment: {Payment}", response.payment.txId);
+                activity?.SetTag("paymentId", response.payment.txId);
+                activity?.SetStatus(ActivityStatusCode.Ok);
+
+                return response;
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                _logger.LogError(ex, "Failed to execute send payment.");
+                throw new InvoiceException("Failed to execute send payment.", ex);
+            }
+        }
+
+        /// <summary>
+        /// Gets the current wallet balance including pending amounts.
+        /// Returns balance in satoshis for BTC, pending receive amounts, and pending send amounts.
+        /// </summary>
+        public async Task<(ulong balanceSat, ulong pendingReceiveSat, ulong pendingSendSat)> GetWalletBalanceAsync(CancellationToken ct = default)
+        {
+            using var activity = _activity.StartActivity(nameof(GetWalletBalanceAsync));
+
+            var sdk = await _sdkInstance.Value.WaitAsync(ct);
+            if (sdk == null)
+            {
+                var ex = new InvalidOperationException("Breez SDK is not connected.");
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                throw ex;
+            }
+
+            try
+            {
+                ct.ThrowIfCancellationRequested();
+                var info = await _wrapper.GetInfoAsync(sdk, ct);
+
+                // Breez SDK C# bindings use record types with lowercase field names;
+                // access via reflection as done in DashboardStatsService.
+                var balanceSat = GetRecordPropertyValue<ulong>(info, "balanceSat");
+                var pendingReceiveSat = GetRecordPropertyValue<ulong>(info, "pendingReceiveSat");
+                var pendingSendSat = GetRecordPropertyValue<ulong>(info, "pendingSendSat");
+
+                activity?.SetTag("balanceSat", balanceSat);
+                activity?.SetTag("pendingReceiveSat", pendingReceiveSat);
+                activity?.SetTag("pendingSendSat", pendingSendSat);
+                activity?.SetStatus(ActivityStatusCode.Ok);
+
+                _logger.LogDebug("Wallet balance: {Balance} sat, pending receive: {PendingReceive} sat, pending send: {PendingSend} sat",
+                    balanceSat, pendingReceiveSat, pendingSendSat);
+
+                return (balanceSat, pendingReceiveSat, pendingSendSat);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                _logger.LogError(ex, "Failed to get wallet balance.");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Parses a BOLT11 invoice and returns structured invoice information.
+        /// Throws InvalidInvoiceException if the input is not a valid BOLT11 invoice.
+        /// </summary>
+        public async Task<LnInvoice> ParseInvoiceAsync(string invoice, CancellationToken ct = default)
+        {
+            using var activity = _activity.StartActivity(nameof(ParseInvoiceAsync));
+            activity?.SetTag("invoice.length", invoice.Length);
+
+            if (string.IsNullOrWhiteSpace(invoice))
+            {
+                var ex = new InvalidInvoiceException("Invoice cannot be empty.");
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                throw ex;
+            }
+
+            var sdk = await _sdkInstance.Value.WaitAsync(ct);
+            if (sdk == null)
+            {
+                var ex = new InvalidOperationException("Breez SDK is not connected.");
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                throw ex;
+            }
+
+            try
+            {
+                ct.ThrowIfCancellationRequested();
+                var parsed = await _wrapper.ParseAsync(sdk, invoice, ct);
+
+                if (parsed is InputType.Bolt11 bolt11)
+                {
+                    activity?.SetTag("paymentHash", bolt11.invoice.paymentHash);
+                    activity?.SetTag("amountSat", bolt11.invoice.amountMsat != null ? (bolt11.invoice.amountMsat / 1000).ToString() : "null");
+                    activity?.SetStatus(ActivityStatusCode.Ok);
+
+                    _logger.LogDebug("Parsed BOLT11 invoice with payment hash: {PaymentHash}", bolt11.invoice.paymentHash);
+                    return bolt11.invoice;
+                }
+
+                var notBolt11Ex = new InvalidInvoiceException("The provided input is not a valid BOLT11 invoice.");
+                activity?.SetStatus(ActivityStatusCode.Error, notBolt11Ex.Message);
+                throw notBolt11Ex;
+            }
+            catch (Exception ex) when (ex is not InvalidInvoiceException && ex is not OperationCanceledException)
+            {
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                _logger.LogError(ex, "Failed to parse invoice.");
+                throw new InvalidInvoiceException("Failed to parse invoice.", ex);
+            }
+        }
+
+        /// <summary>
+        /// Helper to get property value from SDK record types that may use lowercase naming.
+        /// </summary>
+        private static T GetRecordPropertyValue<T>(object record, string propertyName)
+        {
+            var property = record.GetType().GetProperty(propertyName)
+                ?? record.GetType().GetProperty(char.ToUpperInvariant(propertyName[0]) + propertyName.Substring(1));
+            return property != null ? (T)property.GetValue(record)! : default!;
         }
 
         /// <summary>

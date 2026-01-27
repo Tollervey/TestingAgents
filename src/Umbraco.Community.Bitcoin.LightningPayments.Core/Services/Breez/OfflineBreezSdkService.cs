@@ -95,6 +95,30 @@ namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Breez
         public Task<DateTimeOffset?> TryExtractInvoiceExpiryAsync(string invoice, CancellationToken ct = default)
             => Task.FromResult<DateTimeOffset?>(null);
 
+        // New: offline impl for prepare send payment - returns mock response with zero fees
+        public Task<global::Breez.Sdk.Liquid.PrepareSendResponse> PrepareSendPaymentAsync(string destination, CancellationToken ct = default)
+        {
+            throw new NotSupportedException("Send payments are not supported in offline mode.");
+        }
+
+        // New: offline impl for send payment - not supported
+        public Task<global::Breez.Sdk.Liquid.SendPaymentResponse> SendPaymentAsync(global::Breez.Sdk.Liquid.PrepareSendResponse prepareResponse, CancellationToken ct = default)
+        {
+            throw new NotSupportedException("Send payments are not supported in offline mode.");
+        }
+
+        // New: offline impl for wallet balance - returns mock zero balance
+        public Task<(ulong balanceSat, ulong pendingReceiveSat, ulong pendingSendSat)> GetWalletBalanceAsync(CancellationToken ct = default)
+        {
+            return Task.FromResult((0UL, 0UL, 0UL));
+        }
+
+        // New: offline impl for parse invoice - throws not supported
+        public Task<global::Breez.Sdk.Liquid.LnInvoice> ParseInvoiceAsync(string invoice, CancellationToken ct = default)
+        {
+            throw new NotSupportedException("Invoice parsing is not supported in offline mode.");
+        }
+
         public ValueTask DisposeAsync()
         {
             _cts.Cancel();

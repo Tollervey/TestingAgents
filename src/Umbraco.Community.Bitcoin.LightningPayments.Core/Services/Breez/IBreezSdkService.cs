@@ -54,6 +54,27 @@ namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Breez
         /// Retrieves recommended on-chain fees.
         /// </summary>
         Task<global::Breez.Sdk.Liquid.RecommendedFees?> GetRecommendedFeesAsync(CancellationToken ct = default);
+
+        /// <summary>
+        /// Prepares a send payment to the given destination (BOLT11 invoice).
+        /// Returns fee estimation without executing the payment.
+        /// </summary>
+        Task<global::Breez.Sdk.Liquid.PrepareSendResponse> PrepareSendPaymentAsync(string destination, CancellationToken ct = default);
+
+        /// <summary>
+        /// Executes a previously prepared send payment.
+        /// </summary>
+        Task<global::Breez.Sdk.Liquid.SendPaymentResponse> SendPaymentAsync(global::Breez.Sdk.Liquid.PrepareSendResponse prepareResponse, CancellationToken ct = default);
+
+        /// <summary>
+        /// Gets the current wallet balance including pending amounts.
+        /// </summary>
+        Task<(ulong balanceSat, ulong pendingReceiveSat, ulong pendingSendSat)> GetWalletBalanceAsync(CancellationToken ct = default);
+
+        /// <summary>
+        /// Parses a BOLT11 invoice and returns structured invoice information.
+        /// </summary>
+        Task<global::Breez.Sdk.Liquid.LnInvoice> ParseInvoiceAsync(string invoice, CancellationToken ct = default);
     }
 }
 

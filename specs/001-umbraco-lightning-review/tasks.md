@@ -262,34 +262,34 @@
 
 > **TDD REQUIRED: Write tests FIRST, verify they FAIL (RED), then implement until GREEN**
 
-- [ ] T074 [P] [US5] Unit tests for `RefundService` in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Services/RefundServiceTests.cs`
-- [ ] T075 [P] [US5] Unit tests for `RefundController` in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Api/RefundControllerTests.cs`
-- [ ] T076 [P] [US5] Contract tests for `/refunds` CRUD and `/refunds/prepare` endpoints in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Api/Contract/RefundContractTests.cs`
+- [X] T074 [P] [US5] Unit tests for `RefundService` in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Services/RefundServiceTests.cs`
+- [X] T075 [P] [US5] Unit tests for `RefundController` in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Api/RefundControllerTests.cs`
+- [X] T076 [P] [US5] Contract tests for `/refunds` CRUD and `/refunds/prepare` endpoints in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Api/Contract/RefundContractTests.cs`
 
 ### Implementation for User Story 5
 
 #### Backend Services
 
-- [ ] T077 [US5] Extend `IBreezSdkService` to add `PrepareSendPaymentAsync`, `SendPaymentAsync`, `GetWalletBalanceAsync`, `ParseInvoiceAsync` in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/IBreezSdkService.cs`
-- [ ] T078 [US5] Implement send payment methods in `BreezSdkService` in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/BreezSdkService.cs`
-- [ ] T079 [US5] Create `IRefundService` interface in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Refund/IRefundService.cs`
-- [ ] T080 [US5] Implement `RefundService` in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Refund/RefundService.cs`
+- [X] T077 [US5] Extend `IBreezSdkService` to add `PrepareSendPaymentAsync`, `SendPaymentAsync`, `GetWalletBalanceAsync`, `ParseInvoiceAsync` in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/IBreezSdkService.cs`
+- [X] T078 [US5] Implement send payment methods in `BreezSdkService` in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/BreezSdkService.cs`
+- [X] T079 [US5] Create `IRefundService` interface in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Refund/IRefundService.cs`
+- [X] T080 [US5] Implement `RefundService` in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Refund/RefundService.cs`
 
 #### Backend API (from management-api.yaml)
 
-- [ ] T081 [US5] Create `RefundController` with `listRefunds`, `initiateRefund`, `getRefund`, `prepareRefund` endpoints in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Management/RefundController.cs`
+- [X] T081 [US5] Create `RefundController` with `listRefunds`, `initiateRefund`, `getRefund`, `prepareRefund` endpoints in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Management/RefundController.cs`
 
 #### Backend DTOs
 
-- [ ] T082 [P] [US5] Create `RefundTransaction`, `RefundSummary`, `RefundListResponse`, `InitiateRefundRequest`, `PrepareRefundRequest`, `PrepareRefundResponse` DTOs in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Management/Dto/RefundDtos.cs`
+- [X] T082 [P] [US5] Create `RefundTransaction`, `RefundSummary`, `RefundListResponse`, `InitiateRefundRequest`, `PrepareRefundRequest`, `PrepareRefundResponse` DTOs in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Management/Dto/RefundDtos.cs`
 
 #### Authorization
 
-- [ ] T083 [US5] Add Administrator-only authorization policy for refund endpoints in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Management/RefundController.cs`
+- [X] T083 [US5] Add Administrator-only authorization policy for refund endpoints in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Management/RefundController.cs`
 
 #### DI Registration
 
-- [ ] T084 [US5] Register `IRefundService` in DI in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Extensions/LightningPaymentsExtensions.cs`
+- [X] T084 [US5] Register `IRefundService` in DI in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Extensions/LightningPaymentsExtensions.cs`
 
 **Checkpoint**: User Story 5 complete - Refund capability is fully functional and testable independently
 
