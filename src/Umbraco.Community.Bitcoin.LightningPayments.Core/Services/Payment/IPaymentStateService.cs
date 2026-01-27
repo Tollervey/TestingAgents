@@ -91,6 +91,11 @@ namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Payment
         /// </summary>
         /// <returns>True if the service is healthy, false otherwise.</returns>
         Task<bool> IsServiceHealthyAsync();
+
+        /// <summary>
+        /// Gets all pending payments for a specific content ID.
+        /// </summary>
+        Task<IEnumerable<PaymentState>> GetPendingPaymentsByContentIdAsync(int contentId);
     }
 
     /// <summary>
@@ -109,7 +114,11 @@ namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Payment
         /// <summary>
         /// No confirmable record was found.
         /// </summary>
-        NotFound
+        NotFound,
+        /// <summary>
+        /// The payment was expired but received a late payment. Transitioned to Paid.
+        /// </summary>
+        ConfirmedLatePayment
     }
 }
 

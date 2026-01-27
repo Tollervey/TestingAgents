@@ -76,6 +76,11 @@ namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Payment
 
                         return Task.FromResult(PaymentConfirmationResult.Confirmed);
                     }
+                    if (state.Status == PaymentStatus.Expired)
+                    {
+                        state.Status = PaymentStatus.Paid;
+                        return Task.FromResult(PaymentConfirmationResult.ConfirmedLatePayment);
+                    }
                     return Task.FromResult(PaymentConfirmationResult.NotFound);
                 }
                 return Task.FromResult(PaymentConfirmationResult.NotFound);
@@ -219,6 +224,14 @@ namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Payment
             // If mapping.PaymentHash equals the provided paymentHash and invoice, we created it; otherwise it existed.
             var created = mapping.PaymentHash == paymentHash && mapping.Invoice == invoice && mapping.CreatedAt.AddSeconds(1) >= DateTime.UtcNow;
             return Task.FromResult((mapping, created));
+        }
+
+        /// <inheritdoc />
+        public Task<IEnumerable<PaymentState>> GetPendingPaymentsByContentIdAsync(int contentId)
+        {
+            var pending = _paymentStatesByHash.Values
+                .Where(p => p.ContentId == contentId && p.Status == PaymentStatus.Pending);
+            return Task.FromResult(pending.AsEnumerable());
         }
 
         /// <inheritdoc />

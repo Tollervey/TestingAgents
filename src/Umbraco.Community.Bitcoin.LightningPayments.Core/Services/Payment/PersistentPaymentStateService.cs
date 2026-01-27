@@ -105,6 +105,12 @@ namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Payment
 
                     return PaymentConfirmationResult.Confirmed;
                 }
+                if (state.Status == PaymentStatus.Expired)
+                {
+                    state.Status = PaymentStatus.Paid;
+                    await _context.SaveChangesAsync();
+                    return PaymentConfirmationResult.ConfirmedLatePayment;
+                }
                 // For other statuses, do not confirm
                 return PaymentConfirmationResult.NotFound;
             }
@@ -287,6 +293,21 @@ namespace Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Payment
             catch (Exception ex)
             {
                 throw new PaymentException("Failed to create idempotency mapping.", ex);
+            }
+        }
+
+        /// <inheritdoc />
+        public async Task<IEnumerable<PaymentState>> GetPendingPaymentsByContentIdAsync(int contentId)
+        {
+            try
+            {
+                return await _context.PaymentStates
+                    .Where(p => p.ContentId == contentId && p.Status == PaymentStatus.Pending)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new PaymentException("Failed to get pending payments by content ID.", ex);
             }
         }
 

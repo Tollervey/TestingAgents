@@ -20,6 +20,8 @@ using Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Refund;
 using Umbraco.Community.Bitcoin.LightningPayments.Core.Services.ExchangeRate;
 using System.Threading.RateLimiting;
 using Umbraco.Cms.Core.DependencyInjection;
+using Umbraco.Cms.Core.Notifications;
+using Umbraco.Community.Bitcoin.LightningPayments.Core.Notifications;
 using Microsoft.AspNetCore.Builder;
 
 namespace Microsoft.Extensions.DependencyInjection;
@@ -155,6 +157,13 @@ public static class LightningPaymentsExtensions
         // Refund services
         builder.Services.AddScoped<IRefundService, RefundService>();
 
+        // Late payment handler
+        builder.Services.AddScoped<ILatePaymentHandler, LatePaymentHandler>();
+
+        // Content unpublished payment handler
+        builder.Services.AddScoped<IContentUnpublishedPaymentHandler, ContentUnpublishedPaymentHandler>();
+        builder.AddNotificationAsyncHandler<ContentUnpublishedNotification, ContentUnpublishedNotificationHandler>();
+
         // Exchange rate services (multi-currency display)
         builder.Services.AddHttpClient<CoinGeckoClient>();
         builder.Services.AddScoped<ICoinGeckoClient, CoinGeckoClient>();
@@ -169,6 +178,15 @@ public static class LightningPaymentsExtensions
 
     // NOTE: ApplicationInsights methods moved to main package project
     // since Microsoft.ApplicationInsights.AspNetCore is a dependency there
+
+    /// <summary>
+    /// Registers Lightning Payments middleware including correlation ID tracking.
+    /// </summary>
+    public static IApplicationBuilder UseLightningPaymentsMiddleware(this IApplicationBuilder app)
+    {
+        app.UseMiddleware<CorrelationIdMiddleware>();
+        return app;
+    }
 
     // Publicly exposed: enable offline mode for development/testing.
     public static IUmbracoBuilder UseLightningPaymentsOffline(this IUmbracoBuilder builder, Action<OfflineLightningPaymentsOptions>? configure = null)
