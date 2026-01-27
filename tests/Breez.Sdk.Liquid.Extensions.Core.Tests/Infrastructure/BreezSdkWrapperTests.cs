@@ -7,6 +7,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
+using Polly;
+using Polly.Retry;
 
 namespace Breez.Sdk.Liquid.Extensions.Core.Tests.Infrastructure;
 
@@ -95,7 +97,10 @@ public class BreezSdkWrapperTests : IAsyncDisposable
         var options = CreateValidOptions();
         options.ApiKey = "invalid-api-key-that-will-fail";
         _optionsMock.Setup(x => x.Value).Returns(options);
-        _sut = new BreezSdkWrapper(_optionsMock.Object, _loggerMock.Object);
+
+        // Use a fast test policy to avoid production retry delays (2s exponential backoff).
+        // We're testing that the exception propagates, not the retry timing.
+        _sut = new BreezSdkWrapper(_optionsMock.Object, _loggerMock.Object, CreateFastConnectPolicy());
 
         // Act & Assert
         var act = async () => await _sut.ConnectAsync();
@@ -605,6 +610,23 @@ public class BreezSdkWrapperTests : IAsyncDisposable
     #endregion
 
     #region Helper Methods
+
+    /// <summary>
+    /// Creates a fast connect resilience policy for tests.
+    /// Same retry count as production but with 50ms delays instead of 2s,
+    /// keeping tests fast while still exercising retry behavior.
+    /// </summary>
+    private static ResiliencePipeline CreateFastConnectPolicy() =>
+        new ResiliencePipelineBuilder()
+            .AddRetry(new RetryStrategyOptions
+            {
+                MaxRetryAttempts = 3,
+                Delay = TimeSpan.FromMilliseconds(50),
+                BackoffType = DelayBackoffType.Exponential,
+                UseJitter = true
+            })
+            .AddTimeout(TimeSpan.FromSeconds(5))
+            .Build();
 
     /// <summary>
     /// Creates a valid BreezSdkOptions instance for testing.

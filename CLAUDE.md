@@ -378,6 +378,41 @@ private static ResiliencePipeline CreateFastTestPolicy() =>
 
 **Rule**: If a test takes >2 seconds due to waiting, create a fast test policy with short delays.
 
+#### Non-Transient Errors Before Resilience Pipelines
+
+Configuration validation and argument checks are deterministic — they fail the same way every time. These MUST be called **before** entering a retry pipeline, not inside it. Otherwise tests expecting fast validation failures wait through all retry delays.
+
+```csharp
+// BAD: Validation retried 3x with exponential backoff (2s + 4s + 8s = 14s!)
+await RetryPolicy.ExecuteAsync(async ct => {
+    ValidateConfiguration(); // Deterministic failure retried uselessly
+    await ConnectInternalAsync(ct);
+}, cancellationToken);
+
+// GOOD: Validate before the pipeline
+ValidateConfiguration(); // Fails fast
+await RetryPolicy.ExecuteAsync(async ct => {
+    await ConnectInternalAsync(ct); // Only transient failures retried
+}, cancellationToken);
+```
+
+**Corollary**: Make resilience pipelines injectable (constructor parameter) so tests can provide fast policies.
+
+#### Async Enumerable Cancellation Tests
+
+Never cancel inside a `foreach` loop body when the source may be empty. `MoveNextAsync()` blocks waiting for data — the loop body never executes, and the test hangs forever.
+
+```csharp
+// BAD: Hangs — empty channel blocks on MoveNextAsync
+await foreach (var evt in channel.ReadAllAsync(cts.Token))
+    cts.Cancel(); // Never reached if channel is empty!
+
+// GOOD: Write data first so the loop body executes
+await channel.WriteAsync(testEvent, CancellationToken.None);
+await foreach (var evt in channel.ReadAllAsync(cts.Token))
+    cts.Cancel(); // Reached because there's data
+```
+
 ### Test Execution Best Practices
 
 **Avoid full test suite runs during development:**
@@ -390,6 +425,7 @@ private static ResiliencePipeline CreateFastTestPolicy() =>
 - Infinite loops in async code
 - Missing CancellationToken handling
 - Tests waiting for real timeouts instead of short test timeouts
+- Reading from empty channels/streams with cancellation inside the loop body
 
 ### Static State in Tests
 

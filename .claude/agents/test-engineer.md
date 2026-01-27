@@ -182,6 +182,56 @@ private static ResiliencePipeline CreateFastTestPolicy() =>
 
 **Rule**: If a test requires waiting >2 seconds, create a fast test policy with short delays.
 
+### Non-Transient Errors Must Not Be Retried
+
+When production code wraps operations in resilience policies, ensure non-transient errors (configuration validation, argument checks) are thrown **before** entering the retry pipeline. Otherwise tests that expect fast validation failures will wait through all retry delays.
+
+```csharp
+// BAD: Validation inside the retry pipeline — retries a deterministic failure
+public async Task ConnectAsync(CancellationToken ct)
+{
+    await RetryPolicy.ExecuteAsync(async token =>
+    {
+        ValidateConfiguration(); // Throws ConfigurationException on every retry!
+        await ConnectInternalAsync(token);
+    }, ct);
+}
+
+// GOOD: Validate before the pipeline, only retry transient operations
+public async Task ConnectAsync(CancellationToken ct)
+{
+    ValidateConfiguration(); // Fails fast, no retries
+    await RetryPolicy.ExecuteAsync(async token =>
+    {
+        await ConnectInternalAsync(token); // Only transient failures retried
+    }, ct);
+}
+```
+
+**Corollary for test engineers**: When writing tests for code that uses resilience policies:
+1. Ensure the production code validates non-transient inputs before the policy
+2. Make resilience pipelines injectable so tests can provide fast policies
+3. If the SUT uses a static/hardcoded policy, request a constructor overload accepting `ResiliencePipeline`
+
+### Async Enumerable Cancellation Test Anti-Pattern
+
+Never test cancellation by cancelling inside a `foreach` loop body when the source might be empty. An empty async enumerable blocks on `MoveNextAsync()` — the loop body never executes, and the test hangs.
+
+```csharp
+// BAD: Hangs if channel is empty — MoveNextAsync blocks waiting for data
+await foreach (var evt in channel.ReadAllAsync(cts.Token))
+{
+    cts.Cancel(); // Never reached if channel is empty!
+}
+
+// GOOD: Write data first so the loop body executes
+await channel.WriteAsync(testEvent, CancellationToken.None);
+await foreach (var evt in channel.ReadAllAsync(cts.Token))
+{
+    cts.Cancel(); // Executes because there's data to read
+}
+```
+
 ## Verification Command
 
 After creating tests, always run:

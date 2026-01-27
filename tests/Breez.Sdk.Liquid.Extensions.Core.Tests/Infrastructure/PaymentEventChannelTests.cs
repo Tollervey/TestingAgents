@@ -146,12 +146,16 @@ public class PaymentEventChannelTests : IAsyncDisposable
         _sut = new PaymentEventChannel(capacity: 10);
         using var cts = new CancellationTokenSource();
 
+        // Write an event so the foreach body executes (an empty channel would block
+        // on MoveNextAsync indefinitely, never reaching the Cancel() call)
+        await _sut.WriteAsync(CreateInvoiceCreatedEvent(), CancellationToken.None);
+
         // Act
         var act = async () =>
         {
             await foreach (var evt in _sut.ReadAllAsync(cts.Token))
             {
-                cts.Cancel(); // Cancel after attempting to read
+                cts.Cancel(); // Cancel after reading first event
             }
         };
 

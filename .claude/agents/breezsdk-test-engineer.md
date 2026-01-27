@@ -342,6 +342,51 @@ private static ResiliencePipeline CreateFastTestPolicy() =>
 
 **Rule**: If a test requires waiting >2 seconds, create a fast test policy with short delays.
 
+### Non-Transient Errors Must Not Be Retried
+
+Configuration validation, argument checks, and other deterministic failures must be thrown **before** entering the resilience pipeline. Otherwise, tests expecting fast validation failures wait through all retry delays (e.g., 2s + 4s + 8s = 14s).
+
+```csharp
+// BAD: ValidateConfiguration() throws ConfigurationException inside retry loop
+await ResiliencePolicies.ConnectPolicy.ExecuteAsync(async ct =>
+{
+    ValidateConfiguration(); // Retried 3 times with backoff!
+    await ConnectInternalAsync(ct);
+}, cancellationToken);
+
+// GOOD: Validate before entering the retry pipeline
+ValidateConfiguration(); // Fails fast — no retries for deterministic errors
+await ResiliencePolicies.ConnectPolicy.ExecuteAsync(async ct =>
+{
+    await ConnectInternalAsync(ct); // Only transient failures retried
+}, cancellationToken);
+```
+
+**For test engineers**: Make resilience pipelines injectable via constructor overload so tests can provide fast policies:
+```csharp
+// Test uses fast policy (50ms delays instead of 2s)
+_sut = new BreezSdkWrapper(options, logger, CreateFastConnectPolicy());
+```
+
+### Async Enumerable / Channel Cancellation Tests
+
+Never test cancellation inside a `foreach` body when the source may be empty — `MoveNextAsync()` blocks waiting for data, so the cancellation call is never reached and the test hangs.
+
+```csharp
+// BAD: Hangs — empty channel blocks on MoveNextAsync forever
+await foreach (var evt in channel.ReadAllAsync(cts.Token))
+{
+    cts.Cancel(); // Never reached
+}
+
+// GOOD: Ensure data exists so the loop body executes
+await channel.WriteAsync(testEvent, CancellationToken.None);
+await foreach (var evt in channel.ReadAllAsync(cts.Token))
+{
+    cts.Cancel(); // Reached because there's data
+}
+```
+
 ## Output Format
 
 When implementing tests:
