@@ -9,7 +9,7 @@ description: Execute the implementation plan using Claude Code multi-agent workf
 - Read the task breakdown from `/specs/[current-feature]/tasks.md`
 - Read the implementation plan from `/specs/[current-feature]/plan.md`
 - Read the constitution from `/memory/constitution.md`
-- Load the execution skill: `.claude/skills/dotnet-implementation-execution.md`
+- Load the execution skill: `.claude/skills/implementation-execution.md`
 - Verify all agents are available: `/agents`
 
 ## Execution Strategy
@@ -64,8 +64,8 @@ Based on task metadata:
 | model_tier | Agent | Use For |
 |------------|-------|---------|
 | opus | solution-architect | Architectural decisions, complex refactoring |
-| sonnet | backend-developer | .NET implementation |
-| sonnet | frontend-developer | Blazor/UI implementation |
+| sonnet | backend-developer | Backend implementation |
+| sonnet | frontend-developer | UI/frontend implementation |
 | sonnet | test-engineer | Test implementation (TDD) |
 | sonnet | database-architect | Migrations, queries |
 | haiku | security-auditor | Security scanning |
@@ -100,7 +100,7 @@ For every implementation task:
 
 2. **Verify Tests Fail**
    ```
-   Run dotnet test --filter "[component]" and confirm RED state
+   Run <test-runner> --filter "[component]" and confirm RED state
    ```
 
 3. **Implement**
@@ -110,7 +110,7 @@ For every implementation task:
 
 4. **Verify Tests Pass**
    ```
-   Run dotnet test --filter "[component]" and confirm GREEN state
+   Run <test-runner> --filter "[component]" and confirm GREEN state
    ```
 
 ### Phase 5: Context Management
@@ -167,8 +167,8 @@ After all tasks complete:
 
 ```
 # Run full validation
-& dotnet build --warnaserror
-& dotnet test
+& <build-tool> build --warnings-as-errors
+& <test-runner>
 & Use security-auditor to perform final security scan
 & Use code-reviewer to verify constitution compliance
 

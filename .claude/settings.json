@@ -8,14 +8,7 @@
 
 
 
-  "mcpServers": {
-    "umbraco-docs": {
-      "url": "https://docs.umbraco.com/~gitbook/mcp",
-      "transport": "sse",
-      "autoSearch": "auto:3",
-      "description": "Umbraco v17 LTS documentation via GitBook MCP"
-    }
-  },
+  "mcpServers": {},
 
   "autoCompact": {
     "enabled": true,
@@ -36,11 +29,6 @@
         "name": "superpowers",
         "repo": "obra/superpowers-marketplace",
         "phases": ["/speckit.plan", "/speckit.implement"]
-      },
-      {
-        "name": "dotnet-claude-code-skills",
-        "repo": "anthropics/dotnet-claude-code-skills",
-        "phases": ["/speckit.implement"]
       },
       {
         "name": "engineering-workflow-plugin",

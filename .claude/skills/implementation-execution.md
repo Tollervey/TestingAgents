@@ -1,15 +1,13 @@
 ---
-name: dotnet-implementation-execution
-description: Comprehensive Claude Code execution patterns for .NET implementation. Load this skill during /speckit.implement for multi-agent workflows, background tasks, and quality enforcement.
+name: implementation-execution
+description: Comprehensive Claude Code execution patterns for implementation. Load this skill during /speckit.implement for multi-agent workflows, background tasks, and quality enforcement.
 globs:
-  - "**/*.cs"
-  - "**/*.razor"
-  - "**/*.csproj"
+  - "**/*"
 ---
 
-# .NET Implementation Execution Skill
+# Implementation Execution Skill
 
-This skill provides the **canonical** execution patterns for implementing .NET projects using Claude Code's multi-agent capabilities. CLAUDE.md and `/speckit.implement` reference this file as the authoritative source for wave execution strategy.
+This skill provides the **canonical** execution patterns for implementing projects using Claude Code's multi-agent capabilities. CLAUDE.md and `/speckit.implement` reference this file as the authoritative source for wave execution strategy.
 
 ## Wave Execution Strategy (Canonical Definition)
 
@@ -47,7 +45,7 @@ Checkpoint created before Wave 2
 
 # Wave 2: Domain Layer (parallel)
 & Use backend-developer to implement the User aggregate with entity, value objects, and domain events
-& Use backend-developer to implement the Product aggregate with entity, value objects, and domain events  
+& Use backend-developer to implement the Product aggregate with entity, value objects, and domain events
 & Use backend-developer to implement the Order aggregate with entity, value objects, and domain events
 
 # Monitor all parallel tasks
@@ -73,14 +71,14 @@ Use test-engineer to create comprehensive unit tests for OrderService including:
 - Null handling
 
 # Step 2: Verify RED state
-Run: dotnet test --filter "OrderServiceTests"
+Run: <test-runner> --filter "OrderServiceTests"
 Expected: Tests should FAIL (no implementation yet)
 
 # Step 3: Implement to GREEN
 Use backend-developer to implement OrderService until all tests pass
 
-# Step 4: Verify GREEN state  
-Run: dotnet test --filter "OrderServiceTests"
+# Step 4: Verify GREEN state
+Run: <test-runner> --filter "OrderServiceTests"
 Expected: All tests PASS
 
 # Step 5: Refactor (optional)
@@ -125,7 +123,7 @@ Use database-architect to create the Order and Payment migrations and repository
 & Use test-engineer to implement integration tests for checkout flow
 
 # Phase 4: Frontend Implementation (Sonnet)
-Use frontend-developer to implement the CheckoutPage Blazor component with cart summary and payment form
+Use frontend-developer to implement the CheckoutPage component with cart summary and payment form
 
 # Phase 5: Security Audit (Haiku - fast validation)
 & Use security-auditor to scan checkout flow for PCI compliance issues
@@ -195,7 +193,7 @@ Create a checkpoint - [description of current state]
 These run automatically via .claude/hooks.json:
 
 1. **PostToolUse: Format Check**
-   - Runs `dotnet format --verify-no-changes` after .cs/.razor edits
+   - Runs format verification after source file edits
    - Warnings surface immediately
 
 2. **PreToolUse: Dangerous Command Block**
@@ -284,6 +282,6 @@ Use security-auditor to scan Wave N implementations for:
 
 - See `.claude/skills/external-plugins.md` for:
   - TDD plugins (`superpowers`) — Use during RED-GREEN-REFACTOR cycles
-  - DDD patterns (`dotnet-claude-code-skills`) — Use for aggregate/entity design
+  - Technology-specific plugins (see `CLAUDE.project.md`) — Use for domain patterns
   - PR workflows (`dev-agent-skills`) — Use after implementation waves complete
   - Code review (`engineering-workflow-plugin`) — Complements `code-reviewer` agent

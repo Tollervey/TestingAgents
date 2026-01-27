@@ -8,14 +8,14 @@ description: Generate task breakdown with dependency management and parallel exe
 ## Prerequisites
 - Read the implementation plan from `/specs/[current-feature]/plan.md`
 - Read the constitution from `/memory/constitution.md`
-- Load the Claude Code tasks skill: `.claude/skills/dotnet-task-parallelization.md`
+- Load the Claude Code tasks skill (if available)
 
 ## Execution Steps
 
 1. **Load Context**
    - Read plan.md for technical architecture
    - Read the Claude Code Execution Architecture section from plan.md
-   - Read the dotnet-task-parallelization skill
+   - Read any available task parallelization skills
 
 2. **Generate Task Breakdown**
    

@@ -33,12 +33,12 @@ Follow-up TODOs: None
 ================================================================================
 -->
 
-# .NET Fullstack Development Constitution
+# Software Development Constitution
 
 ## Preamble
 
 This Constitution establishes the immutable architectural foundation governing all specifications,
-technical plans, task breakdowns, and implementations for this .NET fullstack development project.
+technical plans, task breakdowns, and implementations for this software development project.
 These principles ensure quality, maintainability, security, and professional engineering practices
 suitable for long-term evolution, team collaboration, and enterprise deployment.
 
@@ -63,7 +63,7 @@ dependencies, technology migration without core rewrites, and clear boundaries f
 **Enforcement Mechanism**:
 - Static analysis validates project references flow inward only
 - Code review gates reject cross-layer violations
-- `dotnet build` with architecture tests in CI pipeline
+- Build tool with architecture tests in CI pipeline
 
 **Gate Status**:
 - PASS: All dependencies flow inward; no Infrastructure references in Domain/Application
@@ -83,7 +83,7 @@ the same language as stakeholders, requirements translation errors decrease and 
 evolves naturally with business needs.
 
 **Enforcement Mechanism**:
-- Domain project has zero package references beyond .NET base libraries
+- Domain module has zero external dependencies beyond language standard libraries
 - Entity/value object naming reviewed against domain glossary
 - Domain events named using business terminology
 
@@ -220,7 +220,7 @@ first forces clear thinking about requirements and interfaces.
 **Enforcement Mechanism**:
 - Task workflow requires test task completion before implementation task
 - CI fails if new code lacks corresponding test coverage
-- `dotnet test` must pass before any commit
+- Test runner must pass before any commit
 
 **Gate Status**:
 - PASS: Tests written first; all tests pass; coverage maintained
@@ -275,7 +275,7 @@ business logic lives.
 
 ### III.4 Automated Validation Gates
 
-**Statement**: All tests MUST be runnable via CLI commands (`dotnet test`) to enable automated
+**Statement**: All tests MUST be runnable via CLI commands (e.g., `<test-runner>`) to enable automated
 verification through hooks and CI/CD pipelines. Interactive tests, manual verification steps,
 and tests requiring human judgment are prohibited in the automated suite.
 
@@ -284,7 +284,7 @@ execution. Tests that require human intervention cannot gate deployments or prov
 consistent feedback.
 
 **Enforcement Mechanism**:
-- `dotnet test` executes full test suite
+- Test runner executes full test suite
 - CI pipeline runs tests on every push
 - Pre-commit hooks run fast unit tests
 
@@ -300,28 +300,28 @@ consistent feedback.
 ### IV.1 Repository Pattern Mandate
 
 **Statement**: All data access MUST occur through repository abstractions defined in the
-Application layer. Infrastructure layer provides implementations. DbContext is never injected
+Application layer. Infrastructure layer provides implementations. ORM context is never injected
 directly into Application or Domain layers.
 
 **Rationale**: Repository abstraction enables unit testing without databases, allows storage
 technology changes without business logic rewrites, and enforces query patterns. Direct
-DbContext usage couples business logic to EF Core.
+ORM context usage couples business logic to the data access framework.
 
 **Enforcement Mechanism**:
 - Repository interfaces in Application layer
 - Repository implementations in Infrastructure layer
-- Code review rejects DbContext injection outside Infrastructure
+- Code review rejects ORM context injection outside Infrastructure
 
 **Gate Status**:
 - PASS: All data access through repository interfaces
-- WARNING: Direct DbContext in Infrastructure service with documented reason
-- CRITICAL: DbContext injected into Application layer; queries in controllers
+- WARNING: Direct ORM context in Infrastructure service with documented reason
+- CRITICAL: ORM context injected into Application layer; queries in controllers
 
 ---
 
 ### IV.2 Migration-First Schema Evolution
 
-**Statement**: Database schema changes MUST occur exclusively through versioned EF Core
+**Statement**: Database schema changes MUST occur exclusively through versioned database
 migrations. Manual schema modifications, direct database edits, and schema-modifying scripts
 outside migration framework are prohibited.
 
@@ -330,9 +330,9 @@ reproducibility across environments, and document schema evolution history. Manu
 create environment drift.
 
 **Enforcement Mechanism**:
-- `dotnet ef migrations add` for all schema changes
+- Migration tool for all schema changes
 - CI applies migrations to test database
-- Production deployment runs `dotnet ef database update`
+- Production deployment runs migration tool update
 
 **Gate Status**:
 - PASS: All schema changes in migrations; migrations tested in CI
@@ -344,22 +344,22 @@ create environment drift.
 ### IV.3 Query Optimization Standards
 
 **Statement**: Complex queries MUST include execution plan analysis. N+1 query patterns are
-CRITICAL violations. All queries use `.AsNoTracking()` for read-only operations. Eager loading
-specified explicitly with `.Include()`.
+CRITICAL violations. All queries use read-only query optimization (e.g., disable change tracking) for read-only operations. Eager loading
+specified explicitly.
 
 **Rationale**: Database queries are common performance bottlenecks. N+1 patterns multiply
 database round trips. Tracking overhead wastes memory for read-only scenarios. Implicit lazy
 loading hides performance problems.
 
 **Enforcement Mechanism**:
-- EF Core logging enabled in development to surface queries
-- Code review checks for `.Include()` presence
+- ORM logging enabled in development to surface queries
+- Code review checks for explicit eager loading
 - Performance tests verify query counts
 
 **Gate Status**:
 - PASS: Queries optimized; explicit loading; no N+1 patterns
 - WARNING: Query count higher than expected but within acceptable bounds
-- CRITICAL: N+1 pattern detected; queries in loops; missing `.AsNoTracking()`
+- CRITICAL: N+1 pattern detected; queries in loops; missing read-only optimization
 
 ---
 
@@ -706,7 +706,7 @@ Unnecessary dependencies complicate auditing.
 
 **Enforcement Mechanism**:
 - New dependency requires justification in PR
-- `dotnet outdated` run weekly
+- Dependency audit tool run regularly
 - License and security audit for new packages
 
 **Gate Status**:
@@ -810,7 +810,7 @@ calls (`.Result`, `.Wait()`, `.GetAwaiter().GetResult()`) require documented jus
 are prohibited in request paths.
 
 **Rationale**: Async operations free threads during I/O, enabling scalability. Blocking on
-async code causes deadlocks and thread pool starvation. .NET is designed for async-first I/O.
+async code causes deadlocks and thread pool starvation. Modern frameworks are designed for async-first I/O.
 
 **Enforcement Mechanism**:
 - Analyzer rules flag blocking calls
@@ -919,8 +919,8 @@ is a critical defect.
 Non-deterministic results undermine trust in automation and lead to ignored failures.
 
 **Enforcement Mechanism**:
-- `dotnet format` for formatting
-- `dotnet test` for testing
+- Formatter for consistent code style
+- Test runner for automated testing
 - Flaky test detection and quarantine
 
 **Gate Status**:
@@ -1011,16 +1011,16 @@ The following quality gates MUST be automated and run on every change:
 
 ```bash
 # Build verification
-dotnet build --warnaserror
+<build-tool> build --warnings-as-errors
 
 # Test execution
-dotnet test --collect:"XPlat Code Coverage"
+<test-runner> --collect-coverage
 
 # Code formatting
-dotnet format --verify-no-changes
+<formatter> --verify-no-changes
 
 # Security scanning
-dotnet list package --vulnerable
+<dependency-audit-tool> --check-vulnerable
 ```
 
 ### Review Checklist

@@ -18,8 +18,6 @@ For deterministic, reproducible builds, pin plugins to specific Git commit SHAs:
 ```bash
 # Pinned installation (RECOMMENDED for production)
 /plugin marketplace add obra/superpowers-marketplace@<commit-sha>
-/plugin marketplace add anthropics/dotnet-claude-code-skills@<commit-sha>
-
 # To find current commit SHA
 /plugins  # Lists installed plugins with versions
 
@@ -64,32 +62,15 @@ Use superpowers to create a worktree for feature/payment-integration
 
 ---
 
-### 2. dotnet-claude-code-skills
+### 2. Technology-Specific Plugins
 
-**Use For**: DDD patterns, EF Core best practices, BDD testing
-**Spec-Kit Phases**: `/speckit.implement`
+Technology-specific plugins are documented in `CLAUDE.project.md`. These plugins vary by project and technology stack.
 
-**Capabilities**:
-- Domain-Driven Design tactical patterns (aggregates, entities, value objects)
-- Entity Framework Core code generation and optimization
-- BDD-style test scenario generation
-- Repository pattern implementation
-
-**Invocation Examples**:
-```
-# DDD aggregate design
-Use dotnet-claude-code-skills to create the Order aggregate with OrderLine value objects
-
-# EF Core optimization
-Use dotnet-claude-code-skills to optimize the customer query with proper includes
-
-# BDD test generation
-Use dotnet-claude-code-skills to generate BDD scenarios for the checkout feature
-```
+**Examples** (install per your project's CLAUDE.project.md):
+- Check `CLAUDE.project.md` for technology-specific plugin recommendations
 
 **Integration with Spec-Kit**:
-- Aligns with Constitution Article I (Clean Architecture, DDD)
-- Aligns with Constitution Article IV (Data Layer Governance)
+- Aligns with Constitution principles for Clean Architecture and Data Layer Governance
 
 ---
 
@@ -193,7 +174,7 @@ Use awesome-claude-skills to analyze the trade-offs between SQL Server and Postg
 |-------|-------|---------|
 | `/speckit.constitution` | awesome-claude-skills | Architecture principles |
 | `/speckit.plan` | superpowers, awesome-claude-skills | Planning, architecture |
-| `/speckit.implement` | superpowers, dotnet-claude-code-skills | TDD, DDD, EF Core |
+| `/speckit.implement` | superpowers, (see CLAUDE.project.md) | TDD, technology-specific patterns |
 | `/speckit.analyze` | engineering-workflow-plugin | Code review workflows |
 | Post-implement | dev-agent-skills, engineering-workflow-plugin | Commits, PRs |
 
@@ -210,7 +191,6 @@ Before invoking plugins, verify they are installed:
 
 # Examples:
 /plugin marketplace add obra/superpowers-marketplace
-/plugin marketplace add anthropics/dotnet-claude-code-skills
 ```
 
 ## Combining Plugins with Agents
@@ -238,82 +218,13 @@ If a plugin command fails:
 
 ## MCP Servers
 
-### Umbraco MCP (GitBook)
+Project-specific MCP servers are documented in `CLAUDE.project.md`. Configure MCP servers in `.claude/settings.json` under `mcpServers`.
 
-**Use For**: Accessing official Umbraco v17 LTS documentation for backend and frontend development
-**Spec-Kit Phases**: `/speckit.plan`, `/speckit.implement`
-
-**Prerequisite Setup**:
-
-Before agents can use the Umbraco MCP, ensure the GitBook MCP server is configured:
-
-1. **VS Code**: Install the GitBook MCP extension or configure manually in `.vscode/mcp.json`
-2. **Claude Code CLI**: The MCP endpoint is accessed via the configured MCP tools
-
-If MCP is not available, agents will automatically fall back to WebFetch.
-
-**Endpoint**: `https://docs.umbraco.com/~gitbook/mcp`
-
-**Available MCP Tools**:
-
-| Tool | Purpose | Parameters |
-|------|---------|------------|
-| `search_content` | Search documentation content | `query: string` |
-| `get_page_content` | Retrieve page by ID | `pageId: string` |
-| `get_page_by_path` | Retrieve page by URL path | `path: string` |
-| `get_space_content` | Get space/section overview | `spaceId?: string` |
-
-**Key Documentation Paths**:
-
-| Path | Content |
-|------|---------|
-| `/umbraco-cms/reference/extending/extending-overview` | Extension points overview |
-| `/umbraco-cms/reference/notifications` | Notification Handlers (events) |
-| `/umbraco-cms/reference/management/services` | Core services (IContentService, etc.) |
-| `/umbraco-cms/extending/backoffice-setup` | Bellissima backoffice setup |
-| `/umbraco-cms/extending/extension-types` | Dashboard, Property Editor, Workspace types |
-| `/umbraco-cms/extending/ui-documentation` | UUI component library usage |
-
-**No-Results Fallback Sequence**:
-
-When MCP search returns no results or is unavailable:
-
-1. **Retry with broader terms**: Simplify the query (e.g., "Composer" instead of "IUserComposer registration")
-2. **Browse via `get_space_content`**: Navigate the documentation structure to find relevant sections
-3. **WebFetch fallback**: Use `WebFetch(domain:docs.umbraco.com)` to fetch specific documentation pages directly
-
-**Invocation Examples**:
-
-```
-# Search for Composer patterns
-Use Umbraco MCP search_content to find "Composer dependency injection"
-
-# Get specific page by path
-Use Umbraco MCP get_page_by_path for "/umbraco-cms/reference/notifications"
-
-# Browse extension types
-Use Umbraco MCP get_space_content to explore the extending section
-
-# Fallback when MCP unavailable
-Use WebFetch to retrieve https://docs.umbraco.com/umbraco-cms/reference/notifications
-```
-
-**Integration with Spec-Kit**:
-
-| Phase | Usage |
-|-------|-------|
-| `/speckit.plan` | Research Umbraco architecture patterns and extension points |
-| `/speckit.implement` | Look up API details, code examples, and best practices |
-
-**Agent Integration**:
-
-The following agents are configured to use Umbraco MCP:
-
-- `umbraco-architect`: Architecture decisions, Document Type design
-- `umbraco-backend-developer`: C# implementation, Composers, Services
-- `umbraco-frontend-developer`: Lit/TypeScript, UUI, Management API
-- `umbraco-backend-reviewer`: C# code review, pattern compliance
-- `umbraco-frontend-reviewer`: Frontend review, accessibility
+See `CLAUDE.project.md` for:
+- MCP server endpoints and configuration
+- Available MCP tools and parameters
+- Documentation paths and fallback sequences
+- Agent integration details
 
 ---
 
@@ -414,7 +325,7 @@ Embed session ID in artifacts for traceability:
 
 ## Related Skills
 
-- See `.claude/skills/dotnet-implementation-execution.md` for:
+- See `.claude/skills/implementation-execution.md` for:
   - Wave-based execution patterns (sequential vs parallel)
   - Checkpoint strategies and recovery
   - Multi-agent orchestration patterns

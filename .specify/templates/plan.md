@@ -8,14 +8,14 @@ description: Create a technical implementation plan from the feature specificati
 ## Prerequisites
 - Read the feature specification from `/specs/[current-feature]/spec.md`
 - Read the constitution from `/memory/constitution.md`
-- Load the Claude Code planning skill: `.claude/skills/dotnet-plan-strategy.md`
+- Load the Claude Code planning skill (if available)
 
 ## Execution Steps
 
 1. **Load Context**
    - Read spec.md for requirements
    - Read constitution.md for governance principles
-   - Read the dotnet-plan-strategy skill for Claude Code architecture guidance
+   - Read any available planning skills for Claude Code architecture guidance
 
 2. **Generate Technical Plan**
    Follow the standard spec-kit plan template with these additions:
@@ -27,8 +27,8 @@ description: Create a technical implementation plan from the feature specificati
    ### Agent Specialization Strategy
    Define which specialized sub-agents will handle which components:
    - `solution-architect` (Opus) - architectural decisions, complex refactoring
-   - `backend-developer` (Sonnet) - .NET implementation, API development
-   - `frontend-developer` (Sonnet) - Blazor/UI implementation
+   - `backend-developer` (Sonnet) - Backend implementation, API development
+   - `frontend-developer` (Sonnet) - UI/frontend implementation
    - `test-engineer` (Sonnet) - test implementation, TDD
    - `database-architect` (Sonnet) - schema design, migrations
    - `security-auditor` (Haiku) - security scanning, vulnerability assessment
@@ -71,7 +71,7 @@ Always include the Claude Code Execution Architecture section regardless of user
 
 Example user input:
 ```
-/speckit.plan We are using .NET 8, Blazor Server, PostgreSQL with EF Core.
+/speckit.plan We are using [technology stack details here]
 ```
 
 The plan should reflect these technology choices AND include the Claude Code execution strategy.

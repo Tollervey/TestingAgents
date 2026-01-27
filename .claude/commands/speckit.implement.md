@@ -31,13 +31,13 @@ This command leverages the following Claude Code 2.1.19 capabilities:
    - Run `/plugins` to list installed plugins
    - Check if recommended plugins for implementation are available:
      - `superpowers` — TDD workflow, debugging
-     - `dotnet-claude-code-skills` — DDD patterns, EF Core (for .NET projects)
+     - Check `CLAUDE.project.md` for any technology-specific plugins recommended for this project
    - If plugins are missing, inform user:
      ```
      ⚠️ Recommended plugins not installed:
      - superpowers: `/plugin marketplace add obra/superpowers-marketplace`
-     - dotnet-claude-code-skills: `/plugin marketplace add anthropics/dotnet-claude-code-skills`
-     
+     - Check CLAUDE.project.md for technology-specific plugin recommendations
+
      Continue without plugins? (yes/no)
      ```
    - If user says "no", halt and let them install plugins first
@@ -223,7 +223,7 @@ This command leverages the following Claude Code 2.1.19 capabilities:
    **Agent Invocation Examples**:
    ```
    # Infrastructure (Wave 1)
-   Use database-architect to create the initial EF Core migrations for User and Order entities
+   Use database-architect to create the initial database migrations for User and Order entities
    Use backend-developer to implement the repository interfaces in src/Domain/Interfaces/
    
    # Domain Layer (Wave 2 - parallel)
@@ -245,14 +245,14 @@ This command leverages the following Claude Code 2.1.19 capabilities:
    Use test-engineer to create unit tests for ProductService including happy path, edge cases, and error conditions
    
    # Step 2: Verify tests fail
-   Run: dotnet test --filter "ProductServiceTests"
+   Run: <test-runner> --filter "ProductServiceTests"
    Expected: Tests FAIL (no implementation yet)
    
    # Step 3: GREEN - Implement until tests pass
    Use backend-developer to implement ProductService until all tests pass
    
    # Step 4: Verify tests pass
-   Run: dotnet test --filter "ProductServiceTests"
+   Run: <test-runner> --filter "ProductServiceTests"
    Expected: All tests PASS
    ```
 
@@ -286,7 +286,7 @@ This command leverages the following Claude Code 2.1.19 capabilities:
    & Use security-auditor to scan for vulnerabilities
 
    # Verify build is clean
-   dotnet build --warnaserror
+   <build-tool> build --warnings-as-errors
 
    # Tests are run manually by user, not after each phase
    ```
@@ -391,7 +391,7 @@ This command leverages the following Claude Code 2.1.19 capabilities:
    **Step 14a: Build Verification**
    ```bash
    # Run build on the entire solution/project
-   dotnet build <solution-file-or-project>
+   <build-tool> build
    ```
 
    - **REQUIRED**: Exit code must be 0 (no errors)
@@ -410,7 +410,7 @@ This command leverages the following Claude Code 2.1.19 capabilities:
    ## Phase Exit Verification
 
    ### Build Status
-   - Command: `dotnet build <path>`
+   - Command: `<build-tool> build`
    - Result: ✓ PASS (0 errors, N warnings) / ✗ FAIL (N errors)
 
    ### Pre-existing Issues Fixed
