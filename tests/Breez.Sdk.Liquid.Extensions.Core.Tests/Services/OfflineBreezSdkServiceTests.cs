@@ -532,9 +532,9 @@ public class OfflineBreezSdkServiceTests
         _sut = CreateService();
         await _sut.ConnectAsync();
 
-        // Act - Create 20 invoices to get statistical significance
+        // Act - Create 100 invoices for better statistical significance
         var results = new List<OperationResult<Invoice>>();
-        for (int i = 0; i < 20; i++)
+        for (int i = 0; i < 100; i++)
         {
             results.Add(await _sut.CreateInvoiceAsync(1000));
         }
@@ -545,8 +545,8 @@ public class OfflineBreezSdkServiceTests
 
         successCount.Should().BeGreaterThan(0);
         failureCount.Should().BeGreaterThan(0);
-        // With 20 samples and 50% rate, we expect roughly 10 of each (allow variance)
-        successCount.Should().BeInRange(5, 15);
+        // With 100 samples and 50% rate, we expect roughly 50 of each (allow reasonable variance)
+        successCount.Should().BeInRange(35, 65);
     }
 
     #endregion

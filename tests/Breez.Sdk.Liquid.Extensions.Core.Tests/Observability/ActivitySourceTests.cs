@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Collections.Concurrent;
 using Breez.Sdk.Liquid.Extensions.Core.Observability;
 using FluentAssertions;
 
@@ -41,7 +42,7 @@ public class ActivitySourceTests : IDisposable
     public void Dispose()
     {
         _listener.Dispose();
-        _recordedActivities.Clear();
+        // ConcurrentBag doesn't have Clear - it will be GC'd with the test instance
     }
 
     #region ActivitySource Configuration Tests
