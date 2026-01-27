@@ -119,20 +119,20 @@
 
 > **TDD REQUIRED: Write tests FIRST, verify they FAIL (RED), then implement until GREEN**
 
-- [ ] T034 [P] [US3] Unit test: Trends action loads archives from archive directory in `.specify/scripts/powershell/agent-metrics.tests.ps1`
-- [ ] T035 [P] [US3] Unit test: Trends action filters by date range and feature branch in `.specify/scripts/powershell/agent-metrics.tests.ps1`
-- [ ] T036 [P] [US3] Unit test: Trends action calculates token usage trend in `.specify/scripts/powershell/agent-metrics.tests.ps1`
-- [ ] T037 [P] [US3] Unit test: Trends action calculates success rate trend in `.specify/scripts/powershell/agent-metrics.tests.ps1`
-- [ ] T038 [P] [US3] Unit test: Trends action generates insights for concerning trends in `.specify/scripts/powershell/agent-metrics.tests.ps1`
-- [ ] T039 [P] [US3] Unit test: Trends action ignores legacy schema archives in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T034 [P] [US3] Unit test: Trends action loads archives from archive directory in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T035 [P] [US3] Unit test: Trends action filters by date range and feature branch in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T036 [P] [US3] Unit test: Trends action calculates token usage trend in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T037 [P] [US3] Unit test: Trends action calculates success rate trend in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T038 [P] [US3] Unit test: Trends action generates insights for concerning trends in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T039 [P] [US3] Unit test: Trends action ignores legacy schema archives in `.specify/scripts/powershell/agent-metrics.tests.ps1`
 
 ### Implementation for User Story 3
 
-- [ ] T040 [US3] Implement Trends action with -Days and -FeatureBranch parameters in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T041 [US3] Implement archive loading and filtering logic for Trends in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T042 [US3] Implement trend calculation algorithms (token, success, duration) in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T043 [US3] Implement insight generation (warnings, positives) in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T044 [US3] Implement Trends report formatting with colored output in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T040 [US3] Implement Trends action with -Days and -FeatureBranch parameters in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T041 [US3] Implement archive loading and filtering logic for Trends in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T042 [US3] Implement trend calculation algorithms (token, success, duration) in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T043 [US3] Implement insight generation (warnings, positives) in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T044 [US3] Implement Trends report formatting with colored output in `.specify/scripts/powershell/agent-metrics.ps1`
 
 **Checkpoint**: US3 complete - trend analysis available for archived sessions
 

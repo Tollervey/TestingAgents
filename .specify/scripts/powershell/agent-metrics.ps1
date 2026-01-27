@@ -900,6 +900,320 @@ function Generate-Report {
     Write-Host ""
 }
 
+function Generate-TrendsReport {
+    <#
+    .SYNOPSIS
+        Generates a trend analysis report from archived sessions
+
+    .DESCRIPTION
+        Loads archived sessions, filters by date range and feature branch,
+        calculates trends for tokens, success rate, and duration,
+        and generates insights for concerning patterns.
+
+    .PARAMETER Days
+        Number of days to analyze (default: 30)
+
+    .PARAMETER Branch
+        Filter by specific feature branch (optional)
+    #>
+    param(
+        [int]$Days = 30,
+        [string]$Branch = ""
+    )
+
+    $archiveDir = Join-Path $MetricsDir "archive"
+
+    # Check if archive directory exists
+    if (-not (Test-Path $archiveDir)) {
+        Write-Host "No archived sessions found. Run -Action Reset to archive sessions first." -ForegroundColor Yellow
+        return
+    }
+
+    # Load all archive files
+    $archiveFiles = Get-ChildItem $archiveDir -Filter "agent-metrics-*.json" -ErrorAction SilentlyContinue
+    if (-not $archiveFiles -or $archiveFiles.Count -eq 0) {
+        Write-Host "No archived sessions found." -ForegroundColor Yellow
+        return
+    }
+
+    # Load and parse all sessions
+    $allSessions = @()
+    foreach ($file in $archiveFiles) {
+        try {
+            $session = Get-Content $file.FullName -Raw | ConvertFrom-Json
+            $allSessions += $session
+        }
+        catch {
+            # Skip invalid files
+        }
+    }
+
+    # Filter out legacy schema (< 2.0.0) per FR-018
+    $validSessions = @()
+    foreach ($s in $allSessions) {
+        if (Test-SchemaVersion -Session $s) {
+            $validSessions += $s
+        }
+    }
+
+    if ($validSessions.Count -eq 0) {
+        Write-Host "No v2.0.0+ sessions available for trend analysis. Legacy archives are excluded." -ForegroundColor Yellow
+        return
+    }
+
+    # Filter by date range
+    $cutoffDate = (Get-Date).AddDays(-$Days)
+    $filteredSessions = @()
+    foreach ($s in $validSessions) {
+        try {
+            $sessionDate = [DateTime]::Parse($s.startTime)
+            if ($sessionDate -ge $cutoffDate) {
+                $filteredSessions += $s
+            }
+        }
+        catch {
+            # Skip sessions with invalid dates
+        }
+    }
+
+    # Filter by feature branch if specified
+    if ($Branch) {
+        $filteredSessions = @($filteredSessions | Where-Object { $_.featureBranch -eq $Branch })
+    }
+
+    if ($filteredSessions.Count -eq 0) {
+        Write-Host "No sessions found matching the specified criteria." -ForegroundColor Yellow
+        return
+    }
+
+    # Sort sessions by start time (wrap in @() to preserve array for single elements)
+    $sortedSessions = @($filteredSessions | Sort-Object { [DateTime]::Parse($_.startTime) })
+
+    # Calculate period
+    $periodStart = [DateTime]::Parse($sortedSessions[0].startTime)
+    $periodEnd = [DateTime]::Parse($sortedSessions[-1].startTime)
+    $branchLabel = if ($Branch) { $Branch } else { "all branches" }
+
+    # --- Display Report Header ---
+    Write-Host ""
+    Write-Host "=======================================================================" -ForegroundColor Magenta
+    Write-Host "                         TREND ANALYSIS REPORT                          " -ForegroundColor Magenta
+    Write-Host "=======================================================================" -ForegroundColor Magenta
+    Write-Host ""
+    Write-Host "Period: $($periodStart.ToString('yyyy-MM-dd')) to $($periodEnd.ToString('yyyy-MM-dd')) ($Days days)" -ForegroundColor White
+    Write-Host "Sessions Analyzed: $($sortedSessions.Count)" -ForegroundColor White
+    Write-Host "Branch: $branchLabel" -ForegroundColor Gray
+    Write-Host ""
+
+    # --- TOKEN USAGE TREND ---
+    Write-Host "-----------------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "                          TOKEN USAGE TREND                              " -ForegroundColor Yellow
+    Write-Host "-----------------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host ""
+
+    $tokenValues = @()
+    $tokenDates = @()
+    foreach ($s in $sortedSessions) {
+        $tokenValues += $s.totals.totalTokens
+        $tokenDates += [DateTime]::Parse($s.startTime).ToString("yyyy-MM-dd")
+    }
+
+    # Display token table
+    $tokenHeader = "{0,-12} {1,-25} {2,12} {3,12}" -f "Date", "Session", "Tokens", "Trend"
+    Write-Host "  $tokenHeader" -ForegroundColor Cyan
+    Write-Host "  $("-" * 65)" -ForegroundColor DarkGray
+
+    for ($i = 0; $i -lt $sortedSessions.Count; $i++) {
+        $s = $sortedSessions[$i]
+        $date = [DateTime]::Parse($s.startTime).ToString("yyyy-MM-dd")
+        $sessionLabel = "$($s.phase) ($($s.featureBranch))"
+        if ($sessionLabel.Length -gt 24) { $sessionLabel = $sessionLabel.Substring(0, 21) + "..." }
+        $tokens = $s.totals.totalTokens
+
+        if ($i -eq 0) {
+            $trendLabel = "baseline"
+        }
+        else {
+            $prev = $sortedSessions[$i - 1].totals.totalTokens
+            if ($prev -gt 0) {
+                $changePct = [math]::Round((($tokens - $prev) / $prev) * 100, 1)
+                $arrow = if ($changePct -ge 0) { [char]0x2191 } else { [char]0x2193 }
+                $trendLabel = "$arrow $changePct%"
+            }
+            else {
+                $trendLabel = "N/A"
+            }
+        }
+
+        $row = "{0,-12} {1,-25} {2,12:N0} {3,12}" -f $date, $sessionLabel, $tokens, $trendLabel
+        Write-Host "  $row" -ForegroundColor White
+    }
+
+    # Overall token trend
+    $firstTokens = $sortedSessions[0].totals.totalTokens
+    $lastTokens = $sortedSessions[-1].totals.totalTokens
+    $overallTokenChange = if ($firstTokens -gt 0) {
+        [math]::Round((($lastTokens - $firstTokens) / $firstTokens) * 100, 1)
+    } else { 0 }
+    $tokenTrendDirection = if ($overallTokenChange -gt 0) { "increasing" } elseif ($overallTokenChange -lt 0) { "decreasing" } else { "stable" }
+
+    Write-Host ""
+    $changeSign = if ($overallTokenChange -ge 0) { "+" } else { "" }
+    Write-Host "  Overall: ${changeSign}${overallTokenChange}% ($tokenTrendDirection)" -ForegroundColor $(if ($overallTokenChange -gt 20) { "Red" } elseif ($overallTokenChange -gt 0) { "Yellow" } else { "Green" })
+    Write-Host ""
+
+    # --- SUCCESS RATE TREND ---
+    Write-Host "-----------------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "                          SUCCESS RATE TREND                             " -ForegroundColor Yellow
+    Write-Host "-----------------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host ""
+
+    $successHeader = "{0,-12} {1,-25} {2,14} {3,12}" -f "Date", "Session", "Success Rate", "Trend"
+    Write-Host "  $successHeader" -ForegroundColor Cyan
+    Write-Host "  $("-" * 65)" -ForegroundColor DarkGray
+
+    for ($i = 0; $i -lt $sortedSessions.Count; $i++) {
+        $s = $sortedSessions[$i]
+        $date = [DateTime]::Parse($s.startTime).ToString("yyyy-MM-dd")
+        $sessionLabel = "$($s.phase) ($($s.featureBranch))"
+        if ($sessionLabel.Length -gt 24) { $sessionLabel = $sessionLabel.Substring(0, 21) + "..." }
+        $successRate = $s.totals.overallSuccessRate
+
+        if ($i -eq 0) {
+            $trendLabel = "baseline"
+        }
+        else {
+            $prev = $sortedSessions[$i - 1].totals.overallSuccessRate
+            if ($successRate -gt $prev) {
+                $trendLabel = [string]([char]0x2191) + " improving"
+            }
+            elseif ($successRate -lt $prev) {
+                $trendLabel = [string]([char]0x2193) + " declining"
+            }
+            else {
+                $trendLabel = [string]([char]0x2192) + " stable"
+            }
+        }
+
+        $row = "{0,-12} {1,-25} {2,14} {3,12}" -f $date, $sessionLabel, "$($successRate)%", $trendLabel
+        Write-Host "  $row" -ForegroundColor White
+    }
+
+    $firstSuccess = $sortedSessions[0].totals.overallSuccessRate
+    $lastSuccess = $sortedSessions[-1].totals.overallSuccessRate
+    $successTrend = if ($lastSuccess -gt $firstSuccess) { "improving" } elseif ($lastSuccess -lt $firstSuccess) { "declining" } else { "stable" }
+
+    Write-Host ""
+    Write-Host "  Overall: Success rate $successTrend ($firstSuccess% -> $lastSuccess%)" -ForegroundColor $(if ($successTrend -eq "improving") { "Green" } elseif ($successTrend -eq "declining") { "Red" } else { "Yellow" })
+    Write-Host ""
+
+    # --- AVERAGE DURATION TREND ---
+    Write-Host "-----------------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "                        AVG DURATION TREND                               " -ForegroundColor Yellow
+    Write-Host "-----------------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host ""
+
+    $durationHeader = "{0,-12} {1,-25} {2,14} {3,12}" -f "Date", "Session", "Avg Duration", "Trend"
+    Write-Host "  $durationHeader" -ForegroundColor Cyan
+    Write-Host "  $("-" * 65)" -ForegroundColor DarkGray
+
+    for ($i = 0; $i -lt $sortedSessions.Count; $i++) {
+        $s = $sortedSessions[$i]
+        $date = [DateTime]::Parse($s.startTime).ToString("yyyy-MM-dd")
+        $sessionLabel = "$($s.phase) ($($s.featureBranch))"
+        if ($sessionLabel.Length -gt 24) { $sessionLabel = $sessionLabel.Substring(0, 21) + "..." }
+        $avgDuration = $s.totals.avgDurationMs
+
+        if ($i -eq 0) {
+            $trendLabel = "baseline"
+        }
+        else {
+            $prev = $sortedSessions[$i - 1].totals.avgDurationMs
+            if ($prev -gt 0) {
+                $changePct = [math]::Round((($avgDuration - $prev) / $prev) * 100, 1)
+                if ($changePct -lt 0) {
+                    $trendLabel = [string]([char]0x2193) + " faster"
+                }
+                elseif ($changePct -gt 0) {
+                    $trendLabel = [string]([char]0x2191) + " slower"
+                }
+                else {
+                    $trendLabel = [string]([char]0x2192) + " stable"
+                }
+            }
+            else {
+                $trendLabel = "N/A"
+            }
+        }
+
+        $row = "{0,-12} {1,-25} {2,14} {3,12}" -f $date, $sessionLabel, (Format-Duration $avgDuration), $trendLabel
+        Write-Host "  $row" -ForegroundColor White
+    }
+
+    $firstDuration = $sortedSessions[0].totals.avgDurationMs
+    $lastDuration = $sortedSessions[-1].totals.avgDurationMs
+    $durationChange = if ($firstDuration -gt 0) {
+        [math]::Round((($lastDuration - $firstDuration) / $firstDuration) * 100, 1)
+    } else { 0 }
+    $durationTrend = if ($durationChange -lt 0) { "improving" } elseif ($durationChange -gt 0) { "slower" } else { "stable" }
+
+    Write-Host ""
+    Write-Host "  Overall: Duration $durationTrend (${durationChange}% change)" -ForegroundColor $(if ($durationTrend -eq "improving") { "Green" } elseif ($durationTrend -eq "slower") { "Red" } else { "Yellow" })
+    Write-Host ""
+
+    # --- INSIGHTS ---
+    Write-Host "-----------------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "                              INSIGHTS                                   " -ForegroundColor Yellow
+    Write-Host "-----------------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host ""
+
+    $hasInsights = $false
+
+    # Warning: Token usage increased >20%
+    if ($overallTokenChange -gt 20) {
+        Write-Host "  WARNING: Token usage increased ${overallTokenChange}% - consider prompt optimization" -ForegroundColor Red
+        $hasInsights = $true
+    }
+
+    # Positive: Success rate improved
+    if ($lastSuccess -gt $firstSuccess) {
+        $successImprovement = [math]::Round($lastSuccess - $firstSuccess, 1)
+        Write-Host "  POSITIVE: Success rate improved by ${successImprovement}% ($firstSuccess% -> $lastSuccess%)" -ForegroundColor Green
+        $hasInsights = $true
+    }
+
+    # Warning: Success rate declined
+    if ($lastSuccess -lt $firstSuccess) {
+        $successDecline = [math]::Round($firstSuccess - $lastSuccess, 1)
+        Write-Host "  WARNING: Success rate declined by ${successDecline}% ($firstSuccess% -> $lastSuccess%)" -ForegroundColor Red
+        $hasInsights = $true
+    }
+
+    # Positive: Duration improved
+    if ($durationChange -lt -10) {
+        Write-Host "  POSITIVE: Average duration decreased by $([math]::Abs($durationChange))%" -ForegroundColor Green
+        $hasInsights = $true
+    }
+
+    # Warning: Duration increased significantly
+    if ($durationChange -gt 20) {
+        Write-Host "  WARNING: Average duration increased by ${durationChange}% - investigate bottlenecks" -ForegroundColor Red
+        $hasInsights = $true
+    }
+
+    # Info: Limited data
+    if ($sortedSessions.Count -lt 3) {
+        Write-Host "  INFO: Limited data for trend analysis ($($sortedSessions.Count) sessions)" -ForegroundColor Gray
+        $hasInsights = $true
+    }
+
+    if (-not $hasInsights) {
+        Write-Host "  No concerning trends detected." -ForegroundColor Green
+    }
+
+    Write-Host ""
+}
+
 function Reset-Metrics {
     if (Test-Path $MetricsFile) {
         # Archive current metrics
@@ -957,8 +1271,7 @@ if (-not $isDotSourced -and $Action) {
         "Report" { Generate-Report }
         "Reset" { Reset-Metrics }
         "Trends" {
-            # Placeholder for Trends action (US3)
-            Write-Host "Trends action not yet implemented (US3)" -ForegroundColor Yellow
+            Generate-TrendsReport -Days $Days -Branch $FeatureBranch
         }
         "Compare" {
             # Placeholder for Compare action (US4)

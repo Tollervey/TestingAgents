@@ -146,10 +146,11 @@ function Setup-TestEnvironment {
     $script:MetricsFile = $script:TestMetricsFile
     $script:SettingsFile = $script:TestSettingsFile
 
-    # Create directory
-    if (-not (Test-Path $script:TestMetricsDir)) {
-        New-Item -ItemType Directory -Path $script:TestMetricsDir -Force | Out-Null
+    # Create clean directory (remove any leftovers from prior tests)
+    if (Test-Path $script:TestMetricsDir) {
+        Remove-Item $script:TestMetricsDir -Recurse -Force
     }
+    New-Item -ItemType Directory -Path $script:TestMetricsDir -Force | Out-Null
 }
 
 function Teardown-TestEnvironment {
@@ -923,6 +924,285 @@ Describe 'agent-metrics.ps1' {
                 $result = Get-MetricsSettings
 
                 $result.retention.archiveDays | Should Be 7
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+    }
+
+    Context 'Trends Action' {
+        # Helper to create archived session files
+        function New-TestArchiveSession {
+            param(
+                [string]$Phase = "implement",
+                [string]$FeatureBranch = "test-branch",
+                [string]$SchemaVersion = "2.0.0",
+                [int]$TotalTokens = 100000,
+                [int]$TotalInvocations = 5,
+                [int]$TotalSuccesses = 5,
+                [int]$TotalFailures = 0,
+                [int]$TotalDurationMs = 300000,
+                [string]$StartTime = "",
+                [string]$EndTime = ""
+            )
+
+            if (-not $StartTime) { $StartTime = (Get-Date).ToString("o") }
+            if (-not $EndTime) { $EndTime = (Get-Date).AddMinutes(30).ToString("o") }
+
+            return @{
+                schemaVersion = $SchemaVersion
+                phase = $Phase
+                featureBranch = $FeatureBranch
+                startTime = $StartTime
+                endTime = $EndTime
+                completionStatus = "complete"
+                sessionId = [guid]::NewGuid().ToString()
+                invocations = @()
+                agents = @{}
+                models = [PSCustomObject]@{}
+                categories = [PSCustomObject]@{}
+                parallelGroups = [PSCustomObject]@{}
+                totals = @{
+                    totalInvocations = $TotalInvocations
+                    totalTokens = $TotalTokens
+                    totalSuccesses = $TotalSuccesses
+                    totalFailures = $TotalFailures
+                    totalTimeouts = 0
+                    totalDurationMs = $TotalDurationMs
+                    parallelInvocations = 0
+                    sequentialInvocations = $TotalInvocations
+                    avgTokensPerInvocation = [math]::Round($TotalTokens / [math]::Max($TotalInvocations, 1), 0)
+                    avgDurationMs = [math]::Round($TotalDurationMs / [math]::Max($TotalInvocations, 1), 0)
+                    overallSuccessRate = if ($TotalInvocations -gt 0) { [math]::Round(($TotalSuccesses / $TotalInvocations) * 100, 1) } else { 0 }
+                }
+            }
+        }
+
+        # T034 [US3]: Trends action loads archives from archive directory
+        It 'loads archives from archive directory' {
+            Setup-TestEnvironment
+            try {
+                # Create archive directory with sessions
+                $archiveDir = Join-Path $script:TestMetricsDir "archive"
+                New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null
+
+                $session1 = New-TestArchiveSession -Phase "implement" -TotalTokens 100000 `
+                    -StartTime (Get-Date).AddDays(-3).ToString("o")
+                $session1 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260124-100000.json") -Encoding UTF8
+
+                $session2 = New-TestArchiveSession -Phase "plan" -TotalTokens 50000 `
+                    -StartTime (Get-Date).AddDays(-1).ToString("o")
+                $session2 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260126-100000.json") -Encoding UTF8
+
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                # Run Trends action and capture output
+                $output = Generate-TrendsReport -Days 30 6>&1 | Out-String
+
+                # Should include data from both sessions
+                $output | Should Match "Sessions Analyzed:\s+2"
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+
+        # T035 [US3]: Trends action filters by date range and feature branch
+        It 'filters by date range and feature branch' {
+            Setup-TestEnvironment
+            try {
+                $archiveDir = Join-Path $script:TestMetricsDir "archive"
+                New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null
+
+                # Session within range, matching branch
+                $session1 = New-TestArchiveSession -Phase "implement" -FeatureBranch "feature-a" -TotalTokens 100000 `
+                    -StartTime (Get-Date).AddDays(-2).ToString("o")
+                $session1 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260125-100000.json") -Encoding UTF8
+
+                # Session within range, different branch
+                $session2 = New-TestArchiveSession -Phase "plan" -FeatureBranch "feature-b" -TotalTokens 50000 `
+                    -StartTime (Get-Date).AddDays(-1).ToString("o")
+                $session2 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260126-100000.json") -Encoding UTF8
+
+                # Session outside date range (40 days ago)
+                $session3 = New-TestArchiveSession -Phase "implement" -FeatureBranch "feature-a" -TotalTokens 80000 `
+                    -StartTime (Get-Date).AddDays(-40).ToString("o")
+                $session3 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20251218-100000.json") -Encoding UTF8
+                (Get-Item (Join-Path $archiveDir "agent-metrics-20251218-100000.json")).LastWriteTime = (Get-Date).AddDays(-40)
+
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                # Filter by branch and 7-day range
+                $output = Generate-TrendsReport -Days 7 -Branch "feature-a" 6>&1 | Out-String
+
+                # Should only include session1 (matching branch + date range)
+                $output | Should Match "Sessions Analyzed:\s+1"
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+
+        # T036 [US3]: Trends action calculates token usage trend
+        It 'calculates token usage trend' {
+            Setup-TestEnvironment
+            try {
+                $archiveDir = Join-Path $script:TestMetricsDir "archive"
+                New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null
+
+                # Create sessions with increasing token usage
+                $session1 = New-TestArchiveSession -Phase "implement" -TotalTokens 100000 `
+                    -StartTime (Get-Date).AddDays(-3).ToString("o")
+                $session1 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260124-100000.json") -Encoding UTF8
+
+                $session2 = New-TestArchiveSession -Phase "implement" -TotalTokens 150000 `
+                    -StartTime (Get-Date).AddDays(-2).ToString("o")
+                $session2 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260125-100000.json") -Encoding UTF8
+
+                $session3 = New-TestArchiveSession -Phase "implement" -TotalTokens 200000 `
+                    -StartTime (Get-Date).AddDays(-1).ToString("o")
+                $session3 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260126-100000.json") -Encoding UTF8
+
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                $output = Generate-TrendsReport -Days 30 6>&1 | Out-String
+
+                # Should show TOKEN USAGE TREND section and increasing trend
+                $output | Should Match "TOKEN USAGE"
+                $output | Should Match "increasing|100.0%|\+100"
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+
+        # T037 [US3]: Trends action calculates success rate trend
+        It 'calculates success rate trend' {
+            Setup-TestEnvironment
+            try {
+                $archiveDir = Join-Path $script:TestMetricsDir "archive"
+                New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null
+
+                # Create sessions with improving success rate
+                $session1 = New-TestArchiveSession -Phase "implement" -TotalInvocations 10 -TotalSuccesses 8 -TotalFailures 2 `
+                    -StartTime (Get-Date).AddDays(-3).ToString("o")
+                $session1 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260124-100000.json") -Encoding UTF8
+
+                $session2 = New-TestArchiveSession -Phase "implement" -TotalInvocations 10 -TotalSuccesses 9 -TotalFailures 1 `
+                    -StartTime (Get-Date).AddDays(-2).ToString("o")
+                $session2 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260125-100000.json") -Encoding UTF8
+
+                $session3 = New-TestArchiveSession -Phase "implement" -TotalInvocations 10 -TotalSuccesses 10 -TotalFailures 0 `
+                    -StartTime (Get-Date).AddDays(-1).ToString("o")
+                $session3 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260126-100000.json") -Encoding UTF8
+
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                $output = Generate-TrendsReport -Days 30 6>&1 | Out-String
+
+                # Should show SUCCESS RATE section and improving trend
+                $output | Should Match "SUCCESS RATE"
+                $output | Should Match "improving|80.*100"
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+
+        # T038 [US3]: Trends action generates insights for concerning trends
+        It 'generates insights for concerning trends' {
+            Setup-TestEnvironment
+            try {
+                $archiveDir = Join-Path $script:TestMetricsDir "archive"
+                New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null
+
+                # Create sessions with large token increase (>20% threshold for warning)
+                $session1 = New-TestArchiveSession -Phase "implement" -TotalTokens 100000 `
+                    -StartTime (Get-Date).AddDays(-3).ToString("o")
+                $session1 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260124-100000.json") -Encoding UTF8
+
+                $session2 = New-TestArchiveSession -Phase "implement" -TotalTokens 200000 `
+                    -StartTime (Get-Date).AddDays(-1).ToString("o")
+                $session2 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260126-100000.json") -Encoding UTF8
+
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                $output = Generate-TrendsReport -Days 30 6>&1 | Out-String
+
+                # Should show INSIGHTS section with warning about token increase
+                $output | Should Match "INSIGHTS"
+                $output | Should Match "WARNING|warning|Token usage increased"
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+
+        # T039 [US3]: Trends action ignores legacy schema archives
+        It 'ignores legacy schema archives' {
+            Setup-TestEnvironment
+            try {
+                $archiveDir = Join-Path $script:TestMetricsDir "archive"
+                New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null
+
+                # Legacy session (v1.0.0)
+                $legacySession = New-TestArchiveSession -Phase "implement" -SchemaVersion "1.0.0" -TotalTokens 50000 `
+                    -StartTime (Get-Date).AddDays(-3).ToString("o")
+                $legacySession | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260124-100000.json") -Encoding UTF8
+
+                # v2.0.0 sessions
+                $modernSession1 = New-TestArchiveSession -Phase "implement" -TotalTokens 100000 `
+                    -StartTime (Get-Date).AddDays(-2).ToString("o")
+                $modernSession1 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260125-100000.json") -Encoding UTF8
+
+                $modernSession2 = New-TestArchiveSession -Phase "plan" -TotalTokens 80000 `
+                    -StartTime (Get-Date).AddDays(-1).ToString("o")
+                $modernSession2 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260126-100000.json") -Encoding UTF8
+
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                $output = Generate-TrendsReport -Days 30 6>&1 | Out-String
+
+                # Should only count the 2 v2.0.0 sessions, not the legacy one
+                $output | Should Match "Sessions Analyzed:\s+2"
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+
+        It 'handles no archives found' {
+            Setup-TestEnvironment
+            try {
+                # No archive directory
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                $output = Generate-TrendsReport -Days 30 6>&1 | Out-String
+
+                $output | Should Match "No archived sessions found"
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+
+        It 'handles all legacy archives gracefully' {
+            Setup-TestEnvironment
+            try {
+                $archiveDir = Join-Path $script:TestMetricsDir "archive"
+                New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null
+
+                # Only legacy sessions
+                $legacySession = New-TestArchiveSession -SchemaVersion "1.0.0" -TotalTokens 50000 `
+                    -StartTime (Get-Date).AddDays(-2).ToString("o")
+                $legacySession | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260125-100000.json") -Encoding UTF8
+
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                $output = Generate-TrendsReport -Days 30 6>&1 | Out-String
+
+                $output | Should Match "No v2.0.0\+ sessions|no.*sessions available"
             } finally {
                 Teardown-TestEnvironment
             }
