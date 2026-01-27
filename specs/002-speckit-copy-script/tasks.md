@@ -24,8 +24,8 @@
 
 **Purpose**: Create script file with parameter definitions, comment-based help, and basic structure
 
-- [ ] T001 Create script file with CmdletBinding, parameter block, and comment-based help at .specify/scripts/powershell/Copy-SpecKit.ps1
-- [ ] T002 Create Pester 5 test file with Describe/Context skeleton organized by user story at .specify/scripts/powershell/Copy-SpecKit.tests.ps1
+- [x] T001 Create script file with CmdletBinding, parameter block, and comment-based help at .specify/scripts/powershell/Copy-SpecKit.ps1
+- [x] T002 Create Pester 5 test file with Describe/Context skeleton organized by user story at .specify/scripts/powershell/Copy-SpecKit.tests.ps1
 
 ---
 
