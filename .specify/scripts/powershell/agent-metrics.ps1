@@ -43,7 +43,7 @@
 
 param(
     [Parameter(Mandatory=$true)]
-    [ValidateSet("Init", "Record", "Report", "Reset")]
+    [ValidateSet("Init", "Record", "Report", "Reset", "Trends", "Compare", "Cumulative", "Export")]
     [string]$Action,
 
     [string]$AgentName,
@@ -53,7 +53,29 @@ param(
     [int]$TokensUsed = 0,
     [int]$DurationMs = 0,
     [string]$PhaseName = "Unknown",
-    [string]$Description = ""
+    [string]$Description = "",
+
+    # New parameters for v2.0.0 schema
+    [ValidateSet("opus", "sonnet", "haiku", "")]
+    [string]$Model = "",
+    [ValidateSet("specify", "clarify", "plan", "tasks", "checklist", "analyze", "implement", "")]
+    [string]$Phase = "",
+    [ValidateSet("implementation", "testing", "review", "planning", "analysis", "other", "")]
+    [string]$Category = "",
+    [string]$FeatureBranch = "",
+
+    # Parallel execution parameters
+    [switch]$IsParallel,
+    [string]$ParallelGroupId = "",
+    [int]$GroupSize = 1,
+
+    # Trends/Compare/Export parameters
+    [int]$Days = 7,
+    [string]$Session1 = "",
+    [string]$Session2 = "",
+    [ValidateSet("CSV", "JSON", "")]
+    [string]$Format = "",
+    [switch]$IncludeArchives
 )
 
 $MetricsDir = Join-Path $PSScriptRoot "..\..\metrics"
@@ -125,30 +147,357 @@ function Get-MetricsSettings {
     return [PSCustomObject]$defaults
 }
 
+function Test-SchemaVersion {
+    <#
+    .SYNOPSIS
+        Validates if a session uses the current v2.0.0 schema
+
+    .DESCRIPTION
+        Checks the schemaVersion field of a session object.
+        Returns $true for v2.0.0+, $false for legacy or missing schemas.
+        Used by Trends/Compare actions to skip legacy data per FR-018.
+
+    .PARAMETER Session
+        The session object to validate
+
+    .OUTPUTS
+        Boolean - $true if schema is v2.0.0 or higher, $false otherwise
+    #>
+    param(
+        [Parameter(Mandatory=$false)]
+        $Session = $null
+    )
+
+    if (-not $Session) { return $false }
+
+    $version = $Session.schemaVersion
+    if (-not $version) { return $false }
+
+    # Parse version - expecting "major.minor.patch" format
+    try {
+        $parts = $version -split '\.'
+        if ($parts.Count -lt 2) { return $false }
+
+        $major = [int]$parts[0]
+        $minor = [int]$parts[1]
+
+        # v2.0.0 or higher is current schema
+        return ($major -ge 2)
+    }
+    catch {
+        return $false
+    }
+}
+
+function Update-ModelAggregate {
+    <#
+    .SYNOPSIS
+        Updates per-model aggregate statistics
+
+    .DESCRIPTION
+        Adds or updates model statistics in the session's models collection.
+        Calculates cost-weighted tokens using weights from settings.
+
+    .PARAMETER Session
+        The session object containing the models aggregate
+
+    .PARAMETER Model
+        The model name (opus/sonnet/haiku)
+
+    .PARAMETER Tokens
+        Number of tokens used in this invocation
+
+    .PARAMETER Settings
+        Settings object containing cost weights
+    #>
+    param(
+        [Parameter(Mandatory=$true)]
+        $Session,
+        [Parameter(Mandatory=$true)]
+        [string]$Model,
+        [int]$Tokens = 0,
+        $Settings = $null
+    )
+
+    if (-not $Model) { $Model = "sonnet" }
+
+    # Get cost weight from settings or use defaults
+    $costWeight = switch ($Model.ToLower()) {
+        "opus" { if ($Settings) { $Settings.costWeights.opus } else { 5.0 } }
+        "sonnet" { if ($Settings) { $Settings.costWeights.sonnet } else { 3.0 } }
+        "haiku" { if ($Settings) { $Settings.costWeights.haiku } else { 1.0 } }
+        default { 3.0 }  # Default to sonnet weight
+    }
+
+    # Initialize model entry if not exists
+    if (-not $Session.models.PSObject.Properties[$Model]) {
+        $Session.models | Add-Member -NotePropertyName $Model -NotePropertyValue @{
+            count = 0
+            totalTokens = 0
+            costWeight = $costWeight
+            weightedTokens = 0
+            costPercent = 0
+        }
+    }
+
+    $modelData = $Session.models.$Model
+    $modelData.count++
+    $modelData.totalTokens += $Tokens
+    $modelData.weightedTokens = $modelData.totalTokens * $costWeight
+
+    # Recalculate cost percentages for all models
+    $totalWeighted = 0
+    foreach ($m in $Session.models.PSObject.Properties) {
+        $totalWeighted += $m.Value.weightedTokens
+    }
+
+    if ($totalWeighted -gt 0) {
+        foreach ($m in $Session.models.PSObject.Properties) {
+            $m.Value.costPercent = [math]::Round(($m.Value.weightedTokens / $totalWeighted) * 100, 1)
+        }
+    }
+}
+
+function Update-CategoryAggregate {
+    <#
+    .SYNOPSIS
+        Updates per-category aggregate statistics
+
+    .DESCRIPTION
+        Adds or updates category statistics in the session's categories collection.
+
+    .PARAMETER Session
+        The session object containing the categories aggregate
+
+    .PARAMETER Category
+        The category name (implementation/testing/review/planning/analysis/other)
+
+    .PARAMETER Tokens
+        Number of tokens used in this invocation
+
+    .PARAMETER DurationMs
+        Duration in milliseconds
+    #>
+    param(
+        [Parameter(Mandatory=$true)]
+        $Session,
+        [string]$Category = "other",
+        [int]$Tokens = 0,
+        [int]$DurationMs = 0
+    )
+
+    if (-not $Category) { $Category = "other" }
+
+    # Initialize category entry if not exists
+    if (-not $Session.categories.PSObject.Properties[$Category]) {
+        $Session.categories | Add-Member -NotePropertyName $Category -NotePropertyValue @{
+            count = 0
+            totalTokens = 0
+            avgTokens = 0
+            totalDurationMs = 0
+            avgDurationMs = 0
+        }
+    }
+
+    $catData = $Session.categories.$Category
+    $catData.count++
+    $catData.totalTokens += $Tokens
+    $catData.totalDurationMs += $DurationMs
+    $catData.avgTokens = [math]::Round($catData.totalTokens / $catData.count, 0)
+    $catData.avgDurationMs = [math]::Round($catData.totalDurationMs / $catData.count, 0)
+}
+
+function Update-ParallelGroupAggregate {
+    <#
+    .SYNOPSIS
+        Updates parallel group aggregate statistics
+
+    .DESCRIPTION
+        Adds or updates parallel execution group metrics in the session.
+        Tracks concurrent execution timing and efficiency.
+
+    .PARAMETER Session
+        The session object containing the parallelGroups aggregate
+
+    .PARAMETER ParallelGroupId
+        Unique identifier for the parallel group
+
+    .PARAMETER TaskId
+        The task ID being added to the group
+
+    .PARAMETER Phase
+        The Spec-Kit phase
+
+    .PARAMETER DurationMs
+        Duration in milliseconds
+
+    .PARAMETER StartTime
+        When the invocation started
+
+    .PARAMETER EndTime
+        When the invocation ended
+
+    .PARAMETER GroupSize
+        Expected number of concurrent agents in this group
+    #>
+    param(
+        [Parameter(Mandatory=$true)]
+        $Session,
+        [Parameter(Mandatory=$true)]
+        [string]$ParallelGroupId,
+        [string]$TaskId = "",
+        [string]$Phase = "",
+        [int]$DurationMs = 0,
+        [string]$StartTime = "",
+        [string]$EndTime = "",
+        [int]$GroupSize = 1
+    )
+
+    if (-not $StartTime) { $StartTime = (Get-Date).AddMilliseconds(-$DurationMs).ToString("o") }
+    if (-not $EndTime) { $EndTime = (Get-Date).ToString("o") }
+
+    # Initialize parallel group entry if not exists
+    if (-not $Session.parallelGroups.PSObject.Properties[$ParallelGroupId]) {
+        $Session.parallelGroups | Add-Member -NotePropertyName $ParallelGroupId -NotePropertyValue @{
+            groupId = $ParallelGroupId
+            phase = $Phase
+            declaredParallel = $true
+            groupStartTime = $StartTime
+            groupEndTime = $EndTime
+            groupDurationMs = 0
+            invocationCount = 0
+            taskIds = @()
+            concurrencyMetrics = @{
+                maxConcurrent = $GroupSize
+                avgConcurrent = 0
+                sequentialEquivalentMs = 0
+                actualDurationMs = 0
+                timeReduction = 0
+                efficiency = 0
+            }
+        }
+    }
+
+    $groupData = $Session.parallelGroups.$ParallelGroupId
+    $groupData.invocationCount++
+    if ($TaskId) {
+        $groupData.taskIds += $TaskId
+    }
+
+    # Update timing
+    $groupStart = [DateTime]::Parse($groupData.groupStartTime)
+    $invStart = [DateTime]::Parse($StartTime)
+    $invEnd = [DateTime]::Parse($EndTime)
+    $groupEnd = [DateTime]::Parse($groupData.groupEndTime)
+
+    if ($invStart -lt $groupStart) { $groupData.groupStartTime = $StartTime }
+    if ($invEnd -gt $groupEnd) { $groupData.groupEndTime = $EndTime }
+
+    # Update metrics
+    $groupData.concurrencyMetrics.sequentialEquivalentMs += $DurationMs
+    $groupStart = [DateTime]::Parse($groupData.groupStartTime)
+    $groupEnd = [DateTime]::Parse($groupData.groupEndTime)
+    $groupData.groupDurationMs = ($groupEnd - $groupStart).TotalMilliseconds
+    $groupData.concurrencyMetrics.actualDurationMs = $groupData.groupDurationMs
+
+    # Calculate efficiency
+    if ($groupData.groupDurationMs -gt 0) {
+        $seqMs = $groupData.concurrencyMetrics.sequentialEquivalentMs
+        $actMs = $groupData.groupDurationMs
+        $groupData.concurrencyMetrics.timeReduction = [math]::Round((1 - ($actMs / $seqMs)) * 100, 1)
+        $groupData.concurrencyMetrics.avgConcurrent = [math]::Round($seqMs / $actMs, 1)
+        $groupData.concurrencyMetrics.efficiency = [math]::Round(($groupData.concurrencyMetrics.avgConcurrent / $groupData.concurrencyMetrics.maxConcurrent) * 100, 1)
+    }
+}
+
 function Initialize-Metrics {
-    param([string]$Phase)
+    param(
+        [string]$Phase,
+        [string]$Branch = ""
+    )
 
     if (-not (Test-Path $MetricsDir)) {
         New-Item -ItemType Directory -Path $MetricsDir -Force | Out-Null
     }
 
+    # Archive any existing incomplete session before creating new one (FR-016)
+    if (Test-Path $MetricsFile) {
+        $existingSession = Get-Content $MetricsFile -Raw | ConvertFrom-Json
+        # Check if session is incomplete (either no completionStatus or not "complete")
+        $isIncomplete = $true
+        if ($existingSession.PSObject.Properties["completionStatus"]) {
+            $isIncomplete = $existingSession.completionStatus -ne "complete"
+        }
+        if ($existingSession -and $isIncomplete) {
+            # Mark as incomplete and archive (add property if missing for legacy sessions)
+            if (-not $existingSession.PSObject.Properties["completionStatus"]) {
+                $existingSession | Add-Member -NotePropertyName "completionStatus" -NotePropertyValue "incomplete"
+            } else {
+                $existingSession.completionStatus = "incomplete"
+            }
+            if (-not $existingSession.endTime) {
+                $existingSession.endTime = (Get-Date).ToString("o")
+            }
+
+            $archiveDir = Join-Path $MetricsDir "archive"
+            if (-not (Test-Path $archiveDir)) {
+                New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null
+            }
+
+            $timestamp = (Get-Date).ToString("yyyyMMdd-HHmmss")
+            $archivePath = Join-Path $archiveDir "agent-metrics-$timestamp.json"
+            $existingSession | ConvertTo-Json -Depth 10 | Set-Content $archivePath -Encoding UTF8
+            Write-Host "Archived incomplete previous session: $archivePath" -ForegroundColor Yellow
+        }
+    }
+
+    # Determine feature branch from git if not provided
+    if (-not $Branch) {
+        try {
+            $Branch = git rev-parse --abbrev-ref HEAD 2>$null
+        }
+        catch {
+            $Branch = "unknown"
+        }
+    }
+
+    # Generate session ID
+    $sessionId = [guid]::NewGuid().ToString()
+
+    # Create v2.0.0 schema session
     $metrics = @{
+        schemaVersion = "2.0.0"
         phase = $Phase
+        featureBranch = $Branch
         startTime = (Get-Date).ToString("o")
         endTime = $null
+        completionStatus = "active"
+        sessionId = $sessionId
         agents = @{}
         invocations = @()
+        models = @{}
+        categories = @{}
+        parallelGroups = @{}
         totals = @{
             totalInvocations = 0
             totalTokens = 0
             totalSuccesses = 0
             totalFailures = 0
             totalTimeouts = 0
+            totalDurationMs = 0
+            parallelInvocations = 0
+            sequentialInvocations = 0
+            avgTokensPerInvocation = 0
+            avgDurationMs = 0
+            overallSuccessRate = 0
         }
     }
 
     $metrics | ConvertTo-Json -Depth 10 | Set-Content $MetricsFile -Encoding UTF8
-    Write-Host "Metrics initialized for phase: $Phase" -ForegroundColor Green
+    Write-Host "Metrics initialized for phase: $Phase (schema v2.0.0)" -ForegroundColor Green
+    if ($Branch) {
+        Write-Host "Feature branch: $Branch" -ForegroundColor Gray
+    }
 }
 
 function Record-AgentMetric {
@@ -158,7 +507,12 @@ function Record-AgentMetric {
         [string]$CompletionStatus,
         [int]$Tokens,
         [int]$Duration,
-        [string]$Desc
+        [string]$Desc,
+        [string]$ModelName = "",
+        [string]$CategoryName = "",
+        [bool]$Parallel = $false,
+        [string]$GroupId = "",
+        [int]$GrpSize = 1
     )
 
     if (-not (Test-Path $MetricsFile)) {
@@ -167,10 +521,24 @@ function Record-AgentMetric {
     }
 
     $metrics = Get-Content $MetricsFile -Raw | ConvertFrom-Json
+    $settings = Get-MetricsSettings
+
+    # Get phase from session
+    $phaseName = $metrics.phase
+
+    # Default model to sonnet if not specified (FR-010)
+    if (-not $ModelName) { $ModelName = "sonnet" }
+
+    # Default category to other if not specified (FR-010)
+    if (-not $CategoryName) { $CategoryName = "other" }
+
+    # Calculate invocation times
+    $invEndTime = (Get-Date).ToString("o")
+    $invStartTime = (Get-Date).AddMilliseconds(-$Duration).ToString("o")
 
     # Initialize agent entry if not exists
     if (-not $metrics.agents.PSObject.Properties[$Agent]) {
-        $metrics.agents | Add-Member -NotePropertyName $Agent -NotePropertyValue @{
+        $metrics.agents | Add-Member -NotePropertyName $Agent -NotePropertyValue ([PSCustomObject]@{
             count = 0
             successes = 0
             failures = 0
@@ -181,7 +549,8 @@ function Record-AgentMetric {
             maxDurationMs = 0
             avgTokens = 0
             avgDurationMs = 0
-        }
+            models = [PSCustomObject]@{}
+        })
     }
 
     $agentMetrics = $metrics.agents.$Agent
@@ -198,28 +567,71 @@ function Record-AgentMetric {
         "timeout" { $agentMetrics.timeouts++; $metrics.totals.totalTimeouts++ }
     }
 
+    # Update per-agent model tracking
+    if (-not $agentMetrics.PSObject.Properties["models"]) {
+        $agentMetrics | Add-Member -NotePropertyName "models" -NotePropertyValue ([PSCustomObject]@{}) -Force
+    }
+    if (-not $agentMetrics.models.PSObject.Properties[$ModelName]) {
+        $agentMetrics.models | Add-Member -NotePropertyName $ModelName -NotePropertyValue ([PSCustomObject]@{
+            count = 0
+            tokens = 0
+        })
+    }
+    $agentMetrics.models.$ModelName.count++
+    $agentMetrics.models.$ModelName.tokens += $Tokens
+
     # Calculate averages
     $agentMetrics.avgTokens = [math]::Round($agentMetrics.totalTokens / $agentMetrics.count, 0)
     $agentMetrics.avgDurationMs = [math]::Round($agentMetrics.totalDurationMs / $agentMetrics.count, 0)
 
+    # Update session-level aggregates
+    Update-ModelAggregate -Session $metrics -Model $ModelName -Tokens $Tokens -Settings $settings
+    Update-CategoryAggregate -Session $metrics -Category $CategoryName -Tokens $Tokens -DurationMs $Duration
+
+    # Update parallel group if applicable
+    if ($Parallel -and $GroupId) {
+        Update-ParallelGroupAggregate -Session $metrics -ParallelGroupId $GroupId -TaskId $Task `
+            -Phase $phaseName -DurationMs $Duration -StartTime $invStartTime -EndTime $invEndTime `
+            -GroupSize $GrpSize
+        $metrics.totals.parallelInvocations++
+    } else {
+        $metrics.totals.sequentialInvocations++
+    }
+
     # Update totals
     $metrics.totals.totalInvocations++
     $metrics.totals.totalTokens += $Tokens
+    $metrics.totals.totalDurationMs += $Duration
 
-    # Record individual invocation
+    # Calculate overall averages
+    if ($metrics.totals.totalInvocations -gt 0) {
+        $metrics.totals.avgTokensPerInvocation = [math]::Round($metrics.totals.totalTokens / $metrics.totals.totalInvocations, 0)
+        $metrics.totals.avgDurationMs = [math]::Round($metrics.totals.totalDurationMs / $metrics.totals.totalInvocations, 0)
+        $metrics.totals.overallSuccessRate = [math]::Round(($metrics.totals.totalSuccesses / $metrics.totals.totalInvocations) * 100, 1)
+    }
+
+    # Record individual invocation with v2.0.0 fields
     $invocation = @{
-        timestamp = (Get-Date).ToString("o")
+        timestamp = $invEndTime
         agent = $Agent
+        model = $ModelName
         taskId = $Task
         status = $CompletionStatus
         tokens = $Tokens
         durationMs = $Duration
         description = $Desc
+        phase = $phaseName
+        category = $CategoryName
+        invocationStartTime = $invStartTime
+        invocationEndTime = $invEndTime
+        isParallel = $Parallel
+        parallelGroupId = if ($Parallel) { $GroupId } else { $null }
+        groupSize = if ($Parallel) { $GrpSize } else { 1 }
     }
     $metrics.invocations += $invocation
 
     $metrics | ConvertTo-Json -Depth 10 | Set-Content $MetricsFile -Encoding UTF8
-    Write-Host "Recorded: $Agent ($CompletionStatus) - ${Tokens} tokens, $([math]::Round($Duration/1000, 1))s" -ForegroundColor Cyan
+    Write-Host "Recorded: $Agent/$ModelName ($CompletionStatus) - ${Tokens} tokens, $([math]::Round($Duration/1000, 1))s" -ForegroundColor Cyan
 }
 
 function Format-Duration {
@@ -393,10 +805,29 @@ function Reset-Metrics {
 
 # Execute action
 switch ($Action) {
-    "Init" { Initialize-Metrics -Phase $PhaseName }
+    "Init" { Initialize-Metrics -Phase $PhaseName -Branch $FeatureBranch }
     "Record" {
-        Record-AgentMetric -Agent $AgentName -Task $TaskId -CompletionStatus $Status -Tokens $TokensUsed -Duration $DurationMs -Desc $Description
+        Record-AgentMetric -Agent $AgentName -Task $TaskId -CompletionStatus $Status `
+            -Tokens $TokensUsed -Duration $DurationMs -Desc $Description `
+            -ModelName $Model -CategoryName $Category `
+            -Parallel $IsParallel.IsPresent -GroupId $ParallelGroupId -GrpSize $GroupSize
     }
     "Report" { Generate-Report }
     "Reset" { Reset-Metrics }
+    "Trends" {
+        # Placeholder for Trends action (US3)
+        Write-Host "Trends action not yet implemented (US3)" -ForegroundColor Yellow
+    }
+    "Compare" {
+        # Placeholder for Compare action (US4)
+        Write-Host "Compare action not yet implemented (US4)" -ForegroundColor Yellow
+    }
+    "Cumulative" {
+        # Placeholder for Cumulative action (US5)
+        Write-Host "Cumulative action not yet implemented (US5)" -ForegroundColor Yellow
+    }
+    "Export" {
+        # Placeholder for Export action (US5)
+        Write-Host "Export action not yet implemented (US5)" -ForegroundColor Yellow
+    }
 }

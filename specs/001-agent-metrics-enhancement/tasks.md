@@ -38,10 +38,10 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Update schema to v2.0.0 with new fields (model, phase, category, parallel) in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T005 [P] Implement schema version validation function in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T006 [P] Implement aggregate calculation helpers (per-model, per-category, parallel groups) in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T007 Add ValidateSet constraints for model, status, phase, category parameters in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T004 Update schema to v2.0.0 with new fields (model, phase, category, parallel) in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T005 [P] Implement schema version validation function in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T006 [P] Implement aggregate calculation helpers (per-model, per-category, parallel groups) in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T007 Add ValidateSet constraints for model, status, phase, category parameters in `.specify/scripts/powershell/agent-metrics.ps1`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
