@@ -1208,4 +1208,210 @@ Describe 'agent-metrics.ps1' {
             }
         }
     }
+
+    Context 'Compare Action' {
+        function New-TestArchiveSession {
+            param(
+                [string]$Phase = "implement",
+                [string]$FeatureBranch = "test-branch",
+                [string]$SchemaVersion = "2.0.0",
+                [int]$TotalTokens = 100000,
+                [int]$TotalInvocations = 5,
+                [int]$TotalSuccesses = 5,
+                [int]$TotalFailures = 0,
+                [int]$TotalDurationMs = 300000,
+                [string]$StartTime = "",
+                [string]$EndTime = ""
+            )
+
+            if (-not $StartTime) { $StartTime = (Get-Date).ToString("o") }
+            if (-not $EndTime) { $EndTime = (Get-Date).AddMinutes(30).ToString("o") }
+
+            return @{
+                schemaVersion = $SchemaVersion
+                phase = $Phase
+                featureBranch = $FeatureBranch
+                startTime = $StartTime
+                endTime = $EndTime
+                completionStatus = "complete"
+                sessionId = [guid]::NewGuid().ToString()
+                invocations = @()
+                agents = @{}
+                models = [PSCustomObject]@{}
+                categories = [PSCustomObject]@{}
+                parallelGroups = [PSCustomObject]@{}
+                totals = @{
+                    totalInvocations = $TotalInvocations
+                    totalTokens = $TotalTokens
+                    totalSuccesses = $TotalSuccesses
+                    totalFailures = $TotalFailures
+                    totalTimeouts = 0
+                    totalDurationMs = $TotalDurationMs
+                    parallelInvocations = 0
+                    sequentialInvocations = $TotalInvocations
+                    avgTokensPerInvocation = [math]::Round($TotalTokens / [math]::Max($TotalInvocations, 1), 0)
+                    avgDurationMs = [math]::Round($TotalDurationMs / [math]::Max($TotalInvocations, 1), 0)
+                    overallSuccessRate = if ($TotalInvocations -gt 0) { [math]::Round(($TotalSuccesses / $TotalInvocations) * 100, 1) } else { 0 }
+                }
+            }
+        }
+
+        # T048 [US4]: Compare action loads two sessions from archive
+        It 'loads two sessions from archive by filename' {
+            Setup-TestEnvironment
+            try {
+                $archiveDir = Join-Path $script:TestMetricsDir "archive"
+                New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null
+
+                $session1 = New-TestArchiveSession -Phase "implement" -FeatureBranch "feature-a" -TotalTokens 100000 `
+                    -StartTime (Get-Date).AddDays(-3).ToString("o")
+                $session1 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260124-100000.json") -Encoding UTF8
+
+                $session2 = New-TestArchiveSession -Phase "implement" -FeatureBranch "feature-a" -TotalTokens 200000 `
+                    -StartTime (Get-Date).AddDays(-1).ToString("o")
+                $session2 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260126-100000.json") -Encoding UTF8
+
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                $output = Compare-Sessions -Sess1 "agent-metrics-20260124-100000.json" -Sess2 "agent-metrics-20260126-100000.json" 6>&1 | Out-String
+
+                # Should display SESSION COMPARISON header and both sessions
+                $output | Should Match "SESSION COMPARISON"
+                $output | Should Match "20260124"
+                $output | Should Match "20260126"
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+
+        It 'loads sessions by timestamp pattern' {
+            Setup-TestEnvironment
+            try {
+                $archiveDir = Join-Path $script:TestMetricsDir "archive"
+                New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null
+
+                $session1 = New-TestArchiveSession -Phase "implement" -TotalTokens 100000 `
+                    -StartTime (Get-Date).AddDays(-3).ToString("o")
+                $session1 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260124-100000.json") -Encoding UTF8
+
+                $session2 = New-TestArchiveSession -Phase "implement" -TotalTokens 200000 `
+                    -StartTime (Get-Date).AddDays(-1).ToString("o")
+                $session2 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260126-100000.json") -Encoding UTF8
+
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                $output = Compare-Sessions -Sess1 "20260124-100000" -Sess2 "20260126-100000" 6>&1 | Out-String
+
+                $output | Should Match "SESSION COMPARISON"
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+
+        It 'loads sessions by date-only pattern (picks latest for that date)' {
+            Setup-TestEnvironment
+            try {
+                $archiveDir = Join-Path $script:TestMetricsDir "archive"
+                New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null
+
+                $session1 = New-TestArchiveSession -Phase "implement" -TotalTokens 100000 `
+                    -StartTime (Get-Date).AddDays(-3).ToString("o")
+                $session1 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260124-100000.json") -Encoding UTF8
+
+                $session2 = New-TestArchiveSession -Phase "implement" -TotalTokens 200000 `
+                    -StartTime (Get-Date).AddDays(-1).ToString("o")
+                $session2 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260126-100000.json") -Encoding UTF8
+
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                $output = Compare-Sessions -Sess1 "20260124" -Sess2 "20260126" 6>&1 | Out-String
+
+                $output | Should Match "SESSION COMPARISON"
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+
+        # T049 [US4]: Compare action calculates deltas between sessions
+        It 'calculates deltas between sessions' {
+            Setup-TestEnvironment
+            try {
+                $archiveDir = Join-Path $script:TestMetricsDir "archive"
+                New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null
+
+                $session1 = New-TestArchiveSession -Phase "implement" -FeatureBranch "feature-a" `
+                    -TotalTokens 100000 -TotalInvocations 8 -TotalSuccesses 7 -TotalFailures 1 -TotalDurationMs 480000 `
+                    -StartTime (Get-Date).AddDays(-3).ToString("o")
+                $session1 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260124-100000.json") -Encoding UTF8
+
+                $session2 = New-TestArchiveSession -Phase "implement" -FeatureBranch "feature-a" `
+                    -TotalTokens 150000 -TotalInvocations 12 -TotalSuccesses 11 -TotalFailures 1 -TotalDurationMs 600000 `
+                    -StartTime (Get-Date).AddDays(-1).ToString("o")
+                $session2 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260126-100000.json") -Encoding UTF8
+
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                $output = Compare-Sessions -Sess1 "agent-metrics-20260124-100000.json" -Sess2 "agent-metrics-20260126-100000.json" 6>&1 | Out-String
+
+                # Should show SUMMARY COMPARISON with deltas
+                $output | Should Match "SUMMARY COMPARISON"
+                # Should show invocation count change (+4)
+                $output | Should Match "\+4"
+                # Should show token change (+50,000 or +50000)
+                $output | Should Match "\+50"
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+
+        # T050 [US4]: Compare action rejects legacy schema sessions
+        It 'rejects legacy schema sessions' {
+            Setup-TestEnvironment
+            try {
+                $archiveDir = Join-Path $script:TestMetricsDir "archive"
+                New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null
+
+                # Legacy session (v1.0.0)
+                $legacySession = New-TestArchiveSession -Phase "implement" -SchemaVersion "1.0.0" -TotalTokens 100000 `
+                    -StartTime (Get-Date).AddDays(-3).ToString("o")
+                $legacySession | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260124-100000.json") -Encoding UTF8
+
+                # v2.0.0 session
+                $modernSession = New-TestArchiveSession -Phase "implement" -TotalTokens 200000 `
+                    -StartTime (Get-Date).AddDays(-1).ToString("o")
+                $modernSession | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260126-100000.json") -Encoding UTF8
+
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                $output = Compare-Sessions -Sess1 "agent-metrics-20260124-100000.json" -Sess2 "agent-metrics-20260126-100000.json" 6>&1 | Out-String
+
+                # Should report legacy format error
+                $output | Should Match "legacy|pre-2.0.0|Legacy"
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+
+        It 'reports error when session file not found' {
+            Setup-TestEnvironment
+            try {
+                $archiveDir = Join-Path $script:TestMetricsDir "archive"
+                New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null
+
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                $output = Compare-Sessions -Sess1 "nonexistent-session.json" -Sess2 "also-nonexistent.json" 6>&1 | Out-String
+
+                $output | Should Match "not found|Not found|No.*found"
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+    }
 }

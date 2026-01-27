@@ -1214,6 +1214,233 @@ function Generate-TrendsReport {
     Write-Host ""
 }
 
+function Resolve-SessionFile {
+    <#
+    .SYNOPSIS
+        Resolves a session identifier to an archive file path
+
+    .DESCRIPTION
+        Accepts: full filename, timestamp (YYYYMMDD-HHMMSS), or date-only (YYYYMMDD).
+        For date-only, picks the latest matching file.
+
+    .PARAMETER SessionId
+        The session identifier string
+
+    .OUTPUTS
+        Full path to the archive file, or $null if not found
+    #>
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$SessionId
+    )
+
+    $archiveDir = Join-Path $MetricsDir "archive"
+    if (-not (Test-Path $archiveDir)) { return $null }
+
+    # Try full filename first
+    $fullPath = Join-Path $archiveDir $SessionId
+    if (Test-Path $fullPath) { return $fullPath }
+
+    # Try as timestamp pattern (YYYYMMDD-HHMMSS)
+    $timestampPath = Join-Path $archiveDir "agent-metrics-$SessionId.json"
+    if (Test-Path $timestampPath) { return $timestampPath }
+
+    # Try as date-only pattern (YYYYMMDD) - pick latest match
+    $datePattern = "agent-metrics-$SessionId-*.json"
+    $matches = Get-ChildItem $archiveDir -Filter $datePattern -ErrorAction SilentlyContinue |
+        Sort-Object Name -Descending
+    if ($matches -and $matches.Count -gt 0) {
+        return $matches[0].FullName
+    }
+
+    return $null
+}
+
+function Compare-Sessions {
+    <#
+    .SYNOPSIS
+        Compares two archived sessions side-by-side (FR-011)
+
+    .DESCRIPTION
+        Loads both archive files, validates schema version,
+        calculates deltas for all metrics, and displays comparison.
+
+    .PARAMETER Sess1
+        First session identifier (filename, timestamp, or date)
+
+    .PARAMETER Sess2
+        Second session identifier (filename, timestamp, or date)
+    #>
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$Sess1,
+        [Parameter(Mandatory=$true)]
+        [string]$Sess2
+    )
+
+    # Resolve session files
+    $file1 = Resolve-SessionFile -SessionId $Sess1
+    $file2 = Resolve-SessionFile -SessionId $Sess2
+
+    if (-not $file1) {
+        Write-Host "Session not found: $Sess1" -ForegroundColor Red
+        return
+    }
+    if (-not $file2) {
+        Write-Host "Session not found: $Sess2" -ForegroundColor Red
+        return
+    }
+
+    # Load sessions
+    $session1 = Get-Content $file1 -Raw | ConvertFrom-Json
+    $session2 = Get-Content $file2 -Raw | ConvertFrom-Json
+
+    # Validate schema versions
+    if (-not (Test-SchemaVersion -Session $session1)) {
+        $name1 = Split-Path $file1 -Leaf
+        Write-Host "Session $name1 is legacy format (pre-2.0.0). Compare requires v2.0.0+ sessions." -ForegroundColor Red
+        return
+    }
+    if (-not (Test-SchemaVersion -Session $session2)) {
+        $name2 = Split-Path $file2 -Leaf
+        Write-Host "Session $name2 is legacy format (pre-2.0.0). Compare requires v2.0.0+ sessions." -ForegroundColor Red
+        return
+    }
+
+    $name1 = Split-Path $file1 -Leaf
+    $name2 = Split-Path $file2 -Leaf
+
+    # Extract totals
+    $t1 = $session1.totals
+    $t2 = $session2.totals
+
+    # --- Header ---
+    Write-Host ""
+    Write-Host "=======================================================================" -ForegroundColor Magenta
+    Write-Host "                         SESSION COMPARISON                              " -ForegroundColor Magenta
+    Write-Host "=======================================================================" -ForegroundColor Magenta
+    Write-Host ""
+    Write-Host "Session 1: $name1" -ForegroundColor White
+    Write-Host "  Phase: $($session1.phase) | Branch: $($session1.featureBranch) | Date: $([DateTime]::Parse($session1.startTime).ToString('yyyy-MM-dd'))" -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "Session 2: $name2" -ForegroundColor White
+    Write-Host "  Phase: $($session2.phase) | Branch: $($session2.featureBranch) | Date: $([DateTime]::Parse($session2.startTime).ToString('yyyy-MM-dd'))" -ForegroundColor Gray
+    Write-Host ""
+
+    # --- SUMMARY COMPARISON ---
+    Write-Host "-----------------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "                          SUMMARY COMPARISON                             " -ForegroundColor Yellow
+    Write-Host "-----------------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host ""
+
+    $compHeader = "{0,-22} {1,14} {2,14} {3,18}" -f "Metric", "Session 1", "Session 2", "Delta"
+    Write-Host "  $compHeader" -ForegroundColor Cyan
+    Write-Host "  $("-" * 70)" -ForegroundColor DarkGray
+
+    # Invocations
+    $invDelta = $t2.totalInvocations - $t1.totalInvocations
+    $invPct = if ($t1.totalInvocations -gt 0) { [math]::Round(($invDelta / $t1.totalInvocations) * 100, 1) } else { 0 }
+    $invSign = if ($invDelta -ge 0) { "+" } else { "" }
+    $invRow = "{0,-22} {1,14} {2,14} {3,18}" -f "Invocations", $t1.totalInvocations, $t2.totalInvocations, "${invSign}${invDelta} (${invSign}${invPct}%)"
+    Write-Host "  $invRow" -ForegroundColor White
+
+    # Tokens
+    $tokDelta = $t2.totalTokens - $t1.totalTokens
+    $tokPct = if ($t1.totalTokens -gt 0) { [math]::Round(($tokDelta / $t1.totalTokens) * 100, 1) } else { 0 }
+    $tokSign = if ($tokDelta -ge 0) { "+" } else { "" }
+    $tokRow = "{0,-22} {1,14:N0} {2,14:N0} {3,18}" -f "Total Tokens", $t1.totalTokens, $t2.totalTokens, "${tokSign}$($tokDelta.ToString('N0')) (${tokSign}${tokPct}%)"
+    Write-Host "  $tokRow" -ForegroundColor White
+
+    # Success Rate
+    $sr1 = $t1.overallSuccessRate
+    $sr2 = $t2.overallSuccessRate
+    $srDelta = [math]::Round($sr2 - $sr1, 1)
+    $srSign = if ($srDelta -ge 0) { "+" } else { "" }
+    $srArrow = if ($srDelta -gt 0) { [string]([char]0x2191) } elseif ($srDelta -lt 0) { [string]([char]0x2193) } else { [string]([char]0x2192) }
+    $srRow = "{0,-22} {1,14} {2,14} {3,18}" -f "Success Rate", "${sr1}%", "${sr2}%", "${srSign}${srDelta}% $srArrow"
+    Write-Host "  $srRow" -ForegroundColor White
+
+    # Avg Duration
+    $ad1 = $t1.avgDurationMs
+    $ad2 = $t2.avgDurationMs
+    $adDelta = $ad2 - $ad1
+    $adPct = if ($ad1 -gt 0) { [math]::Round(($adDelta / $ad1) * 100, 1) } else { 0 }
+    $adSign = if ($adDelta -ge 0) { "+" } else { "" }
+    $adArrow = if ($adDelta -lt 0) { [string]([char]0x2193) } elseif ($adDelta -gt 0) { [string]([char]0x2191) } else { [string]([char]0x2192) }
+    $adRow = "{0,-22} {1,14} {2,14} {3,18}" -f "Avg Duration", (Format-Duration $ad1), (Format-Duration $ad2), "${adSign}$(Format-Duration ([math]::Abs($adDelta))) $adArrow"
+    Write-Host "  $adRow" -ForegroundColor White
+
+    Write-Host ""
+
+    # --- MODEL COMPARISON ---
+    $hasModels1 = $session1.models -and $session1.models.PSObject.Properties.Count -gt 0
+    $hasModels2 = $session2.models -and $session2.models.PSObject.Properties.Count -gt 0
+    if ($hasModels1 -or $hasModels2) {
+        Write-Host "-----------------------------------------------------------------------" -ForegroundColor DarkGray
+        Write-Host "                          MODEL COMPARISON                               " -ForegroundColor Yellow
+        Write-Host "-----------------------------------------------------------------------" -ForegroundColor DarkGray
+        Write-Host ""
+
+        $mdlHeader = "{0,-10} {1,8} {2,8} {3,8} {4,8} {5,14}" -f "Model", "S1 Cnt", "S1 Cost%", "S2 Cnt", "S2 Cost%", "Change"
+        Write-Host "  $mdlHeader" -ForegroundColor Cyan
+        Write-Host "  $("-" * 60)" -ForegroundColor DarkGray
+
+        # Collect all model names from both sessions
+        $allModels = @()
+        if ($hasModels1) { $allModels += $session1.models.PSObject.Properties.Name }
+        if ($hasModels2) { $allModels += $session2.models.PSObject.Properties.Name }
+        $allModels = $allModels | Sort-Object -Unique
+
+        foreach ($modelName in $allModels) {
+            $m1Count = 0; $m1Cost = 0
+            $m2Count = 0; $m2Cost = 0
+            if ($hasModels1 -and $session1.models.PSObject.Properties[$modelName]) {
+                $m1Count = $session1.models.$modelName.count
+                $m1Cost = $session1.models.$modelName.costPercent
+            }
+            if ($hasModels2 -and $session2.models.PSObject.Properties[$modelName]) {
+                $m2Count = $session2.models.$modelName.count
+                $m2Cost = $session2.models.$modelName.costPercent
+            }
+
+            $changeLabel = if ($m2Cost -gt $m1Cost) { [string]([char]0x2191) + " more usage" }
+                elseif ($m2Cost -lt $m1Cost) { [string]([char]0x2193) + " less usage" }
+                else { [string]([char]0x2192) + " stable" }
+
+            $mdlRow = "{0,-10} {1,8} {2,8} {3,8} {4,8} {5,14}" -f `
+                $modelName, $m1Count, "$($m1Cost)%", $m2Count, "$($m2Cost)%", $changeLabel
+            Write-Host "  $mdlRow" -ForegroundColor White
+        }
+        Write-Host ""
+    }
+
+    # --- INSIGHTS ---
+    Write-Host "-----------------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "                              INSIGHTS                                   " -ForegroundColor Yellow
+    Write-Host "-----------------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host ""
+
+    if ($srDelta -gt 0) {
+        Write-Host "  $([char]0x2191) Success rate improved by ${srDelta}%" -ForegroundColor Green
+    } elseif ($srDelta -lt 0) {
+        Write-Host "  $([char]0x2193) Success rate declined by $([math]::Abs($srDelta))%" -ForegroundColor Red
+    }
+
+    if ($tokPct -gt 20) {
+        Write-Host "  $([char]0x2193) Token usage increased ${tokPct}% - monitor for trends" -ForegroundColor Yellow
+    } elseif ($tokPct -lt -10) {
+        Write-Host "  $([char]0x2191) Token usage decreased $([math]::Abs($tokPct))% - efficiency improving" -ForegroundColor Green
+    }
+
+    if ($adPct -lt -10) {
+        Write-Host "  $([char]0x2191) Average duration decreased - agents running faster" -ForegroundColor Green
+    } elseif ($adPct -gt 20) {
+        Write-Host "  $([char]0x2193) Average duration increased ${adPct}% - investigate bottlenecks" -ForegroundColor Yellow
+    }
+
+    Write-Host ""
+}
+
 function Reset-Metrics {
     if (Test-Path $MetricsFile) {
         # Archive current metrics
@@ -1274,8 +1501,7 @@ if (-not $isDotSourced -and $Action) {
             Generate-TrendsReport -Days $Days -Branch $FeatureBranch
         }
         "Compare" {
-            # Placeholder for Compare action (US4)
-            Write-Host "Compare action not yet implemented (US4)" -ForegroundColor Yellow
+            Compare-Sessions -Sess1 $Session1 -Sess2 $Session2
         }
         "Cumulative" {
             # Placeholder for Cumulative action (US5)

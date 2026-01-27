@@ -148,22 +148,22 @@
 
 > **TDD REQUIRED: Write tests FIRST, verify they FAIL (RED), then implement until GREEN**
 
-- [ ] T045 [P] [US4] Unit test: Record action captures parallel execution fields in `.specify/scripts/powershell/agent-metrics.tests.ps1`
-- [ ] T046 [P] [US4] Unit test: Record action updates parallel group metrics in `.specify/scripts/powershell/agent-metrics.tests.ps1`
-- [ ] T047 [P] [US4] Unit test: Report action displays parallelization metrics section in `.specify/scripts/powershell/agent-metrics.tests.ps1`
-- [ ] T048 [P] [US4] Unit test: Compare action loads two sessions from archive in `.specify/scripts/powershell/agent-metrics.tests.ps1`
-- [ ] T049 [P] [US4] Unit test: Compare action calculates deltas between sessions in `.specify/scripts/powershell/agent-metrics.tests.ps1`
-- [ ] T050 [P] [US4] Unit test: Compare action rejects legacy schema sessions in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T045 [P] [US4] Unit test: Record action captures parallel execution fields in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T046 [P] [US4] Unit test: Record action updates parallel group metrics in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T047 [P] [US4] Unit test: Report action displays parallelization metrics section in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T048 [P] [US4] Unit test: Compare action loads two sessions from archive in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T049 [P] [US4] Unit test: Compare action calculates deltas between sessions in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T050 [P] [US4] Unit test: Compare action rejects legacy schema sessions in `.specify/scripts/powershell/agent-metrics.tests.ps1`
 
 ### Implementation for User Story 4
 
-- [ ] T051 [US4] Enhance Record action with -IsParallel, -ParallelGroupId, -GroupSize parameters in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T052 [US4] Implement parallel group aggregate updates in Record action in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T053 [US4] Enhance Report action with PARALLELIZATION METRICS section in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T054 [US4] Implement parallelization efficiency calculation in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T055 [US4] Implement Compare action with -Session1 and -Session2 parameters in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T056 [US4] Implement session loading by filename, timestamp, or date in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T057 [US4] Implement delta calculation and comparison report formatting in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T051 [US4] Enhance Record action with -IsParallel, -ParallelGroupId, -GroupSize parameters in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T052 [US4] Implement parallel group aggregate updates in Record action in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T053 [US4] Enhance Report action with PARALLELIZATION METRICS section in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T054 [US4] Implement parallelization efficiency calculation in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T055 [US4] Implement Compare action with -Session1 and -Session2 parameters in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T056 [US4] Implement session loading by filename, timestamp, or date in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T057 [US4] Implement delta calculation and comparison report formatting in `.specify/scripts/powershell/agent-metrics.ps1`
 
 **Checkpoint**: US4 complete - parallelization tracking and session comparison functional
 
