@@ -42,9 +42,9 @@
 #>
 
 param(
-    [Parameter(Mandatory=$true)]
-    [ValidateSet("Init", "Record", "Report", "Reset", "Trends", "Compare", "Cumulative", "Export")]
-    [string]$Action,
+    [Parameter(Mandatory=$false)]
+    [ValidateSet("Init", "Record", "Report", "Reset", "Trends", "Compare", "Cumulative", "Export", "")]
+    [string]$Action = "",
 
     [string]$AgentName,
     [string]$TaskId,
@@ -659,6 +659,7 @@ function Generate-Report {
 
     $metrics = Get-Content $MetricsFile -Raw | ConvertFrom-Json
     $metrics.endTime = (Get-Date).ToString("o")
+    $metrics.completionStatus = "complete"
 
     # Calculate phase duration
     $startTime = [DateTime]::Parse($metrics.startTime)
@@ -690,6 +691,122 @@ function Generate-Report {
     Write-Host ("  Overall Success Rate:     {0}%" -f $overallSuccessRate) -ForegroundColor $(if ($overallSuccessRate -ge 90) { "Green" } elseif ($overallSuccessRate -ge 70) { "Yellow" } else { "Red" })
     Write-Host ("  Successes / Failures:     {0} / {1}" -f $totals.totalSuccesses, ($totals.totalFailures + $totals.totalTimeouts))
     Write-Host ""
+
+    # MODEL DISTRIBUTION (FR-003)
+    if ($metrics.models -and $metrics.models.PSObject.Properties.Count -gt 0) {
+        Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host "                         MODEL DISTRIBUTION                                    " -ForegroundColor Yellow
+        Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host ""
+
+        # Table header
+        $modelHeader = "{0,-12} {1,12} {2,14} {3,14} {4,10}" -f "Model", "Invocations", "Tokens", "Cost Weight", "Cost %"
+        Write-Host "  $modelHeader" -ForegroundColor Cyan
+        Write-Host "  $("-" * 66)" -ForegroundColor DarkGray
+
+        # Sort models by cost percentage (highest first)
+        $sortedModels = $metrics.models.PSObject.Properties | Sort-Object { $_.Value.costPercent } -Descending
+
+        foreach ($modelProp in $sortedModels) {
+            $name = $modelProp.Name
+            $data = $modelProp.Value
+
+            $modelRow = "{0,-12} {1,12} {2,14:N0} {3,14} {4,10}" -f `
+                $name, `
+                $data.count, `
+                $data.totalTokens, `
+                "$($data.costWeight)x", `
+                "$($data.costPercent)%"
+
+            Write-Host "  $modelRow" -ForegroundColor White
+        }
+        Write-Host ""
+    }
+
+    # CATEGORY BREAKDOWN (FR-007)
+    if ($metrics.categories -and $metrics.categories.PSObject.Properties.Count -gt 0) {
+        Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host "                         CATEGORY BREAKDOWN                                    " -ForegroundColor Yellow
+        Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host ""
+
+        # Table header
+        $catHeader = "{0,-16} {1,8} {2,14} {3,12} {4,10}" -f "Category", "Count", "Total Tokens", "Avg Tokens", "% of Total"
+        Write-Host "  $catHeader" -ForegroundColor Cyan
+        Write-Host "  $("-" * 64)" -ForegroundColor DarkGray
+
+        # Calculate total tokens for percentage
+        $totalCategoryTokens = 0
+        foreach ($cat in $metrics.categories.PSObject.Properties) {
+            $totalCategoryTokens += $cat.Value.totalTokens
+        }
+
+        # Sort categories by token usage (highest first)
+        $sortedCategories = $metrics.categories.PSObject.Properties | Sort-Object { $_.Value.totalTokens } -Descending
+
+        foreach ($catProp in $sortedCategories) {
+            $name = $catProp.Name
+            $data = $catProp.Value
+
+            $pctOfTotal = if ($totalCategoryTokens -gt 0) {
+                [math]::Round(($data.totalTokens / $totalCategoryTokens) * 100, 1)
+            } else { 0 }
+
+            $catRow = "{0,-16} {1,8} {2,14:N0} {3,12:N0} {4,10}" -f `
+                $name, `
+                $data.count, `
+                $data.totalTokens, `
+                $data.avgTokens, `
+                "$pctOfTotal%"
+
+            Write-Host "  $catRow" -ForegroundColor White
+        }
+        Write-Host ""
+    }
+
+    # PARALLELIZATION METRICS (FR-009)
+    if ($totals.parallelInvocations -gt 0 -or ($metrics.parallelGroups -and $metrics.parallelGroups.PSObject.Properties.Count -gt 0)) {
+        Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host "                      PARALLELIZATION METRICS                                  " -ForegroundColor Yellow
+        Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host ""
+
+        $parallelPct = if ($totals.totalInvocations -gt 0) {
+            [math]::Round(($totals.parallelInvocations / $totals.totalInvocations) * 100, 1)
+        } else { 0 }
+        $sequentialPct = 100 - $parallelPct
+
+        Write-Host ("  Total Invocations:        {0}" -f $totals.totalInvocations)
+        Write-Host ("  Parallel Declarations:    {0} ({1}%)" -f $totals.parallelInvocations, $parallelPct)
+        Write-Host ("  Sequential:               {0} ({1}%)" -f $totals.sequentialInvocations, $sequentialPct)
+
+        if ($metrics.parallelGroups -and $metrics.parallelGroups.PSObject.Properties.Count -gt 0) {
+            $groupCount = $metrics.parallelGroups.PSObject.Properties.Count
+            $maxConcurrent = 0
+            $totalEfficiency = 0
+            $totalTimeReduction = 0
+
+            foreach ($grp in $metrics.parallelGroups.PSObject.Properties) {
+                if ($grp.Value.concurrencyMetrics.maxConcurrent -gt $maxConcurrent) {
+                    $maxConcurrent = $grp.Value.concurrencyMetrics.maxConcurrent
+                }
+                $totalEfficiency += $grp.Value.concurrencyMetrics.efficiency
+                $totalTimeReduction += $grp.Value.concurrencyMetrics.timeReduction
+            }
+            $avgEfficiency = [math]::Round($totalEfficiency / $groupCount, 1)
+            $avgTimeReduction = [math]::Round($totalTimeReduction / $groupCount, 1)
+
+            Write-Host ""
+            Write-Host ("  Parallel Groups:          {0}" -f $groupCount)
+            Write-Host ("  Max Concurrent Observed:  {0} agents" -f $maxConcurrent)
+
+            $effColor = if ($avgEfficiency -ge 80) { "Green" } elseif ($avgEfficiency -ge 50) { "Yellow" } else { "Red" }
+            $effLabel = if ($avgEfficiency -ge 80) { "excellent" } elseif ($avgEfficiency -ge 50) { "good" } else { "needs improvement" }
+            Write-Host ("  Efficiency:               {0}% ({1})" -f $avgEfficiency, $effLabel) -ForegroundColor $effColor
+            Write-Host ("  Time Reduction:           {0}% vs sequential baseline" -f $avgTimeReduction)
+        }
+        Write-Host ""
+    }
 
     # Agent Performance Table
     Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
@@ -797,37 +914,63 @@ function Reset-Metrics {
         Remove-Item $MetricsFile
 
         Write-Host "Metrics archived to: $archivePath" -ForegroundColor Yellow
+
+        # Auto-cleanup old archives per retention settings (FR-020)
+        $settings = Get-MetricsSettings
+        if ($settings.retention.autoCleanupEnabled) {
+            $retentionDays = $settings.retention.archiveDays
+            $cutoffDate = (Get-Date).AddDays(-$retentionDays)
+
+            $archiveFiles = Get-ChildItem $archiveDir -Filter "agent-metrics-*.json" -ErrorAction SilentlyContinue
+            $deletedCount = 0
+
+            foreach ($file in $archiveFiles) {
+                if ($file.LastWriteTime -lt $cutoffDate) {
+                    Remove-Item $file.FullName -Force
+                    $deletedCount++
+                }
+            }
+
+            if ($deletedCount -gt 0) {
+                Write-Host "Cleaned up $deletedCount archive(s) older than $retentionDays days." -ForegroundColor Gray
+            }
+        }
+
         Write-Host "Metrics reset for next phase." -ForegroundColor Green
     } else {
         Write-Host "No metrics to reset." -ForegroundColor Gray
     }
 }
 
-# Execute action
-switch ($Action) {
-    "Init" { Initialize-Metrics -Phase $PhaseName -Branch $FeatureBranch }
-    "Record" {
-        Record-AgentMetric -Agent $AgentName -Task $TaskId -CompletionStatus $Status `
-            -Tokens $TokensUsed -Duration $DurationMs -Desc $Description `
-            -ModelName $Model -CategoryName $Category `
-            -Parallel $IsParallel.IsPresent -GroupId $ParallelGroupId -GrpSize $GroupSize
-    }
-    "Report" { Generate-Report }
-    "Reset" { Reset-Metrics }
-    "Trends" {
-        # Placeholder for Trends action (US3)
-        Write-Host "Trends action not yet implemented (US3)" -ForegroundColor Yellow
-    }
-    "Compare" {
-        # Placeholder for Compare action (US4)
-        Write-Host "Compare action not yet implemented (US4)" -ForegroundColor Yellow
-    }
-    "Cumulative" {
-        # Placeholder for Cumulative action (US5)
-        Write-Host "Cumulative action not yet implemented (US5)" -ForegroundColor Yellow
-    }
-    "Export" {
-        # Placeholder for Export action (US5)
-        Write-Host "Export action not yet implemented (US5)" -ForegroundColor Yellow
+# Execute action - only run when not being dot-sourced for testing
+# When dot-sourced, $MyInvocation.InvocationName will be '.' or '&'
+$isDotSourced = $MyInvocation.InvocationName -eq '.' -or $MyInvocation.InvocationName -eq '&'
+if (-not $isDotSourced -and $Action) {
+    switch ($Action) {
+        "Init" { Initialize-Metrics -Phase $PhaseName -Branch $FeatureBranch }
+        "Record" {
+            Record-AgentMetric -Agent $AgentName -Task $TaskId -CompletionStatus $Status `
+                -Tokens $TokensUsed -Duration $DurationMs -Desc $Description `
+                -ModelName $Model -CategoryName $Category `
+                -Parallel $IsParallel.IsPresent -GroupId $ParallelGroupId -GrpSize $GroupSize
+        }
+        "Report" { Generate-Report }
+        "Reset" { Reset-Metrics }
+        "Trends" {
+            # Placeholder for Trends action (US3)
+            Write-Host "Trends action not yet implemented (US3)" -ForegroundColor Yellow
+        }
+        "Compare" {
+            # Placeholder for Compare action (US4)
+            Write-Host "Compare action not yet implemented (US4)" -ForegroundColor Yellow
+        }
+        "Cumulative" {
+            # Placeholder for Cumulative action (US5)
+            Write-Host "Cumulative action not yet implemented (US5)" -ForegroundColor Yellow
+        }
+        "Export" {
+            # Placeholder for Export action (US5)
+            Write-Host "Export action not yet implemented (US5)" -ForegroundColor Yellow
+        }
     }
 }

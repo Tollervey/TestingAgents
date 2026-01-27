@@ -57,20 +57,20 @@
 
 > **TDD REQUIRED: Write tests FIRST, verify they FAIL (RED), then implement until GREEN**
 
-- [ ] T008 [P] [US1] Unit test: Init action creates session with v2.0.0 schema in `.specify/scripts/powershell/agent-metrics.tests.ps1`
-- [ ] T009 [P] [US1] Unit test: Record action captures model parameter in `.specify/scripts/powershell/agent-metrics.tests.ps1`
-- [ ] T010 [P] [US1] Unit test: Record action updates per-model aggregates in `.specify/scripts/powershell/agent-metrics.tests.ps1`
-- [ ] T011 [P] [US1] Unit test: Report action calculates cost distribution by model (1:3:5 weights) in `.specify/scripts/powershell/agent-metrics.tests.ps1`
-- [ ] T012 [P] [US1] Unit test: Report action displays model distribution section in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T008 [P] [US1] Unit test: Init action creates session with v2.0.0 schema in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T009 [P] [US1] Unit test: Record action captures model parameter in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T010 [P] [US1] Unit test: Record action updates per-model aggregates in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T011 [P] [US1] Unit test: Report action calculates cost distribution by model (1:3:5 weights) in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T012 [P] [US1] Unit test: Report action displays model distribution section in `.specify/scripts/powershell/agent-metrics.tests.ps1`
 
 ### Implementation for User Story 1
 
-- [ ] T013 [US1] Enhance Init action with v2.0.0 schema, phase, featureBranch parameters in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T014 [US1] Enhance Record action with -Model parameter and model validation in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T015 [US1] Implement per-model aggregate updates in Record action in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T016 [US1] Enhance Report action with MODEL DISTRIBUTION section in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T017 [US1] Implement cost percentage calculation using weighted tokens in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T018 [US1] Enhance Reset action with auto-cleanup per retention settings in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T013 [US1] Enhance Init action with v2.0.0 schema, phase, featureBranch parameters in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T014 [US1] Enhance Record action with -Model parameter and model validation in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T015 [US1] Implement per-model aggregate updates in Record action in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T016 [US1] Enhance Report action with MODEL DISTRIBUTION section in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T017 [US1] Implement cost percentage calculation using weighted tokens in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T018 [US1] Enhance Reset action with auto-cleanup per retention settings in `.specify/scripts/powershell/agent-metrics.ps1`
 
 **Checkpoint**: US1 complete - model tracking and cost distribution fully functional
 

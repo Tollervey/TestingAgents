@@ -1,0 +1,180 @@
+﻿{
+    "sessionId":  "cd5cef38-a2c4-497c-886e-276ea303a414",
+    "startTime":  "2026-01-27T00:35:49.1462204+00:00",
+    "parallelGroups":  {
+
+                       },
+    "agents":  {
+                   "backend-developer":  {
+                                             "count":  1,
+                                             "successes":  1,
+                                             "failures":  0,
+                                             "timeouts":  0,
+                                             "totalTokens":  30000,
+                                             "totalDurationMs":  60000,
+                                             "minDurationMs":  60000,
+                                             "maxDurationMs":  60000,
+                                             "avgTokens":  30000,
+                                             "avgDurationMs":  60000,
+                                             "models":  {
+                                                            "sonnet":  {
+                                                                           "count":  1,
+                                                                           "tokens":  30000
+                                                                       }
+                                                        }
+                                         },
+                   "solution-architect":  {
+                                              "count":  1,
+                                              "successes":  1,
+                                              "failures":  0,
+                                              "timeouts":  0,
+                                              "totalTokens":  50000,
+                                              "totalDurationMs":  120000,
+                                              "minDurationMs":  120000,
+                                              "maxDurationMs":  120000,
+                                              "avgTokens":  50000,
+                                              "avgDurationMs":  120000,
+                                              "models":  {
+                                                             "opus":  {
+                                                                          "count":  1,
+                                                                          "tokens":  50000
+                                                                      }
+                                                         }
+                                          },
+                   "code-reviewer":  {
+                                         "count":  1,
+                                         "successes":  1,
+                                         "failures":  0,
+                                         "timeouts":  0,
+                                         "totalTokens":  10000,
+                                         "totalDurationMs":  30000,
+                                         "minDurationMs":  30000,
+                                         "maxDurationMs":  30000,
+                                         "avgTokens":  10000,
+                                         "avgDurationMs":  30000,
+                                         "models":  {
+                                                        "haiku":  {
+                                                                      "count":  1,
+                                                                      "tokens":  10000
+                                                                  }
+                                                    }
+                                     }
+               },
+    "featureBranch":  "001-agent-metrics-enhancement",
+    "completionStatus":  "complete",
+    "invocations":  [
+                        {
+                            "invocationEndTime":  "2026-01-27T00:36:04.4639959+00:00",
+                            "model":  "sonnet",
+                            "durationMs":  60000,
+                            "timestamp":  "2026-01-27T00:36:04.4639959+00:00",
+                            "category":  "implementation",
+                            "groupSize":  1,
+                            "description":  "",
+                            "status":  "completed",
+                            "taskId":  "T001",
+                            "tokens":  30000,
+                            "invocationStartTime":  "2026-01-27T00:35:04.4660945+00:00",
+                            "phase":  "test-US1",
+                            "agent":  "backend-developer",
+                            "parallelGroupId":  null,
+                            "isParallel":  false
+                        },
+                        {
+                            "invocationEndTime":  "2026-01-27T00:36:20.6311306+00:00",
+                            "model":  "opus",
+                            "durationMs":  120000,
+                            "timestamp":  "2026-01-27T00:36:20.6311306+00:00",
+                            "category":  "planning",
+                            "groupSize":  1,
+                            "description":  "",
+                            "status":  "completed",
+                            "taskId":  "T002",
+                            "tokens":  50000,
+                            "invocationStartTime":  "2026-01-27T00:34:20.6321306+00:00",
+                            "phase":  "test-US1",
+                            "agent":  "solution-architect",
+                            "parallelGroupId":  null,
+                            "isParallel":  false
+                        },
+                        {
+                            "invocationEndTime":  "2026-01-27T00:36:20.9973644+00:00",
+                            "model":  "haiku",
+                            "durationMs":  30000,
+                            "timestamp":  "2026-01-27T00:36:20.9973644+00:00",
+                            "category":  "review",
+                            "groupSize":  1,
+                            "description":  "",
+                            "status":  "completed",
+                            "taskId":  "T003",
+                            "tokens":  10000,
+                            "invocationStartTime":  "2026-01-27T00:35:50.9983645+00:00",
+                            "phase":  "test-US1",
+                            "agent":  "code-reviewer",
+                            "parallelGroupId":  null,
+                            "isParallel":  false
+                        }
+                    ],
+    "endTime":  "2026-01-27T00:36:35.7048233+00:00",
+    "models":  {
+                   "sonnet":  {
+                                  "costPercent":  25.7,
+                                  "weightedTokens":  90000.0,
+                                  "count":  1,
+                                  "costWeight":  3.0,
+                                  "totalTokens":  30000
+                              },
+                   "opus":  {
+                                "costPercent":  71.4,
+                                "weightedTokens":  250000.0,
+                                "count":  1,
+                                "costWeight":  5.0,
+                                "totalTokens":  50000
+                            },
+                   "haiku":  {
+                                 "costPercent":  2.9,
+                                 "weightedTokens":  10000.0,
+                                 "count":  1,
+                                 "costWeight":  1.0,
+                                 "totalTokens":  10000
+                             }
+               },
+    "phase":  "test-US1",
+    "categories":  {
+                       "implementation":  {
+                                              "totalDurationMs":  60000,
+                                              "avgTokens":  30000,
+                                              "avgDurationMs":  60000,
+                                              "count":  1,
+                                              "totalTokens":  30000
+                                          },
+                       "planning":  {
+                                        "totalDurationMs":  120000,
+                                        "avgTokens":  50000,
+                                        "avgDurationMs":  120000,
+                                        "count":  1,
+                                        "totalTokens":  50000
+                                    },
+                       "review":  {
+                                      "totalDurationMs":  30000,
+                                      "avgTokens":  10000,
+                                      "avgDurationMs":  30000,
+                                      "count":  1,
+                                      "totalTokens":  10000
+                                  }
+                   },
+    "schemaVersion":  "2.0.0",
+    "totals":  {
+                   "totalDurationMs":  210000,
+                   "sequentialInvocations":  3,
+                   "parallelInvocations":  0,
+                   "totalInvocations":  3,
+                   "totalTimeouts":  0,
+                   "avgDurationMs":  70000,
+                   "totalFailures":  0,
+                   "avgTokensPerInvocation":  30000,
+                   "totalSuccesses":  3,
+                   "totalTokens":  90000,
+                   "overallSuccessRate":  100
+               }
+}
