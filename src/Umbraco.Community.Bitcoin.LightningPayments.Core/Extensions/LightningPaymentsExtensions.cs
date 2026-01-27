@@ -17,6 +17,7 @@ using Umbraco.Community.Bitcoin.LightningPayments.Core.Features.Dashboard;
 using Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Bolt12;
 using Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Notification;
 using Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Refund;
+using Umbraco.Community.Bitcoin.LightningPayments.Core.Services.ExchangeRate;
 using System.Threading.RateLimiting;
 using Umbraco.Cms.Core.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
@@ -153,6 +154,11 @@ public static class LightningPaymentsExtensions
 
         // Refund services
         builder.Services.AddScoped<IRefundService, RefundService>();
+
+        // Exchange rate services (multi-currency display)
+        builder.Services.AddHttpClient<CoinGeckoClient>();
+        builder.Services.AddScoped<ICoinGeckoClient, CoinGeckoClient>();
+        builder.Services.AddScoped<IExchangeRateService, ExchangeRateService>();
 
         builder.Services.AddHealthChecks().AddCheck<BreezSdkHealthCheck>("breez");
 

@@ -83,7 +83,8 @@ public class DashboardContractTests
         deserialized.PendingCount.Should().BeGreaterThanOrEqualTo(0);
         deserialized.DailyVolumeSat.Should().BeGreaterThanOrEqualTo(0);
         deserialized.WalletBalanceSat.Should().BeGreaterThanOrEqualTo(0);
-        deserialized.SdkConnected.Should().BeDefined(); // bool is non-nullable, must have value
+        // bool is non-nullable, must have value - verify it's false as set
+        deserialized.SdkConnected.Should().BeFalse();
     }
 
     [Fact]

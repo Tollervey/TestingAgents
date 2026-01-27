@@ -415,7 +415,9 @@ public class PaywallPropertyEditorValueConverter
     public object? ConvertIntermediateToObject(object? source)
     {
         if (source == null || (source is string s && string.IsNullOrWhiteSpace(s)))
+        {
             return new PaywallConfig();
+        }
 
         try
         {
@@ -434,7 +436,9 @@ public class PaywallPropertyEditorValueConverter
     public object? ConvertSourceToIntermediate(object? source)
     {
         if (source is not PaywallConfig config)
+        {
             return null;
+        }
 
         return JsonSerializer.Serialize(config, new JsonSerializerOptions
         {
