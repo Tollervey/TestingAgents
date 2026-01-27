@@ -86,24 +86,24 @@
 
 > **TDD REQUIRED: Write tests FIRST, verify they FAIL (RED), then implement until GREEN**
 
-- [ ] T019 [P] [US2] Unit test: Record action captures phase name from session in `.specify/scripts/powershell/agent-metrics.tests.ps1`
-- [ ] T020 [P] [US2] Unit test: Record action captures category parameter in `.specify/scripts/powershell/agent-metrics.tests.ps1`
-- [ ] T021 [P] [US2] Unit test: Report action displays category breakdown section in `.specify/scripts/powershell/agent-metrics.tests.ps1`
-- [ ] T022 [P] [US2] Unit test: Init archives incomplete previous session in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T019 [P] [US2] Unit test: Record action captures phase name from session in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T020 [P] [US2] Unit test: Record action captures category parameter in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T021 [P] [US2] Unit test: Report action displays category breakdown section in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T022 [P] [US2] Unit test: Init archives incomplete previous session in `.specify/scripts/powershell/agent-metrics.tests.ps1`
 
 ### Implementation for User Story 2
 
-- [ ] T023 [US2] Enhance Record action with -Category parameter and category aggregates in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T024 [US2] Implement per-category aggregate updates in Record action in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T025 [US2] Enhance Report action with CATEGORY BREAKDOWN section in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T026 [US2] Implement incomplete session archiving in Init action in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T027 [P] [US2] Add metrics integration to speckit.specify.md in `.claude/commands/speckit.specify.md`
-- [ ] T028 [P] [US2] Add metrics integration to speckit.clarify.md in `.claude/commands/speckit.clarify.md`
-- [ ] T029 [P] [US2] Add metrics integration to speckit.plan.md in `.claude/commands/speckit.plan.md`
-- [ ] T030 [P] [US2] Add metrics integration to speckit.tasks.md in `.claude/commands/speckit.tasks.md`
-- [ ] T031 [P] [US2] Add metrics integration to speckit.checklist.md in `.claude/commands/speckit.checklist.md`
-- [ ] T032 [P] [US2] Add metrics integration to speckit.analyze.md in `.claude/commands/speckit.analyze.md`
-- [ ] T033 [US2] Update speckit.implement.md with enhanced model capture in `.claude/commands/speckit.implement.md`
+- [X] T023 [US2] Enhance Record action with -Category parameter and category aggregates in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T024 [US2] Implement per-category aggregate updates in Record action in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T025 [US2] Enhance Report action with CATEGORY BREAKDOWN section in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T026 [US2] Implement incomplete session archiving in Init action in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T027 [P] [US2] Add metrics integration to speckit.specify.md in `.claude/commands/speckit.specify.md`
+- [X] T028 [P] [US2] Add metrics integration to speckit.clarify.md in `.claude/commands/speckit.clarify.md`
+- [X] T029 [P] [US2] Add metrics integration to speckit.plan.md in `.claude/commands/speckit.plan.md`
+- [X] T030 [P] [US2] Add metrics integration to speckit.tasks.md in `.claude/commands/speckit.tasks.md`
+- [X] T031 [P] [US2] Add metrics integration to speckit.checklist.md in `.claude/commands/speckit.checklist.md`
+- [X] T032 [P] [US2] Add metrics integration to speckit.analyze.md in `.claude/commands/speckit.analyze.md`
+- [X] T033 [US2] Update speckit.implement.md with enhanced model capture in `.claude/commands/speckit.implement.md`
 
 **Checkpoint**: US2 complete - all 7 Spec-Kit phases track metrics with phase/category breakdown
 

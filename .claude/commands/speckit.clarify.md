@@ -29,6 +29,26 @@ Execution steps:
    - If JSON parsing fails, abort and instruct user to re-run `/speckit.specify` or verify feature branch environment.
    - For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
+1a. **Initialize Agent Metrics Tracking** (if agents are invoked):
+
+   At the start of this phase, initialize metrics collection:
+   ```powershell
+   .\.specify\scripts\powershell\agent-metrics.ps1 -Action Init -PhaseName "clarify" -FeatureBranch "<current-branch>"
+   ```
+
+   When any agent completes during this phase, record its metrics:
+   ```powershell
+   .\.specify\scripts\powershell\agent-metrics.ps1 -Action Record `
+       -AgentName "<agent-name>" `
+       -Model "<model>" `
+       -TaskId "<task-id>" `
+       -Status "completed" `
+       -TokensUsed <tokens> `
+       -DurationMs <duration> `
+       -Category "planning" `
+       -Description "<description>"
+   ```
+
 2. Load the current spec file. Perform a structured ambiguity & coverage scan using this taxonomy. For each category, mark status: Clear / Partial / Missing. Produce an internal coverage map used for prioritization (do not output raw map unless no questions will be asked).
 
    Functional Scope & Behavior:
@@ -167,6 +187,13 @@ Execution steps:
    - Coverage summary table listing each taxonomy category with Status: Resolved (was Partial/Missing and addressed), Deferred (exceeds question quota or better suited for planning), Clear (already sufficient), Outstanding (still Partial/Missing but low impact).
    - If any Outstanding or Deferred remain, recommend whether to proceed to `/speckit.plan` or run `/speckit.clarify` again later post-plan.
    - Suggested next command.
+
+9. **Generate Agent Metrics Report** (if metrics were initialized):
+
+   Before completing this phase, generate the performance report:
+   ```powershell
+   .\.specify\scripts\powershell\agent-metrics.ps1 -Action Report
+   ```
 
 Behavior rules:
 

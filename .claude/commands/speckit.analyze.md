@@ -33,6 +33,26 @@ Run `.specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -In
 Abort with an error message if any required file is missing (instruct the user to run missing prerequisite command).
 For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
+### 1a. Initialize Agent Metrics Tracking (if agents are invoked)
+
+At the start of this phase, initialize metrics collection:
+```powershell
+.\.specify\scripts\powershell\agent-metrics.ps1 -Action Init -PhaseName "analyze" -FeatureBranch "<current-branch>"
+```
+
+When any agent completes during this phase, record its metrics:
+```powershell
+.\.specify\scripts\powershell\agent-metrics.ps1 -Action Record `
+    -AgentName "<agent-name>" `
+    -Model "<model>" `
+    -TaskId "<task-id>" `
+    -Status "completed" `
+    -TokensUsed <tokens> `
+    -DurationMs <duration> `
+    -Category "analysis" `
+    -Description "<description>"
+```
+
 ### 2. Load Artifacts (Progressive Disclosure)
 
 Load only the minimal necessary context from each artifact:
@@ -161,6 +181,13 @@ At end of report, output a concise Next Actions block:
 ### 8. Offer Remediation
 
 Ask the user: "Would you like me to suggest concrete remediation edits for the top N issues?" (Do NOT apply them automatically.)
+
+### 9. Generate Agent Metrics Report (if metrics were initialized)
+
+Before completing this phase, generate the performance report:
+```powershell
+.\.specify\scripts\powershell\agent-metrics.ps1 -Action Report
+```
 
 ## Operating Principles
 

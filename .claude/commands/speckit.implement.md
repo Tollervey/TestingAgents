@@ -135,7 +135,7 @@ This command leverages the following Claude Code 2.1.19 capabilities:
 
    **Metrics Tracking Protocol**:
    - Record EVERY agent invocation when it completes
-   - Track: agent name, task ID, status, tokens used, duration
+   - Track: agent name, **model**, task ID, status, tokens used, duration, **category**
    - Token count is reported in agent progress notifications (e.g., "Agent X progress: Y new tokens")
    - Duration is calculated from invocation start to completion
 
@@ -144,10 +144,12 @@ This command leverages the following Claude Code 2.1.19 capabilities:
    ```powershell
    .\.specify\scripts\powershell\agent-metrics.ps1 -Action Record `
        -AgentName "backend-developer" `
+       -Model "sonnet" `
        -TaskId "a620108" `
-       -Status "completed" `  # or "failed" or "timeout"
+       -Status "completed" `
        -TokensUsed 45000 `
        -DurationMs 120000 `
+       -Category "implementation" `
        -Description "Implement PaywallController"
    ```
 
@@ -155,6 +157,8 @@ This command leverages the following Claude Code 2.1.19 capabilities:
    - Token count: Parse from `"Agent X progress: Y new tokens"` messages
    - Status: From `<status>completed</status>` in task-notification
    - Duration: Track start time when launching agent, calculate on completion
+   - Model: From agent type mapping (solution-architect → opus, backend-developer/test-engineer/frontend-developer → sonnet, code-reviewer/security-auditor → haiku)
+   - Category: From task type (implementation/testing/review/planning/analysis)
 
 6. Parse tasks.md structure and extract:
    - **Task phases**: Setup, Tests, Core, Integration, Polish

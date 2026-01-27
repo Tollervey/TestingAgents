@@ -36,7 +36,27 @@ Given that feature description, do this:
      - "Create a dashboard for analytics" → "analytics-dashboard"
      - "Fix payment processing timeout bug" → "fix-payment-timeout"
 
-2. **Check for existing branches before creating new one**:
+2. **Initialize Agent Metrics Tracking** (if agents are invoked):
+
+   At the start of this phase, initialize metrics collection:
+   ```powershell
+   .\.specify\scripts\powershell\agent-metrics.ps1 -Action Init -PhaseName "specify" -FeatureBranch "<current-branch>"
+   ```
+
+   When any agent completes during this phase, record its metrics:
+   ```powershell
+   .\.specify\scripts\powershell\agent-metrics.ps1 -Action Record `
+       -AgentName "<agent-name>" `
+       -Model "<model>" `
+       -TaskId "<task-id>" `
+       -Status "completed" `
+       -TokensUsed <tokens> `
+       -DurationMs <duration> `
+       -Category "planning" `
+       -Description "<description>"
+   ```
+
+3. **Check for existing branches before creating new one**:
 
    a. First, fetch all remote branches to ensure we have the latest information:
 
@@ -68,9 +88,9 @@ Given that feature description, do this:
    - The JSON output will contain BRANCH_NAME and SPEC_FILE paths
    - For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot")
 
-3. Load `.specify/templates/spec-template.md` to understand required sections.
+4. Load `.specify/templates/spec-template.md` to understand required sections.
 
-4. Follow this execution flow:
+5. Follow this execution flow:
 
     1. Parse user description from Input
        If empty: ERROR "No feature description provided"
@@ -96,9 +116,9 @@ Given that feature description, do this:
     7. Identify Key Entities (if data involved)
     8. Return: SUCCESS (spec ready for planning)
 
-5. Write the specification to SPEC_FILE using the template structure, replacing placeholders with concrete details derived from the feature description (arguments) while preserving section order and headings.
+6. Write the specification to SPEC_FILE using the template structure, replacing placeholders with concrete details derived from the feature description (arguments) while preserving section order and headings.
 
-6. **Specification Quality Validation**: After writing the initial spec, validate it against quality criteria:
+7. **Specification Quality Validation**: After writing the initial spec, validate it against quality criteria:
 
    a. **Create Spec Quality Checklist**: Generate a checklist file at `FEATURE_DIR/checklists/requirements.md` using the checklist template structure with these validation items:
 
@@ -190,7 +210,14 @@ Given that feature description, do this:
 
    d. **Update Checklist**: After each validation iteration, update the checklist file with current pass/fail status
 
-7. Report completion with branch name, spec file path, checklist results, and readiness for the next phase (`/speckit.clarify` or `/speckit.plan`).
+8. **Generate Agent Metrics Report** (if metrics were initialized):
+
+   Before completing this phase, generate the performance report:
+   ```powershell
+   .\.specify\scripts\powershell\agent-metrics.ps1 -Action Report
+   ```
+
+9. Report completion with branch name, spec file path, checklist results, and readiness for the next phase (`/speckit.clarify` or `/speckit.plan`).
 
 **NOTE:** The script creates and checks out the new branch and initializes the spec file before writing.
 

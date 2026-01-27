@@ -23,6 +23,26 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 1. **Setup**: Run `.specify/scripts/powershell/check-prerequisites.ps1 -Json` from repo root and parse FEATURE_DIR and AVAILABLE_DOCS list. All paths must be absolute. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
+1a. **Initialize Agent Metrics Tracking** (if agents are invoked):
+
+   At the start of this phase, initialize metrics collection:
+   ```powershell
+   .\.specify\scripts\powershell\agent-metrics.ps1 -Action Init -PhaseName "tasks" -FeatureBranch "<current-branch>"
+   ```
+
+   When any agent completes during this phase, record its metrics:
+   ```powershell
+   .\.specify\scripts\powershell\agent-metrics.ps1 -Action Record `
+       -AgentName "<agent-name>" `
+       -Model "<model>" `
+       -TaskId "<task-id>" `
+       -Status "completed" `
+       -TokensUsed <tokens> `
+       -DurationMs <duration> `
+       -Category "planning" `
+       -Description "<description>"
+   ```
+
 2. **Load design documents**: Read from FEATURE_DIR:
    - **Required**: plan.md (tech stack, libraries, structure), spec.md (user stories with priorities)
    - **Optional**: data-model.md (entities), contracts/ (API endpoints), research.md (decisions), quickstart.md (test scenarios)
@@ -59,6 +79,13 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Independent test criteria for each story
    - Suggested MVP scope (typically just User Story 1)
    - Format validation: Confirm ALL tasks follow the checklist format (checkbox, ID, labels, file paths)
+
+6. **Generate Agent Metrics Report** (if metrics were initialized):
+
+   Before completing this phase, generate the performance report:
+   ```powershell
+   .\.specify\scripts\powershell\agent-metrics.ps1 -Action Report
+   ```
 
 Context for task generation: $ARGUMENTS
 
