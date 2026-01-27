@@ -169,33 +169,33 @@
 
 > **TDD REQUIRED: Write tests FIRST, verify they FAIL (RED), then implement until GREEN**
 
-- [ ] T048 [P] [US3] Unit tests for `Bolt12OfferService` in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Services/Bolt12OfferServiceTests.cs`
-- [ ] T049 [P] [US3] Unit tests for `Bolt12Controller` in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Api/Bolt12ControllerTests.cs`
-- [ ] T050 [P] [US3] Contract tests for `/offers` CRUD endpoints in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Api/Contract/Bolt12ContractTests.cs`
+- [x] T048 [P] [US3] Unit tests for `Bolt12OfferService` in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Services/Bolt12OfferServiceTests.cs`
+- [x] T049 [P] [US3] Unit tests for `Bolt12Controller` in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Api/Bolt12ControllerTests.cs`
+- [x] T050 [P] [US3] Contract tests for `/offers` CRUD endpoints in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Api/Contract/Bolt12ContractTests.cs`
 
 ### Implementation for User Story 3
 
 #### Backend Services
 
-- [ ] T051 [US3] Create `IBolt12OfferService` interface in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Bolt12/IBolt12OfferService.cs`
-- [ ] T052 [US3] Implement `Bolt12OfferService` in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Bolt12/Bolt12OfferService.cs`
+- [x] T051 [US3] Create `IBolt12OfferService` interface in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Bolt12/IBolt12OfferService.cs`
+- [x] T052 [US3] Implement `Bolt12OfferService` in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Bolt12/Bolt12OfferService.cs`
 
 #### Backend API (from management-api.yaml)
 
-- [ ] T053 [US3] Create `Bolt12Controller` with `listOffers`, `createOffer`, `getOffer`, `deactivateOffer`, `listOfferPayments` endpoints in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Management/Bolt12Controller.cs`
+- [x] T053 [US3] Create `Bolt12Controller` with `listOffers`, `createOffer`, `getOffer`, `deactivateOffer`, `listOfferPayments` endpoints in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Management/Bolt12Controller.cs`
 
 #### Backend DTOs
 
-- [ ] T054 [P] [US3] Create `Bolt12Offer`, `Bolt12OfferDetails`, `CreateOfferRequest` DTOs in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Management/Dto/Bolt12Dtos.cs`
+- [x] T054 [P] [US3] Create `Bolt12Offer`, `Bolt12OfferDetails`, `CreateOfferRequest` DTOs in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Management/Dto/Bolt12Dtos.cs`
 
 #### Public API (from public-api.yaml)
 
-- [ ] T055 [US3] Create `OffersController` with `getOfferInfo` endpoint in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Public/OffersController.cs`
-- [ ] T056 [P] [US3] Create `OfferInfo` DTO in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Public/Dto/OfferDtos.cs`
+- [x] T055 [US3] Create `OffersController` with `getOfferInfo` endpoint in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Public/OffersController.cs`
+- [x] T056 [P] [US3] Create `OfferInfo` DTO in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Public/Dto/OfferDtos.cs`
 
 #### DI Registration
 
-- [ ] T057 [US3] Register `IBolt12OfferService` in DI in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Extensions/LightningPaymentsExtensions.cs`
+- [x] T057 [US3] Register `IBolt12OfferService` in DI in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Extensions/LightningPaymentsExtensions.cs`
 
 **Checkpoint**: User Story 3 complete - Bolt12 offers are fully functional and testable independently
 

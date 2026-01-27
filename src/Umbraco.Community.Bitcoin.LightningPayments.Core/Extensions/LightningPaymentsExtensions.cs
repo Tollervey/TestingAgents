@@ -14,6 +14,7 @@ using Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Payment;
 using Umbraco.Community.Bitcoin.LightningPayments.Core.Services.RateLimiting;
 using Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Runtime;
 using Umbraco.Community.Bitcoin.LightningPayments.Core.Features.Dashboard;
+using Umbraco.Community.Bitcoin.LightningPayments.Core.Services.Bolt12;
 using System.Threading.RateLimiting;
 using Umbraco.Cms.Core.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
@@ -136,6 +137,9 @@ public static class LightningPaymentsExtensions
 
         // Dashboard services
         builder.Services.AddScoped<IDashboardStatsService, DashboardStatsService>();
+
+        // Bolt12 offer services
+        builder.Services.AddScoped<IBolt12OfferService, Bolt12OfferService>();
 
         builder.Services.AddHealthChecks().AddCheck<BreezSdkHealthCheck>("breez");
 
