@@ -127,9 +127,12 @@ function Test-SpecKitSource {
         [string]$DestinationPath
     )
 
+    Write-Verbose "Validating source path: $SourcePath"
+
     $errors = @()
 
     if (-not (Test-Path $SourcePath)) {
+        Write-Verbose "Validation result: Invalid - Source path does not exist"
         return [PSCustomObject]@{
             Valid   = $false
             Errors  = @("Source path does not exist: $SourcePath")
@@ -151,6 +154,7 @@ function Test-SpecKitSource {
         } else {
             Test-Path $fullPath -PathType Leaf
         }
+        Write-Verbose "Checking required item: $($item.Label) - $(if ($exists) { 'Found' } else { 'Missing' })"
         if (-not $exists) {
             $missing += $item.Label
         }
@@ -167,8 +171,11 @@ function Test-SpecKitSource {
         $errors += "Source and destination paths are the same: $resolvedSource"
     }
 
+    $isValid = ($errors.Count -eq 0)
+    Write-Verbose "Validation result: $(if ($isValid) { 'Valid' } else { 'Invalid' })"
+
     return [PSCustomObject]@{
-        Valid  = ($errors.Count -eq 0)
+        Valid  = $isValid
         Errors = $errors
     }
 }
@@ -187,6 +194,8 @@ function Build-FileManifest {
         [string[]]$IncludeDomains
     )
 
+    Write-Verbose "Building file manifest from: $SourcePath"
+
     $manifest = @()
 
     # Tier 1: Framework files (always included)
@@ -203,6 +212,7 @@ function Build-FileManifest {
     foreach ($pattern in $tier1Patterns) {
         $fullPattern = Join-Path $SourcePath $pattern.Glob
         $files = @(Get-ChildItem -Path $fullPattern -File -ErrorAction SilentlyContinue)
+        Write-Verbose "Scanning tier 1 pattern '$($pattern.Glob)': Found $($files.Count) files"
         foreach ($file in $files) {
             $relativePath = $file.FullName.Substring($SourcePath.Length).TrimStart([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
             $manifest += [PSCustomObject]@{
@@ -217,6 +227,7 @@ function Build-FileManifest {
 
     # Tier 2: Core agents (always included) and domain agents (conditional)
     $agentFiles = @(Get-ChildItem -Path (Join-Path $SourcePath '.claude/agents/*.md') -File -ErrorAction SilentlyContinue)
+    Write-Verbose "Processing agents: Found $($agentFiles.Count) agent files"
     foreach ($agentFile in $agentFiles) {
         $baseName = [System.IO.Path]::GetFileNameWithoutExtension($agentFile.Name)
         $relativePath = $agentFile.FullName.Substring($SourcePath.Length).TrimStart([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
@@ -250,6 +261,7 @@ function Build-FileManifest {
 
     # Tier 2: Core skills (always included) and domain skills (conditional)
     $skillFiles = @(Get-ChildItem -Path (Join-Path $SourcePath '.claude/skills/*.md') -File -ErrorAction SilentlyContinue)
+    Write-Verbose "Processing skills: Found $($skillFiles.Count) skill files"
     foreach ($skillFile in $skillFiles) {
         $baseName = [System.IO.Path]::GetFileNameWithoutExtension($skillFile.Name)
         $relativePath = $skillFile.FullName.Substring($SourcePath.Length).TrimStart([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
@@ -280,6 +292,7 @@ function Build-FileManifest {
         }
     }
 
+    Write-Verbose "Total manifest entries: $($manifest.Count)"
     return $manifest
 }
 
@@ -294,6 +307,8 @@ function Get-DomainModules {
         [string]$SourcePath
     )
 
+    Write-Verbose "Discovering domain modules in: $SourcePath"
+
     $domains = @{}
 
     # Scan agents
@@ -304,6 +319,7 @@ function Get-DomainModules {
             $domainName = ($baseName -split '-', 2)[0]
             $relativePath = $file.FullName.Substring($SourcePath.Length).TrimStart([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
             if (-not $domains.ContainsKey($domainName)) {
+                Write-Verbose "Found domain module: $domainName"
                 $domains[$domainName] = @{ AgentFiles = @(); SkillFiles = @() }
             }
             $domains[$domainName].AgentFiles += $relativePath
@@ -318,6 +334,7 @@ function Get-DomainModules {
             $domainName = ($baseName -split '-', 2)[0]
             $relativePath = $file.FullName.Substring($SourcePath.Length).TrimStart([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
             if (-not $domains.ContainsKey($domainName)) {
+                Write-Verbose "Found domain module: $domainName"
                 $domains[$domainName] = @{ AgentFiles = @(); SkillFiles = @() }
             }
             $domains[$domainName].SkillFiles += $relativePath
@@ -336,6 +353,7 @@ function Get-DomainModules {
         }
     }
 
+    Write-Verbose "Total domains found: $($result.Count)"
     return $result
 }
 
@@ -641,6 +659,11 @@ if ($MyInvocation.InvocationName -ne '.' -and $MyInvocation.InvocationName -ne '
         exit 1
     }
 
+    Write-Verbose "Parameter resolution: Source='$Source', Destination='$Destination', Preview=$Preview, Force=$Force"
+    if ($IncludeDomains) {
+        Write-Verbose "Domains to include: $($IncludeDomains -join ', ')"
+    }
+
     # Determine mode label
     $modeLabel = if ($Preview) { 'Preview' } elseif ($Force) { 'Force Copy' } else { 'Copy' }
 
@@ -651,6 +674,7 @@ if ($MyInvocation.InvocationName -ne '.' -and $MyInvocation.InvocationName -ne '
     Write-Host "Mode:        $modeLabel" -ForegroundColor White
 
     # Discover and display available domains
+    Write-Verbose "Discovering domain modules..."
     $domainModules = Get-DomainModules -SourcePath $Source
     if ($domainModules.Count -gt 0) {
         $checkmark = [char]0x2713
@@ -666,9 +690,22 @@ if ($MyInvocation.InvocationName -ne '.' -and $MyInvocation.InvocationName -ne '
         }
     }
 
-    # Build manifest and execute copy
+    # Build manifest
+    Write-Verbose "Building file manifest..."
     $manifest = Build-FileManifest -SourcePath $Source -IncludeDomains $IncludeDomains
-    $copyResult = Invoke-SpecKitCopy -Manifest $manifest -SourcePath $Source -DestinationPath $Destination -Preview:$Preview -Force:$Force -RequestedDomains $IncludeDomains
+
+    # Check if we should proceed with the operation (handles -WhatIf and -Confirm)
+    # If ShouldProcess returns false, automatically enable Preview mode
+    $effectivePreview = $Preview
+    if (-not $Preview -and -not $PSCmdlet.ShouldProcess($Destination, 'Copy Spec-Kit framework files')) {
+        Write-Verbose "ShouldProcess returned false; enabling Preview mode"
+        $effectivePreview = $true
+    }
+
+    # Execute copy
+    Write-Verbose "Starting copy operation (Preview=$effectivePreview)..."
+    $copyResult = Invoke-SpecKitCopy -Manifest $manifest -SourcePath $Source -DestinationPath $Destination -Preview:$effectivePreview -Force:$Force -RequestedDomains $IncludeDomains
+    Write-Verbose "Copy operation completed"
 
     # Display warnings (e.g., unknown domain names)
     if ($copyResult.Warnings.Count -gt 0) {
