@@ -120,14 +120,14 @@
 
 ### Validation for User Story 4 (Structural Verification)
 
-- [ ] T029 [US4] Write a validation script at `specs/001-generic-speckit-reuse/validate-workflow-preservation.ps1` that verifies: (1) all `/speckit.*` command files still exist and are valid, (2) CLAUDE.md still contains wave execution strategy, context management, checkpoint patterns, quality gate sections, (3) constitution still contains all articles and principles, (4) all core agent files exist. Run for RED baseline.
+- [x] T029 [US4] Write a validation script at `specs/001-generic-speckit-reuse/validate-workflow-preservation.ps1` that verifies: (1) all `/speckit.*` command files still exist and are valid, (2) CLAUDE.md still contains wave execution strategy, context management, checkpoint patterns, quality gate sections, (3) constitution still contains all articles and principles, (4) all core agent files exist. Run for RED baseline.
 
 ### Implementation for User Story 4
 
-- [ ] T030 [US4] Review `CLAUDE.md` post-genericization — Verify wave execution strategy, context management, checkpoint patterns, phase completion requirements, workflow rules, and agent coordination patterns are preserved and coherent after all content moves per plan.md D1. Fix any gaps.
-- [ ] T031 [P] [US4] Review `.claude/commands/speckit.implement.md` post-genericization — Verify TDD enforcement, quality gates, wave execution references, and agent recommendations are intact after genericization in T012. Fix any gaps.
-- [ ] T032 [P] [US4] Review `.specify/memory/constitution.md` post-genericization — Verify all articles, principles, and enforcement mechanisms are coherent after genericization in T004/T027. Fix any gaps.
-- [ ] T033 [US4] Run `specs/001-generic-speckit-reuse/validate-workflow-preservation.ps1` — Verify all workflow capabilities preserved (GREEN validation).
+- [x] T030 [US4] Review `CLAUDE.md` post-genericization — Verify wave execution strategy, context management, checkpoint patterns, phase completion requirements, workflow rules, and agent coordination patterns are preserved and coherent after all content moves per plan.md D1. Fix any gaps.
+- [x] T031 [P] [US4] Review `.claude/commands/speckit.implement.md` post-genericization — Verify TDD enforcement, quality gates, wave execution references, and agent recommendations are intact after genericization in T012. Fix any gaps.
+- [x] T032 [P] [US4] Review `.specify/memory/constitution.md` post-genericization — Verify all articles, principles, and enforcement mechanisms are coherent after genericization in T004/T027. Fix any gaps.
+- [x] T033 [US4] Run `specs/001-generic-speckit-reuse/validate-workflow-preservation.ps1` — Verify all workflow capabilities preserved (GREEN validation).
 
 **Checkpoint**: Full SpecKit workflow effectiveness confirmed after genericization.
 
