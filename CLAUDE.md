@@ -434,6 +434,30 @@ When testing classes with static state (Meters, ActivitySources, ConcurrentDicti
 - Don't assert exact counts - filter by your unique identifier
 - Static state persists across test runs in the same process
 
+#### Metrics Test Pollution (Static Meters)
+
+Static `Meter` instruments (Counters, Histograms, ObservableGauges) are shared across all tests in the same process. Using hardcoded tag values (e.g., `"testnet"`, `"mainnet"`) causes **cross-test pollution** — one test's recorded measurements appear in another test's assertions, causing flaky count/value checks depending on execution order.
+
+**Fix**: Use `Guid.NewGuid()` for tag values that identify test-specific data, then **filter assertions** by that unique tag.
+
+```csharp
+// BAD: Hardcoded tag — polluted by other tests using the same value
+var network = "testnet";
+Metrics.RecordInvoiceCreated(network, "success");
+var measurements = _counterMeasurements["breez.invoice.created"];
+measurements.Should().HaveCount(1); // FLAKY
+
+// GOOD: Unique tag + filtered assertion
+var network = $"invoice-test-{Guid.NewGuid():N}";
+Metrics.RecordInvoiceCreated(network, "success");
+var measurements = _counterMeasurements["breez.invoice.created"]
+    .Where(m => m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString() == network))
+    .ToList();
+measurements.Should().HaveCount(1); // STABLE
+```
+
+**Rule**: Any test that records metrics via static instruments MUST use unique tag values and filter assertions by those values.
+
 ### API Verification Before Writing Tests
 
 1. Verify the API exists in the target framework

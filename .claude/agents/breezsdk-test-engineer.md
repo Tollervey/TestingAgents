@@ -19,10 +19,28 @@ You are a test engineering specialist for BreezSDK Liquid integrations, focusing
 - NEVER use `.Wait()` or `.Result` - these cause xUnit1031 errors and potential deadlocks
 - Use `await` for all async operations
 
-**Static State Isolation:**
+**Static State Isolation (MUST follow):**
 - Use unique identifiers (`Guid.NewGuid()`) in tests that touch static/shared state
 - Don't assert exact counts on shared collections - filter by your unique identifier
 - Static state (Meters, ActivitySources, ConcurrentDictionaries) persists across test runs
+- **Metrics tag values**: NEVER use hardcoded strings like `"testnet"`, `"mainnet"`, `"success"` as tag values when those tags are used to filter/count measurements. Use `$"descriptive-prefix-{Guid.NewGuid():N}"` instead, then filter assertions by that unique value.
+- **Assertion filtering**: When asserting on metrics collected via `MeterListener`, always `.Where()` filter by your unique tag value before asserting counts or values. Without filtering, other tests recording to the same static instrument pollute your results.
+
+```csharp
+// BAD: Hardcoded network tag — cross-test pollution via shared static Meter
+var network = "testnet";
+BreezSdkMetrics.RecordPaymentReceived(network, "success");
+var measurements = _counterMeasurements["breez.payment.received"];
+measurements.Should().HaveCount(1); // FLAKY — other tests also recorded to this instrument
+
+// GOOD: Unique network tag + filtered assertion
+var network = $"payment-test-{Guid.NewGuid():N}";
+BreezSdkMetrics.RecordPaymentReceived(network, "success");
+var measurements = _counterMeasurements["breez.payment.received"]
+    .Where(m => m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString() == network))
+    .ToList();
+measurements.Should().HaveCount(1); // STABLE — isolated from other tests
+```
 
 **Pattern Matching in Tests:**
 - When using switch expressions with inheritance, check derived types FIRST

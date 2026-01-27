@@ -118,17 +118,19 @@ public class BreezSdkMetricsTests : IDisposable
     [Fact]
     public void InvoiceCreated_ShouldIncrementCounter_WithCorrectTags()
     {
-        // Arrange
-        var network = "testnet";
+        // Arrange - Use unique network name to avoid interference from other tests
+        var network = $"invoice-tags-test-{Guid.NewGuid():N}";
         var status = "success";
 
         // Act
         BreezSdkMetrics.RecordInvoiceCreated(network, status);
         _listener.RecordObservableInstruments();
 
-        // Assert
+        // Assert - Filter by our unique network
         _counterMeasurements.Should().ContainKey("breez.invoice.created");
-        var measurements = _counterMeasurements["breez.invoice.created"];
+        var measurements = _counterMeasurements["breez.invoice.created"]
+            .Where(m => m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString() == network))
+            .ToList();
         measurements.Should().HaveCount(1);
 
         var measurement = measurements.First();
@@ -144,8 +146,8 @@ public class BreezSdkMetricsTests : IDisposable
     [Fact]
     public void InvoiceCreated_ShouldAccumulateMultipleIncrements()
     {
-        // Arrange
-        var network = "mainnet";
+        // Arrange - Use unique network name to avoid interference from other tests
+        var network = $"accumulate-test-{Guid.NewGuid():N}";
         var status = "success";
 
         // Act
@@ -154,9 +156,11 @@ public class BreezSdkMetricsTests : IDisposable
         BreezSdkMetrics.RecordInvoiceCreated(network, status);
         _listener.RecordObservableInstruments();
 
-        // Assert
+        // Assert - Filter by our unique network
         _counterMeasurements.Should().ContainKey("breez.invoice.created");
-        var measurements = _counterMeasurements["breez.invoice.created"];
+        var measurements = _counterMeasurements["breez.invoice.created"]
+            .Where(m => m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString() == network))
+            .ToList();
         measurements.Should().HaveCount(3);
         measurements.Sum(m => m.Value).Should().Be(3);
     }
@@ -216,17 +220,19 @@ public class BreezSdkMetricsTests : IDisposable
     [Fact]
     public void PaymentReceived_ShouldIncrementCounter_WithCorrectTags()
     {
-        // Arrange
-        var network = "testnet";
+        // Arrange - Use unique network name to avoid interference from other tests
+        var network = $"payment-tags-test-{Guid.NewGuid():N}";
         var status = "success";
 
         // Act
         BreezSdkMetrics.RecordPaymentReceived(network, status);
         _listener.RecordObservableInstruments();
 
-        // Assert
+        // Assert - Filter by our unique network
         _counterMeasurements.Should().ContainKey("breez.payment.received");
-        var measurements = _counterMeasurements["breez.payment.received"];
+        var measurements = _counterMeasurements["breez.payment.received"]
+            .Where(m => m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString() == network))
+            .ToList();
         measurements.Should().HaveCount(1);
 
         var measurement = measurements.First();
@@ -242,8 +248,8 @@ public class BreezSdkMetricsTests : IDisposable
     [Fact]
     public void PaymentReceived_ShouldAccumulateMultipleIncrements()
     {
-        // Arrange
-        var network = "mainnet";
+        // Arrange - Use unique network name to avoid interference from other tests
+        var network = $"payment-accumulate-test-{Guid.NewGuid():N}";
         var status = "success";
 
         // Act
@@ -253,9 +259,11 @@ public class BreezSdkMetricsTests : IDisposable
         }
         _listener.RecordObservableInstruments();
 
-        // Assert
+        // Assert - Filter by our unique network
         _counterMeasurements.Should().ContainKey("breez.payment.received");
-        var measurements = _counterMeasurements["breez.payment.received"];
+        var measurements = _counterMeasurements["breez.payment.received"]
+            .Where(m => m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString() == network))
+            .ToList();
         measurements.Should().HaveCount(5);
         measurements.Sum(m => m.Value).Should().Be(5);
     }
@@ -267,17 +275,19 @@ public class BreezSdkMetricsTests : IDisposable
     [Fact]
     public void PaymentFailed_ShouldIncrementCounter_WithCorrectTags()
     {
-        // Arrange
-        var network = "testnet";
+        // Arrange - Use unique network name to avoid interference from other tests
+        var network = $"failed-tags-test-{Guid.NewGuid():N}";
         var errorType = "insufficient_funds";
 
         // Act
         BreezSdkMetrics.RecordPaymentFailed(network, errorType);
         _listener.RecordObservableInstruments();
 
-        // Assert
+        // Assert - Filter by our unique network
         _counterMeasurements.Should().ContainKey("breez.payment.failed");
-        var measurements = _counterMeasurements["breez.payment.failed"];
+        var measurements = _counterMeasurements["breez.payment.failed"]
+            .Where(m => m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString() == network))
+            .ToList();
         measurements.Should().HaveCount(1);
 
         var measurement = measurements.First();
@@ -322,18 +332,20 @@ public class BreezSdkMetricsTests : IDisposable
     [Fact]
     public void OperationDuration_ShouldRecordDuration_WithCorrectTags()
     {
-        // Arrange
+        // Arrange - Use unique network name to avoid interference from other tests
         var operationType = "prepare_receive";
-        var network = "testnet";
+        var network = $"duration-tags-test-{Guid.NewGuid():N}";
         var durationMs = 125.5;
 
         // Act
         BreezSdkMetrics.RecordOperationDuration(operationType, network, durationMs);
         _listener.RecordObservableInstruments();
 
-        // Assert
+        // Assert - Filter by our unique network
         _histogramMeasurements.Should().ContainKey("breez.operation.duration");
-        var measurements = _histogramMeasurements["breez.operation.duration"];
+        var measurements = _histogramMeasurements["breez.operation.duration"]
+            .Where(m => m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString() == network))
+            .ToList();
         measurements.Should().HaveCount(1);
 
         var measurement = measurements.First();
@@ -399,16 +411,18 @@ public class BreezSdkMetricsTests : IDisposable
     [Fact]
     public void OperationDuration_ShouldAcceptZeroDuration()
     {
-        // Arrange
+        // Arrange - Use unique network name to avoid interference from other tests
         var operationType = "get_info";
-        var network = "mainnet";
+        var network = $"zero-duration-test-{Guid.NewGuid():N}";
 
         // Act
         BreezSdkMetrics.RecordOperationDuration(operationType, network, 0.0);
         _listener.RecordObservableInstruments();
 
-        // Assert
-        var measurements = _histogramMeasurements["breez.operation.duration"];
+        // Assert - Filter by our unique network
+        var measurements = _histogramMeasurements["breez.operation.duration"]
+            .Where(m => m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString() == network))
+            .ToList();
         measurements.Should().HaveCount(1);
         measurements.First().Value.Should().Be(0.0);
     }
@@ -416,17 +430,19 @@ public class BreezSdkMetricsTests : IDisposable
     [Fact]
     public void OperationDuration_ShouldAcceptLargeDurations()
     {
-        // Arrange
+        // Arrange - Use unique network name to avoid interference from other tests
         var operationType = "sync";
-        var network = "mainnet";
+        var network = $"large-duration-test-{Guid.NewGuid():N}";
         var largeDuration = 30000.0; // 30 seconds
 
         // Act
         BreezSdkMetrics.RecordOperationDuration(operationType, network, largeDuration);
         _listener.RecordObservableInstruments();
 
-        // Assert
-        var measurements = _histogramMeasurements["breez.operation.duration"];
+        // Assert - Filter by our unique network
+        var measurements = _histogramMeasurements["breez.operation.duration"]
+            .Where(m => m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString() == network))
+            .ToList();
         measurements.Should().HaveCount(1);
         measurements.First().Value.Should().Be(largeDuration);
     }

@@ -20,10 +20,28 @@ You are a test engineering specialist focused on .NET testing best practices and
 - NEVER use `.Wait()` or `.Result` - these cause xUnit1031 errors and potential deadlocks
 - Use `await` for all async operations
 
-**Static State Isolation:**
+**Static State Isolation (MUST follow):**
 - Use unique identifiers (`Guid.NewGuid()`) in tests that touch static/shared state
 - Don't assert exact counts on shared collections - filter by your unique identifier
 - Static state (Meters, ActivitySources, ConcurrentDictionaries) persists across test runs
+- **Metrics tag values**: NEVER use hardcoded strings like `"testnet"`, `"mainnet"`, `"success"` as tag values when those tags are used to filter/count measurements. Use `$"descriptive-prefix-{Guid.NewGuid():N}"` instead, then filter assertions by that unique value.
+- **Assertion filtering**: When asserting on metrics collected via `MeterListener`, always `.Where()` filter by your unique tag value before asserting counts or values. Without filtering, other tests recording to the same instrument pollute your results.
+
+```csharp
+// BAD: Hardcoded tag value — other tests using "testnet" pollute this test's assertions
+var network = "testnet";
+BreezSdkMetrics.RecordInvoiceCreated(network, "success");
+var measurements = _counterMeasurements["breez.invoice.created"]; // Contains ALL tests' data!
+measurements.Should().HaveCount(1); // FLAKY — count depends on test execution order
+
+// GOOD: Unique tag value + filtered assertion — immune to test pollution
+var network = $"invoice-tags-test-{Guid.NewGuid():N}";
+BreezSdkMetrics.RecordInvoiceCreated(network, "success");
+var measurements = _counterMeasurements["breez.invoice.created"]
+    .Where(m => m.Tags.ToArray().Any(t => t.Key == "network" && t.Value?.ToString() == network))
+    .ToList();
+measurements.Should().HaveCount(1); // STABLE — only sees this test's data
+```
 
 **Pattern Matching in Tests:**
 - When using switch expressions with inheritance, check derived types FIRST

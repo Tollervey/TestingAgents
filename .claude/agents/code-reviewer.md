@@ -58,6 +58,7 @@ Review against all applicable constitution articles:
 - Memory leaks (undisposed resources)
 - Thread safety concerns
 - Performance anti-patterns
+- **Test pollution via static state**: Flag tests that use hardcoded tag values (e.g., `"testnet"`, `"mainnet"`) with static Meters/ActivitySources/ConcurrentDictionaries. These cause flaky tests due to cross-test pollution. Require `Guid.NewGuid()` unique identifiers and `.Where()` filtered assertions.
 
 ## Output Format
 
