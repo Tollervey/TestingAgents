@@ -1414,4 +1414,380 @@ Describe 'agent-metrics.ps1' {
             }
         }
     }
+
+    Context 'Export Action' {
+        function New-TestArchiveSession {
+            param(
+                [string]$Phase = "implement",
+                [string]$FeatureBranch = "test-branch",
+                [string]$SchemaVersion = "2.0.0",
+                [int]$TotalTokens = 100000,
+                [int]$TotalInvocations = 5,
+                [int]$TotalSuccesses = 5,
+                [int]$TotalFailures = 0,
+                [int]$TotalDurationMs = 300000,
+                [string]$StartTime = "",
+                [string]$EndTime = ""
+            )
+
+            if (-not $StartTime) { $StartTime = (Get-Date).ToString("o") }
+            if (-not $EndTime) { $EndTime = (Get-Date).AddMinutes(30).ToString("o") }
+
+            return @{
+                schemaVersion = $SchemaVersion
+                phase = $Phase
+                featureBranch = $FeatureBranch
+                startTime = $StartTime
+                endTime = $EndTime
+                completionStatus = "complete"
+                sessionId = [guid]::NewGuid().ToString()
+                invocations = @()
+                agents = @{}
+                models = [PSCustomObject]@{}
+                categories = [PSCustomObject]@{}
+                parallelGroups = [PSCustomObject]@{}
+                totals = @{
+                    totalInvocations = $TotalInvocations
+                    totalTokens = $TotalTokens
+                    totalSuccesses = $TotalSuccesses
+                    totalFailures = $TotalFailures
+                    totalTimeouts = 0
+                    totalDurationMs = $TotalDurationMs
+                    parallelInvocations = 0
+                    sequentialInvocations = $TotalInvocations
+                    avgTokensPerInvocation = [math]::Round($TotalTokens / [math]::Max($TotalInvocations, 1), 0)
+                    avgDurationMs = [math]::Round($TotalDurationMs / [math]::Max($TotalInvocations, 1), 0)
+                    overallSuccessRate = if ($TotalInvocations -gt 0) { [math]::Round(($TotalSuccesses / $TotalInvocations) * 100, 1) } else { 0 }
+                }
+            }
+        }
+
+        # T058 [US5]: Export generates valid CSV with correct columns
+        It 'generates valid CSV with correct columns' {
+            Setup-TestEnvironment
+            try {
+                # Create session with invocations
+                $session = New-TestSession -Phase "implement" -FeatureBranch "test-branch"
+                $inv1 = @{
+                    timestamp = (Get-Date).ToString("o")
+                    agent = "backend-developer"
+                    model = "sonnet"
+                    taskId = "t-001"
+                    status = "completed"
+                    tokens = 30000
+                    durationMs = 60000
+                    description = "Test task"
+                    phase = "implement"
+                    category = "implementation"
+                    invocationStartTime = (Get-Date).AddSeconds(-60).ToString("o")
+                    invocationEndTime = (Get-Date).ToString("o")
+                    isParallel = $false
+                    parallelGroupId = $null
+                    groupSize = 1
+                }
+                $session.invocations = @($inv1)
+                $session.models = [PSCustomObject]@{
+                    sonnet = @{ count = 1; totalTokens = 30000; costWeight = 3.0; weightedTokens = 90000; costPercent = 100.0 }
+                }
+                $session.totals.totalInvocations = 1
+                $session.totals.totalTokens = 30000
+                $session.totals.totalSuccesses = 1
+                $session | ConvertTo-Json -Depth 10 | Set-Content $script:TestMetricsFile -Encoding UTF8
+
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                $csvPath = Join-Path $script:TestMetricsDir "test-export.csv"
+
+                # Call Export-Metrics
+                Export-Metrics -Format "CSV" -OutputPath $csvPath
+
+                # Verify file exists
+                $csvPath | Should Exist
+
+                # Verify header
+                $content = Get-Content $csvPath
+                $content[0] | Should Match "Timestamp,Phase,FeatureBranch,Agent,Model,TaskId,Category,Status,Tokens,DurationMs,DurationSec,IsParallel,ParallelGroupId,Description"
+
+                # Verify at least 1 data row
+                $content.Count | Should BeGreaterThan 1
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+
+        # T059 [US5]: Export generates valid JSON format
+        It 'generates valid JSON format' {
+            Setup-TestEnvironment
+            try {
+                # Create session with invocations
+                $session = New-TestSession -Phase "implement" -FeatureBranch "test-branch"
+                $inv1 = @{
+                    timestamp = (Get-Date).ToString("o")
+                    agent = "backend-developer"
+                    model = "sonnet"
+                    taskId = "t-002"
+                    status = "completed"
+                    tokens = 25000
+                    durationMs = 50000
+                    description = "JSON export test"
+                    phase = "implement"
+                    category = "implementation"
+                    invocationStartTime = (Get-Date).AddSeconds(-50).ToString("o")
+                    invocationEndTime = (Get-Date).ToString("o")
+                    isParallel = $false
+                    parallelGroupId = $null
+                    groupSize = 1
+                }
+                $session.invocations = @($inv1)
+                $session.models = [PSCustomObject]@{
+                    sonnet = @{ count = 1; totalTokens = 25000; costWeight = 3.0; weightedTokens = 75000; costPercent = 100.0 }
+                }
+                $session.totals.totalInvocations = 1
+                $session.totals.totalTokens = 25000
+                $session.totals.totalSuccesses = 1
+                $session | ConvertTo-Json -Depth 10 | Set-Content $script:TestMetricsFile -Encoding UTF8
+
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                $jsonPath = Join-Path $script:TestMetricsDir "test-export.json"
+
+                # Call Export-Metrics
+                Export-Metrics -Format "JSON" -OutputPath $jsonPath
+
+                # Verify file exists
+                $jsonPath | Should Exist
+
+                # Verify valid JSON
+                $content = Get-Content $jsonPath -Raw | ConvertFrom-Json
+                $content | Should Not BeNullOrEmpty
+                $content -is [array] | Should Be $true
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+
+        # T060 [US5]: Export includes archives when -IncludeArchives specified
+        It 'includes archives when -IncludeArchives specified' {
+            Setup-TestEnvironment
+            try {
+                # Create active session with 1 invocation
+                $session = New-TestSession -Phase "implement" -FeatureBranch "test-branch"
+                $inv1 = @{
+                    timestamp = (Get-Date).ToString("o")
+                    agent = "backend-developer"
+                    model = "sonnet"
+                    taskId = "t-active-001"
+                    status = "completed"
+                    tokens = 30000
+                    durationMs = 60000
+                    description = "Active task"
+                    phase = "implement"
+                    category = "implementation"
+                    invocationStartTime = (Get-Date).AddSeconds(-60).ToString("o")
+                    invocationEndTime = (Get-Date).ToString("o")
+                    isParallel = $false
+                    parallelGroupId = $null
+                    groupSize = 1
+                }
+                $session.invocations = @($inv1)
+                $session.models = [PSCustomObject]@{
+                    sonnet = @{ count = 1; totalTokens = 30000; costWeight = 3.0; weightedTokens = 90000; costPercent = 100.0 }
+                }
+                $session.totals.totalInvocations = 1
+                $session.totals.totalTokens = 30000
+                $session.totals.totalSuccesses = 1
+                $session | ConvertTo-Json -Depth 10 | Set-Content $script:TestMetricsFile -Encoding UTF8
+
+                # Create archive directory with 1 archived session containing 2 invocations
+                $archiveDir = Join-Path $script:TestMetricsDir "archive"
+                New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null
+
+                $archivedSession = New-TestArchiveSession -Phase "plan" -FeatureBranch "test-branch" -TotalTokens 50000 -TotalInvocations 2
+                $inv2 = @{
+                    timestamp = (Get-Date).AddDays(-1).ToString("o")
+                    agent = "solution-architect"
+                    model = "opus"
+                    taskId = "t-archived-001"
+                    status = "completed"
+                    tokens = 25000
+                    durationMs = 120000
+                    description = "Archived task 1"
+                    phase = "plan"
+                    category = "architecture"
+                    invocationStartTime = (Get-Date).AddDays(-1).AddSeconds(-120).ToString("o")
+                    invocationEndTime = (Get-Date).AddDays(-1).ToString("o")
+                    isParallel = $false
+                    parallelGroupId = $null
+                    groupSize = 1
+                }
+                $inv3 = @{
+                    timestamp = (Get-Date).AddDays(-1).AddHours(1).ToString("o")
+                    agent = "database-architect"
+                    model = "sonnet"
+                    taskId = "t-archived-002"
+                    status = "completed"
+                    tokens = 25000
+                    durationMs = 90000
+                    description = "Archived task 2"
+                    phase = "plan"
+                    category = "database"
+                    invocationStartTime = (Get-Date).AddDays(-1).AddHours(1).AddSeconds(-90).ToString("o")
+                    invocationEndTime = (Get-Date).AddDays(-1).AddHours(1).ToString("o")
+                    isParallel = $false
+                    parallelGroupId = $null
+                    groupSize = 1
+                }
+                $archivedSession.invocations = @($inv2, $inv3)
+                $archivedSession | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260125-100000.json") -Encoding UTF8
+
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                $csvPath = Join-Path $script:TestMetricsDir "test-export-with-archives.csv"
+
+                # Call Export-Metrics with -IncludeArchives
+                Export-Metrics -Format "CSV" -OutputPath $csvPath -IncludeArchives
+
+                # Verify file has header + 3 data lines (1 from active + 2 from archive)
+                $content = Get-Content $csvPath
+                $content.Count | Should Be 4
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+    }
+
+    Context 'Cumulative Action' {
+        function New-TestArchiveSession {
+            param(
+                [string]$Phase = "implement",
+                [string]$FeatureBranch = "test-branch",
+                [string]$SchemaVersion = "2.0.0",
+                [int]$TotalTokens = 100000,
+                [int]$TotalInvocations = 5,
+                [int]$TotalSuccesses = 5,
+                [int]$TotalFailures = 0,
+                [int]$TotalDurationMs = 300000,
+                [string]$StartTime = "",
+                [string]$EndTime = ""
+            )
+
+            if (-not $StartTime) { $StartTime = (Get-Date).ToString("o") }
+            if (-not $EndTime) { $EndTime = (Get-Date).AddMinutes(30).ToString("o") }
+
+            return @{
+                schemaVersion = $SchemaVersion
+                phase = $Phase
+                featureBranch = $FeatureBranch
+                startTime = $StartTime
+                endTime = $EndTime
+                completionStatus = "complete"
+                sessionId = [guid]::NewGuid().ToString()
+                invocations = @()
+                agents = @{}
+                models = [PSCustomObject]@{}
+                categories = [PSCustomObject]@{}
+                parallelGroups = [PSCustomObject]@{}
+                totals = @{
+                    totalInvocations = $TotalInvocations
+                    totalTokens = $TotalTokens
+                    totalSuccesses = $TotalSuccesses
+                    totalFailures = $TotalFailures
+                    totalTimeouts = 0
+                    totalDurationMs = $TotalDurationMs
+                    parallelInvocations = 0
+                    sequentialInvocations = $TotalInvocations
+                    avgTokensPerInvocation = [math]::Round($TotalTokens / [math]::Max($TotalInvocations, 1), 0)
+                    avgDurationMs = [math]::Round($TotalDurationMs / [math]::Max($TotalInvocations, 1), 0)
+                    overallSuccessRate = if ($TotalInvocations -gt 0) { [math]::Round(($TotalSuccesses / $TotalInvocations) * 100, 1) } else { 0 }
+                }
+            }
+        }
+
+        # T061 [US5]: Cumulative aggregates all sessions for feature branch
+        It 'aggregates all sessions for feature branch' {
+            Setup-TestEnvironment
+            try {
+                # Create archive with 2 v2.0.0 sessions for "feature-x" branch
+                $archiveDir = Join-Path $script:TestMetricsDir "archive"
+                New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null
+
+                # Session 1: plan phase (50000 tokens, 3 invocations)
+                $session1 = New-TestArchiveSession -Phase "plan" -FeatureBranch "feature-x" `
+                    -TotalTokens 50000 -TotalInvocations 3 -TotalSuccesses 3 `
+                    -StartTime (Get-Date).AddDays(-3).ToString("o")
+                $session1 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260124-100000.json") -Encoding UTF8
+
+                # Session 2: implement phase (100000 tokens, 5 invocations)
+                $session2 = New-TestArchiveSession -Phase "implement" -FeatureBranch "feature-x" `
+                    -TotalTokens 100000 -TotalInvocations 5 -TotalSuccesses 5 `
+                    -StartTime (Get-Date).AddDays(-2).ToString("o")
+                $session2 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260125-100000.json") -Encoding UTF8
+
+                # Active session for same branch (30000 tokens, 2 invocations)
+                $activeSession = New-TestSession -Phase "implement" -FeatureBranch "feature-x"
+                $activeSession.totals.totalInvocations = 2
+                $activeSession.totals.totalTokens = 30000
+                $activeSession.totals.totalSuccesses = 2
+                $activeSession | ConvertTo-Json -Depth 10 | Set-Content $script:TestMetricsFile -Encoding UTF8
+
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                # Call Generate-CumulativeReport
+                $output = Generate-CumulativeReport -Branch "feature-x" 6>&1 | Out-String
+
+                # Verify output
+                $output | Should Match "CUMULATIVE FEATURE REPORT"
+                $output | Should Match "10"  # Total invocations (3+5+2)
+                $output | Should Match "180.*000|180000"  # Total tokens (50000+100000+30000)
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+
+        # T062 [US5]: Cumulative displays phase breakdown
+        It 'displays phase breakdown' {
+            Setup-TestEnvironment
+            try {
+                # Create archive with 2 sessions for "feature-x" branch (different phases)
+                $archiveDir = Join-Path $script:TestMetricsDir "archive"
+                New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null
+
+                # Session 1: plan phase
+                $session1 = New-TestArchiveSession -Phase "plan" -FeatureBranch "feature-x" `
+                    -TotalTokens 50000 -TotalInvocations 3 -TotalSuccesses 3 `
+                    -StartTime (Get-Date).AddDays(-3).ToString("o")
+                $session1 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260124-100000.json") -Encoding UTF8
+
+                # Session 2: implement phase
+                $session2 = New-TestArchiveSession -Phase "implement" -FeatureBranch "feature-x" `
+                    -TotalTokens 100000 -TotalInvocations 5 -TotalSuccesses 5 `
+                    -StartTime (Get-Date).AddDays(-2).ToString("o")
+                $session2 | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260125-100000.json") -Encoding UTF8
+
+                # Active session (implement phase)
+                $activeSession = New-TestSession -Phase "implement" -FeatureBranch "feature-x"
+                $activeSession.totals.totalInvocations = 2
+                $activeSession.totals.totalTokens = 30000
+                $activeSession.totals.totalSuccesses = 2
+                $activeSession | ConvertTo-Json -Depth 10 | Set-Content $script:TestMetricsFile -Encoding UTF8
+
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                # Call Generate-CumulativeReport
+                $output = Generate-CumulativeReport -Branch "feature-x" 6>&1 | Out-String
+
+                # Verify phase breakdown section
+                $output | Should Match "PHASE BREAKDOWN"
+                $output | Should Match "plan"
+                $output | Should Match "implement"
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+    }
 }

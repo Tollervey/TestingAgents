@@ -75,6 +75,7 @@ param(
     [string]$Session2 = "",
     [ValidateSet("CSV", "JSON", "")]
     [string]$Format = "",
+    [string]$OutputPath = "",
     [switch]$IncludeArchives
 )
 
@@ -1441,6 +1442,378 @@ function Compare-Sessions {
     Write-Host ""
 }
 
+function Export-Metrics {
+    <#
+    .SYNOPSIS
+        Exports metrics to CSV or JSON format for external analysis (FR-006)
+
+    .PARAMETER Format
+        Export format: "CSV" or "JSON"
+
+    .PARAMETER OutputPath
+        Output file path (auto-generated if not specified)
+
+    .PARAMETER IncludeArchives
+        Include all archived sessions
+
+    .PARAMETER Branch
+        Filter archives by feature branch
+    #>
+    param(
+        [string]$Format = "CSV",
+        [string]$OutputPath = "",
+        [switch]$IncludeArchives,
+        [string]$Branch = ""
+    )
+
+    $allInvocations = @()
+    $featureBranch = ""
+
+    # Load active session invocations
+    if (Test-Path $MetricsFile) {
+        $activeSession = Get-Content $MetricsFile -Raw | ConvertFrom-Json
+        $featureBranch = $activeSession.featureBranch
+        if ($activeSession.invocations -and $activeSession.invocations.Count -gt 0) {
+            foreach ($inv in $activeSession.invocations) {
+                # Attach featureBranch from session
+                if (-not $inv.PSObject.Properties["featureBranch"]) {
+                    $inv | Add-Member -NotePropertyName "featureBranch" -NotePropertyValue $activeSession.featureBranch -Force
+                }
+                $allInvocations += $inv
+            }
+        }
+    }
+
+    # Load archives if requested
+    if ($IncludeArchives) {
+        $archiveDir = Join-Path $MetricsDir "archive"
+        if (Test-Path $archiveDir) {
+            $archiveFiles = Get-ChildItem $archiveDir -Filter "agent-metrics-*.json" -ErrorAction SilentlyContinue
+            foreach ($file in $archiveFiles) {
+                try {
+                    $session = Get-Content $file.FullName -Raw | ConvertFrom-Json
+                    if (-not (Test-SchemaVersion -Session $session)) { continue }
+                    if ($Branch -and $session.featureBranch -ne $Branch) { continue }
+                    if ($session.invocations -and $session.invocations.Count -gt 0) {
+                        foreach ($inv in $session.invocations) {
+                            if (-not $inv.PSObject.Properties["featureBranch"]) {
+                                $inv | Add-Member -NotePropertyName "featureBranch" -NotePropertyValue $session.featureBranch -Force
+                            }
+                            $allInvocations += $inv
+                        }
+                    }
+                }
+                catch {
+                    # Skip invalid files
+                }
+            }
+        }
+    }
+
+    if ($allInvocations.Count -eq 0) {
+        Write-Host "No metrics found to export." -ForegroundColor Yellow
+        return
+    }
+
+    # Auto-generate output path if not specified
+    if (-not $OutputPath) {
+        $timestamp = (Get-Date).ToString("yyyyMMdd-HHmmss")
+        $suffix = if ($IncludeArchives) { "-all" } else { "" }
+        $ext = if ($Format -eq "JSON") { "json" } else { "csv" }
+        $OutputPath = Join-Path $MetricsDir "metrics-export$suffix-$timestamp.$ext"
+    }
+
+    if ($Format -eq "CSV") {
+        $lines = @()
+        $lines += "Timestamp,Phase,FeatureBranch,Agent,Model,TaskId,Category,Status,Tokens,DurationMs,DurationSec,IsParallel,ParallelGroupId,Description"
+
+        foreach ($inv in $allInvocations) {
+            $durationSec = [math]::Round($inv.durationMs / 1000, 1)
+            $isParallel = if ($inv.isParallel) { "TRUE" } else { "FALSE" }
+            $pgId = if ($inv.parallelGroupId) { $inv.parallelGroupId } else { "" }
+            $desc = if ($inv.description) { "`"$($inv.description -replace '"', '""')`"" } else { "" }
+            $fb = if ($inv.featureBranch) { $inv.featureBranch } else { $featureBranch }
+
+            $lines += "$($inv.timestamp),$($inv.phase),$fb,$($inv.agent),$($inv.model),$($inv.taskId),$($inv.category),$($inv.status),$($inv.tokens),$($inv.durationMs),$durationSec,$isParallel,$pgId,$desc"
+        }
+
+        $lines | Set-Content $OutputPath -Encoding UTF8
+    }
+    elseif ($Format -eq "JSON") {
+        $exportArray = @()
+        foreach ($inv in $allInvocations) {
+            $exportArray += @{
+                Timestamp = $inv.timestamp
+                Phase = $inv.phase
+                FeatureBranch = if ($inv.featureBranch) { $inv.featureBranch } else { $featureBranch }
+                Agent = $inv.agent
+                Model = $inv.model
+                TaskId = $inv.taskId
+                Category = $inv.category
+                Status = $inv.status
+                Tokens = $inv.tokens
+                DurationMs = $inv.durationMs
+                DurationSec = [math]::Round($inv.durationMs / 1000, 1)
+                IsParallel = [bool]$inv.isParallel
+                ParallelGroupId = $inv.parallelGroupId
+                Description = $inv.description
+            }
+        }
+
+        # Ensure array wrapper even for single item (ConvertTo-Json unwraps single-element arrays)
+        $jsonContent = $exportArray | ConvertTo-Json -Depth 5
+        if ($exportArray.Count -eq 1) {
+            $jsonContent = "[$jsonContent]"
+        }
+        $jsonContent | Set-Content $OutputPath -Encoding UTF8
+    }
+
+    Write-Host "Exported $($allInvocations.Count) invocations to: $(Split-Path $OutputPath -Leaf)" -ForegroundColor Green
+}
+
+function Generate-CumulativeReport {
+    <#
+    .SYNOPSIS
+        Generates cross-phase cumulative report for a feature branch (FR-017)
+
+    .PARAMETER Branch
+        Feature branch to aggregate
+    #>
+    param(
+        [string]$Branch = ""
+    )
+
+    # Detect branch from git if not provided
+    if (-not $Branch) {
+        try {
+            $Branch = git rev-parse --abbrev-ref HEAD 2>$null
+        }
+        catch {
+            Write-Host "Specify -FeatureBranch parameter" -ForegroundColor Red
+            return
+        }
+    }
+
+    if (-not $Branch) {
+        Write-Host "Specify -FeatureBranch parameter" -ForegroundColor Red
+        return
+    }
+
+    # Collect all matching sessions
+    $allSessions = @()
+
+    # Load archives
+    $archiveDir = Join-Path $MetricsDir "archive"
+    if (Test-Path $archiveDir) {
+        $archiveFiles = Get-ChildItem $archiveDir -Filter "agent-metrics-*.json" -ErrorAction SilentlyContinue
+        foreach ($file in $archiveFiles) {
+            try {
+                $session = Get-Content $file.FullName -Raw | ConvertFrom-Json
+                if ((Test-SchemaVersion -Session $session) -and $session.featureBranch -eq $Branch) {
+                    $allSessions += $session
+                }
+            }
+            catch { }
+        }
+    }
+
+    # Include active session if matching
+    if (Test-Path $MetricsFile) {
+        $activeSession = Get-Content $MetricsFile -Raw | ConvertFrom-Json
+        if ($activeSession.featureBranch -eq $Branch) {
+            $allSessions += $activeSession
+        }
+    }
+
+    if ($allSessions.Count -eq 0) {
+        Write-Host "No sessions found for branch: $Branch" -ForegroundColor Red
+        return
+    }
+
+    # Sort by start time
+    $allSessions = @($allSessions | Sort-Object { [DateTime]::Parse($_.startTime) })
+
+    # Calculate period
+    $periodStart = [DateTime]::Parse($allSessions[0].startTime)
+    $periodEnd = [DateTime]::Parse($allSessions[-1].startTime)
+
+    # Aggregate totals
+    $totalInvocations = 0
+    $totalTokens = 0
+    $totalSuccesses = 0
+    $totalFailures = 0
+    $totalDurationMs = 0
+
+    # Phase breakdown
+    $phaseData = @{}
+
+    foreach ($s in $allSessions) {
+        $totalInvocations += $s.totals.totalInvocations
+        $totalTokens += $s.totals.totalTokens
+        $totalSuccesses += $s.totals.totalSuccesses
+        $totalFailures += $s.totals.totalFailures
+        $totalDurationMs += $s.totals.totalDurationMs
+
+        $phase = $s.phase
+        if (-not $phaseData.ContainsKey($phase)) {
+            $phaseData[$phase] = @{
+                sessions = 0
+                invocations = 0
+                tokens = 0
+                durationMs = 0
+                successes = 0
+                failures = 0
+            }
+        }
+        $phaseData[$phase].sessions++
+        $phaseData[$phase].invocations += $s.totals.totalInvocations
+        $phaseData[$phase].tokens += $s.totals.totalTokens
+        $phaseData[$phase].durationMs += $s.totals.totalDurationMs
+        $phaseData[$phase].successes += $s.totals.totalSuccesses
+        $phaseData[$phase].failures += $s.totals.totalFailures
+    }
+
+    $overallSuccessRate = if ($totalInvocations -gt 0) {
+        [math]::Round(($totalSuccesses / $totalInvocations) * 100, 1)
+    } else { 0 }
+
+    # --- Display Report ---
+    Write-Host ""
+    Write-Host "═══════════════════════════════════════════════════════════════════════════════" -ForegroundColor Magenta
+    Write-Host "                    CUMULATIVE FEATURE REPORT                                  " -ForegroundColor Magenta
+    Write-Host "═══════════════════════════════════════════════════════════════════════════════" -ForegroundColor Magenta
+    Write-Host ""
+    Write-Host "Feature Branch: $Branch" -ForegroundColor White
+    Write-Host "Period: $($periodStart.ToString('yyyy-MM-dd')) to $($periodEnd.ToString('yyyy-MM-dd'))" -ForegroundColor White
+    Write-Host "Sessions: $($allSessions.Count)" -ForegroundColor White
+    Write-Host ""
+
+    # PHASE BREAKDOWN
+    Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "                              PHASE BREAKDOWN                                  " -ForegroundColor Yellow
+    Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host ""
+
+    $phaseHeader = "{0,-14} {1,10} {2,14} {3,14} {4,12} {5,10}" -f "Phase", "Sessions", "Invocations", "Tokens", "Duration", "Success"
+    Write-Host "  $phaseHeader" -ForegroundColor Cyan
+    Write-Host "  $("-" * 78)" -ForegroundColor DarkGray
+
+    foreach ($phase in ($phaseData.Keys | Sort-Object)) {
+        $pd = $phaseData[$phase]
+        $successRate = if ($pd.invocations -gt 0) {
+            [math]::Round(($pd.successes / $pd.invocations) * 100, 0)
+        } else { 0 }
+
+        $phaseRow = "{0,-14} {1,10} {2,14} {3,14:N0} {4,12} {5,10}" -f `
+            $phase, $pd.sessions, $pd.invocations, $pd.tokens, `
+            (Format-Duration $pd.durationMs), "$($successRate)%"
+        Write-Host "  $phaseRow" -ForegroundColor White
+    }
+
+    Write-Host "  $("-" * 78)" -ForegroundColor DarkGray
+    $totalRow = "{0,-14} {1,10} {2,14} {3,14:N0} {4,12} {5,10}" -f `
+        "TOTAL", $allSessions.Count, $totalInvocations, $totalTokens, `
+        (Format-Duration $totalDurationMs), "$($overallSuccessRate)%"
+    Write-Host "  $totalRow" -ForegroundColor White
+    Write-Host ""
+
+    # CUMULATIVE MODEL DISTRIBUTION
+    $allModels = @{}
+    $settings = Get-MetricsSettings
+    foreach ($s in $allSessions) {
+        if ($s.models -and $s.models.PSObject.Properties.Count -gt 0) {
+            foreach ($mp in $s.models.PSObject.Properties) {
+                $mn = $mp.Name
+                if (-not $allModels.ContainsKey($mn)) {
+                    $costWeight = switch ($mn.ToLower()) {
+                        "opus" { $settings.costWeights.opus }
+                        "sonnet" { $settings.costWeights.sonnet }
+                        "haiku" { $settings.costWeights.haiku }
+                        default { 3.0 }
+                    }
+                    $allModels[$mn] = @{ count = 0; totalTokens = 0; costWeight = $costWeight }
+                }
+                $allModels[$mn].count += $mp.Value.count
+                $allModels[$mn].totalTokens += $mp.Value.totalTokens
+            }
+        }
+    }
+
+    if ($allModels.Count -gt 0) {
+        # Calculate weighted totals
+        $totalWeighted = 0
+        foreach ($m in $allModels.Values) {
+            $m.weightedTokens = $m.totalTokens * $m.costWeight
+            $totalWeighted += $m.weightedTokens
+        }
+        foreach ($m in $allModels.Values) {
+            $m.costPercent = if ($totalWeighted -gt 0) { [math]::Round(($m.weightedTokens / $totalWeighted) * 100, 1) } else { 0 }
+        }
+
+        Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host "                     CUMULATIVE MODEL DISTRIBUTION                             " -ForegroundColor Yellow
+        Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host ""
+
+        $mdlHeader = "{0,-12} {1,14} {2,14} {3,14} {4,10}" -f "Model", "Total Tokens", "Invocations", "Cost Weight", "Cost %"
+        Write-Host "  $mdlHeader" -ForegroundColor Cyan
+        Write-Host "  $("-" * 68)" -ForegroundColor DarkGray
+
+        foreach ($mn in ($allModels.Keys | Sort-Object { $allModels[$_].costPercent } -Descending)) {
+            $md = $allModels[$mn]
+            $mdlRow = "{0,-12} {1,14:N0} {2,14} {3,14} {4,10}" -f `
+                $mn, $md.totalTokens, $md.count, "$($md.costWeight)x", "$($md.costPercent)%"
+            Write-Host "  $mdlRow" -ForegroundColor White
+        }
+        Write-Host ""
+    }
+
+    # CUMULATIVE CATEGORY BREAKDOWN
+    $allCategories = @{}
+    foreach ($s in $allSessions) {
+        if ($s.categories -and $s.categories.PSObject.Properties.Count -gt 0) {
+            foreach ($cp in $s.categories.PSObject.Properties) {
+                $cn = $cp.Name
+                if (-not $allCategories.ContainsKey($cn)) {
+                    $allCategories[$cn] = @{ count = 0; totalTokens = 0 }
+                }
+                $allCategories[$cn].count += $cp.Value.count
+                $allCategories[$cn].totalTokens += $cp.Value.totalTokens
+            }
+        }
+    }
+
+    if ($allCategories.Count -gt 0) {
+        Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host "                     CUMULATIVE CATEGORY BREAKDOWN                             " -ForegroundColor Yellow
+        Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host ""
+
+        $catHeader = "{0,-16} {1,14} {2,14} {3,10}" -f "Category", "Invocations", "Tokens", "% of Total"
+        Write-Host "  $catHeader" -ForegroundColor Cyan
+        Write-Host "  $("-" * 58)" -ForegroundColor DarkGray
+
+        foreach ($cn in ($allCategories.Keys | Sort-Object { $allCategories[$_].totalTokens } -Descending)) {
+            $cd = $allCategories[$cn]
+            $pct = if ($totalTokens -gt 0) { [math]::Round(($cd.totalTokens / $totalTokens) * 100, 1) } else { 0 }
+            $catRow = "{0,-16} {1,14} {2,14:N0} {3,10}" -f $cn, $cd.count, $cd.totalTokens, "$($pct)%"
+            Write-Host "  $catRow" -ForegroundColor White
+        }
+        Write-Host ""
+    }
+
+    # FEATURE SUMMARY
+    Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "                         FEATURE SUMMARY                                       " -ForegroundColor Yellow
+    Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host ("  Total Development Time:       {0}" -f (Format-Duration $totalDurationMs))
+    Write-Host ("  Total Agent Invocations:      {0}" -f $totalInvocations)
+    Write-Host ("  Total Tokens Consumed:        {0:N0}" -f $totalTokens)
+    Write-Host ("  Overall Success Rate:         {0}%" -f $overallSuccessRate)
+    Write-Host ""
+}
+
 function Reset-Metrics {
     if (Test-Path $MetricsFile) {
         # Archive current metrics
@@ -1504,12 +1877,10 @@ if (-not $isDotSourced -and $Action) {
             Compare-Sessions -Sess1 $Session1 -Sess2 $Session2
         }
         "Cumulative" {
-            # Placeholder for Cumulative action (US5)
-            Write-Host "Cumulative action not yet implemented (US5)" -ForegroundColor Yellow
+            Generate-CumulativeReport -Branch $FeatureBranch
         }
         "Export" {
-            # Placeholder for Export action (US5)
-            Write-Host "Export action not yet implemented (US5)" -ForegroundColor Yellow
+            Export-Metrics -Format $Format -OutputPath $OutputPath -IncludeArchives:$IncludeArchives.IsPresent -Branch $FeatureBranch
         }
     }
 }

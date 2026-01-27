@@ -179,21 +179,21 @@
 
 > **TDD REQUIRED: Write tests FIRST, verify they FAIL (RED), then implement until GREEN**
 
-- [ ] T058 [P] [US5] Unit test: Export action generates valid CSV with correct columns in `.specify/scripts/powershell/agent-metrics.tests.ps1`
-- [ ] T059 [P] [US5] Unit test: Export action generates valid JSON format in `.specify/scripts/powershell/agent-metrics.tests.ps1`
-- [ ] T060 [P] [US5] Unit test: Export action includes archives when -IncludeArchives specified in `.specify/scripts/powershell/agent-metrics.tests.ps1`
-- [ ] T061 [P] [US5] Unit test: Cumulative action aggregates all sessions for feature branch in `.specify/scripts/powershell/agent-metrics.tests.ps1`
-- [ ] T062 [P] [US5] Unit test: Cumulative action displays phase breakdown in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T058 [P] [US5] Unit test: Export action generates valid CSV with correct columns in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T059 [P] [US5] Unit test: Export action generates valid JSON format in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T060 [P] [US5] Unit test: Export action includes archives when -IncludeArchives specified in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T061 [P] [US5] Unit test: Cumulative action aggregates all sessions for feature branch in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T062 [P] [US5] Unit test: Cumulative action displays phase breakdown in `.specify/scripts/powershell/agent-metrics.tests.ps1`
 
 ### Implementation for User Story 5
 
-- [ ] T063 [US5] Implement Export action with -Format parameter (CSV, JSON) in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T064 [US5] Implement CSV export with standardized columns per contract in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T065 [US5] Implement JSON export with formatted array structure in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T066 [US5] Implement -IncludeArchives and -FeatureBranch filtering for Export in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T067 [US5] Implement Cumulative action with -FeatureBranch parameter in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T068 [US5] Implement cross-phase aggregation logic for Cumulative in `.specify/scripts/powershell/agent-metrics.ps1`
-- [ ] T069 [US5] Implement Cumulative report formatting with phase breakdown in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T063 [US5] Implement Export action with -Format parameter (CSV, JSON) in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T064 [US5] Implement CSV export with standardized columns per contract in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T065 [US5] Implement JSON export with formatted array structure in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T066 [US5] Implement -IncludeArchives and -FeatureBranch filtering for Export in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T067 [US5] Implement Cumulative action with -FeatureBranch parameter in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T068 [US5] Implement cross-phase aggregation logic for Cumulative in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T069 [US5] Implement Cumulative report formatting with phase breakdown in `.specify/scripts/powershell/agent-metrics.ps1`
 
 **Checkpoint**: US5 complete - export and cumulative reporting functional
 
