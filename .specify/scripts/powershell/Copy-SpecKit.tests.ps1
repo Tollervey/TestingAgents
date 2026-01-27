@@ -1108,6 +1108,332 @@ Describe 'Copy-SpecKit' {
 
     Context 'US5: Conflict handling' {
         # T027: Skip without -Force, overwrite with -Force, custom files untouched
+
+        Context 'Without -Force (skip existing files)' {
+            BeforeAll {
+                $script:SourceRoot = New-MockSpecKitSource
+                $script:DestRoot = Join-Path $TestDrive 'us5-skip-dest'
+
+                # Build manifest and perform initial copy
+                $script:Manifest = Build-FileManifest -SourcePath $script:SourceRoot
+                $script:InitialResult = Invoke-SpecKitCopy -Manifest $script:Manifest -SourcePath $script:SourceRoot -DestinationPath $script:DestRoot
+
+                # Modify an existing destination file to detect if it gets overwritten
+                $script:TestFile = Join-Path $script:DestRoot 'CLAUDE.md'
+                $script:OriginalContent = Get-Content -Path $script:TestFile -Raw
+                $script:ModifiedContent = "# Modified Content - DO NOT OVERWRITE"
+                Set-Content -Path $script:TestFile -Value $script:ModifiedContent
+
+                # Modify a nested file as well
+                $script:TestNestedFile = Join-Path $script:DestRoot '.claude\settings.json'
+                $script:OriginalNestedContent = Get-Content -Path $script:TestNestedFile -Raw
+                $script:ModifiedNestedContent = '{ "modified": true }'
+                Set-Content -Path $script:TestNestedFile -Value $script:ModifiedNestedContent
+
+                # Perform second copy WITHOUT -Force
+                $script:SecondResult = Invoke-SpecKitCopy -Manifest $script:Manifest -SourcePath $script:SourceRoot -DestinationPath $script:DestRoot
+            }
+
+            It 'existing files are not overwritten when -Force is not specified' {
+                $content = (Get-Content -Path $script:TestFile -Raw).TrimEnd()
+                $content | Should -Be $script:ModifiedContent -Because 'Existing files should be skipped without -Force'
+            }
+
+            It 'nested existing files are not overwritten when -Force is not specified' {
+                $content = (Get-Content -Path $script:TestNestedFile -Raw).TrimEnd()
+                $content | Should -Be $script:ModifiedNestedContent -Because 'Existing nested files should be skipped without -Force'
+            }
+
+            It 'returns FilesSkipped count reflecting number of existing files' {
+                $script:SecondResult.FilesSkipped | Should -BeGreaterThan 0 -Because 'Some files already existed and should be counted as skipped'
+            }
+
+            It 'returns FilesSkipped count matching the number of existing manifest files' {
+                # All files from initial copy should be skipped on second copy
+                $expectedSkipped = $script:InitialResult.FilesCopied
+                $script:SecondResult.FilesSkipped | Should -Be $expectedSkipped -Because 'All files from first copy should be skipped on second copy'
+            }
+
+            It 'returns ExitCode 2 when files are skipped indicating partial success' {
+                $script:SecondResult.ExitCode | Should -Be 2 -Because 'ExitCode 2 indicates partial success (some files skipped)'
+            }
+
+            It 'returns Success=$true even when files are skipped' {
+                $script:SecondResult.Success | Should -BeTrue -Because 'Skipping is not a failure condition'
+            }
+
+            It 'returns FilesCopied=0 when all files already exist' {
+                $script:SecondResult.FilesCopied | Should -Be 0 -Because 'No new files should be copied when all exist'
+            }
+
+            It 'returns FilesOverwritten=0 when -Force is not used' {
+                $script:SecondResult.FilesOverwritten | Should -Be 0 -Because 'No files should be overwritten without -Force'
+            }
+
+            It 'new files are still copied even when some files are skipped' {
+                # Create a fresh source with an additional file
+                $newSource = Join-Path $TestDrive 'us5-source-with-new'
+                New-MockSpecKitSource -Root $newSource
+
+                # Add a new file to the source
+                $newFile = Join-Path $newSource '.claude\NEW-FILE.md'
+                Set-Content -Path $newFile -Value '# New file not at destination'
+
+                # Build new manifest that includes the new file (simulate by using Build-FileManifest)
+                # We'll manually add it to manifest
+                $newManifest = Build-FileManifest -SourcePath $newSource
+                $newFileEntry = [PSCustomObject]@{
+                    RelativePath = '.claude\NEW-FILE.md'
+                    Tier = 'Framework'
+                    Included = $true
+                    Domain = $null
+                    Reason = 'New file test'
+                }
+                $combinedManifest = @($newManifest) + @($newFileEntry)
+
+                # Copy with the new file
+                $resultWithNew = Invoke-SpecKitCopy -Manifest $combinedManifest -SourcePath $newSource -DestinationPath $script:DestRoot
+
+                # The new file should be copied
+                $newFileDest = Join-Path $script:DestRoot '.claude\NEW-FILE.md'
+                $newFileDest | Should -Exist -Because 'New files should still be copied even when others are skipped'
+
+                # Should have FilesCopied > 0
+                $resultWithNew.FilesCopied | Should -BeGreaterThan 0 -Because 'New files were copied'
+            }
+        }
+
+        Context 'With -Force (overwrite existing files)' {
+            BeforeAll {
+                $script:SourceRoot = New-MockSpecKitSource
+                $script:DestRoot = Join-Path $TestDrive 'us5-force-dest'
+
+                # Build manifest and perform initial copy
+                $script:Manifest = Build-FileManifest -SourcePath $script:SourceRoot
+                $script:InitialResult = Invoke-SpecKitCopy -Manifest $script:Manifest -SourcePath $script:SourceRoot -DestinationPath $script:DestRoot
+
+                # Modify existing destination files
+                $script:TestFile = Join-Path $script:DestRoot 'CLAUDE.md'
+                $script:OriginalContent = Get-Content -Path $script:TestFile -Raw
+                Set-Content -Path $script:TestFile -Value "# Modified - should be overwritten"
+
+                $script:TestNestedFile = Join-Path $script:DestRoot '.claude\hooks.json'
+                $script:OriginalNestedContent = Get-Content -Path $script:TestNestedFile -Raw
+                Set-Content -Path $script:TestNestedFile -Value '{ "modified": "yes" }'
+
+                # Perform second copy WITH -Force
+                $script:ForceResult = Invoke-SpecKitCopy -Manifest $script:Manifest -SourcePath $script:SourceRoot -DestinationPath $script:DestRoot -Force
+            }
+
+            It 'existing files are overwritten when -Force is specified' {
+                $content = Get-Content -Path $script:TestFile -Raw
+                $content | Should -Be $script:OriginalContent -Because 'Files should be overwritten with -Force'
+            }
+
+            It 'nested existing files are overwritten when -Force is specified' {
+                $content = Get-Content -Path $script:TestNestedFile -Raw
+                $content | Should -Be $script:OriginalNestedContent -Because 'Nested files should be overwritten with -Force'
+            }
+
+            It 'returns FilesOverwritten count reflecting number of overwritten files' {
+                $script:ForceResult.FilesOverwritten | Should -BeGreaterThan 0 -Because 'Some files were overwritten with -Force'
+            }
+
+            It 'returns FilesOverwritten count matching all existing manifest files' {
+                $expectedOverwritten = $script:InitialResult.FilesCopied
+                $script:ForceResult.FilesOverwritten | Should -Be $expectedOverwritten -Because 'All existing files should be overwritten with -Force'
+            }
+
+            It 'returns FilesSkipped=0 when -Force is used' {
+                $script:ForceResult.FilesSkipped | Should -Be 0 -Because 'No files should be skipped when using -Force'
+            }
+
+            It 'returns ExitCode 0 when all files are successfully copied/overwritten' {
+                $script:ForceResult.ExitCode | Should -Be 0 -Because 'Full success with -Force should return ExitCode 0'
+            }
+
+            It 'returns Success=$true when all files are overwritten successfully' {
+                $script:ForceResult.Success | Should -BeTrue -Because 'Successful overwrite should set Success=true'
+            }
+
+            It 'returns FilesCopied=0 when overwriting existing files (not counting as new copies)' {
+                $script:ForceResult.FilesCopied | Should -Be 0 -Because 'Overwrites should be counted separately from new copies'
+            }
+
+            It 'overwrites preserve correct file content from source' {
+                # Verify multiple files have source content
+                $claudeMd = Get-Content -Path (Join-Path $script:DestRoot 'CLAUDE.md') -Raw
+                $sourceClaude = Get-Content -Path (Join-Path $script:SourceRoot 'CLAUDE.md') -Raw
+                $claudeMd | Should -Be $sourceClaude -Because 'Overwritten files should match source content'
+
+                $hooks = Get-Content -Path (Join-Path $script:DestRoot '.claude\hooks.json') -Raw
+                $sourceHooks = Get-Content -Path (Join-Path $script:SourceRoot '.claude\hooks.json') -Raw
+                $hooks | Should -Be $sourceHooks -Because 'Overwritten nested files should match source content'
+            }
+        }
+
+        Context 'Custom files preservation' {
+            BeforeAll {
+                $script:SourceRoot = New-MockSpecKitSource
+                $script:DestRoot = Join-Path $TestDrive 'us5-custom-dest'
+
+                # Build manifest and perform initial copy
+                $script:Manifest = Build-FileManifest -SourcePath $script:SourceRoot
+                Invoke-SpecKitCopy -Manifest $script:Manifest -SourcePath $script:SourceRoot -DestinationPath $script:DestRoot
+
+                # Create custom files at destination (not in manifest)
+                $script:CustomFile1 = Join-Path $script:DestRoot 'CUSTOM-README.md'
+                $script:CustomContent1 = "# Custom user file"
+                Set-Content -Path $script:CustomFile1 -Value $script:CustomContent1
+
+                $script:CustomFile2 = Join-Path $script:DestRoot '.claude\custom-config.json'
+                $script:CustomContent2 = '{ "custom": "settings" }'
+                Set-Content -Path $script:CustomFile2 -Value $script:CustomContent2
+
+                $script:CustomFile3 = Join-Path $script:DestRoot 'specs\my-feature.md'
+                $script:CustomContent3 = '# My custom spec'
+                Set-Content -Path $script:CustomFile3 -Value $script:CustomContent3
+
+                # Perform copy WITHOUT -Force
+                $script:NoForceResult = Invoke-SpecKitCopy -Manifest $script:Manifest -SourcePath $script:SourceRoot -DestinationPath $script:DestRoot
+            }
+
+            It 'custom files at destination root are not deleted without -Force' {
+                $script:CustomFile1 | Should -Exist -Because 'Custom files not in manifest should never be deleted'
+                $content = (Get-Content -Path $script:CustomFile1 -Raw).TrimEnd()
+                $content | Should -Be $script:CustomContent1
+            }
+
+            It 'custom files in .claude directory are not deleted without -Force' {
+                $script:CustomFile2 | Should -Exist -Because 'Custom files in framework directories should be preserved'
+                $content = (Get-Content -Path $script:CustomFile2 -Raw).TrimEnd()
+                $content | Should -Be $script:CustomContent2
+            }
+
+            It 'custom files in placeholder directories are not deleted without -Force' {
+                $script:CustomFile3 | Should -Exist -Because 'Custom files in placeholder directories should be preserved'
+                $content = (Get-Content -Path $script:CustomFile3 -Raw).TrimEnd()
+                $content | Should -Be $script:CustomContent3
+            }
+
+            It 'custom files at destination root are not deleted with -Force' {
+                # Perform copy WITH -Force
+                $forceResult = Invoke-SpecKitCopy -Manifest $script:Manifest -SourcePath $script:SourceRoot -DestinationPath $script:DestRoot -Force
+
+                $script:CustomFile1 | Should -Exist -Because 'Custom files should never be deleted even with -Force'
+                $content = (Get-Content -Path $script:CustomFile1 -Raw).TrimEnd()
+                $content | Should -Be $script:CustomContent1
+            }
+
+            It 'custom files in .claude directory are not deleted with -Force' {
+                # Already called with -Force in previous test
+                $script:CustomFile2 | Should -Exist -Because 'Custom files should be preserved with -Force'
+                $content = (Get-Content -Path $script:CustomFile2 -Raw).TrimEnd()
+                $content | Should -Be $script:CustomContent2
+            }
+
+            It 'custom files in placeholder directories are not deleted with -Force' {
+                $script:CustomFile3 | Should -Exist -Because 'Custom files should be preserved with -Force'
+                $content = (Get-Content -Path $script:CustomFile3 -Raw).TrimEnd()
+                $content | Should -Be $script:CustomContent3
+            }
+
+            It 'only manifest files are affected by copy operations' {
+                # Count files before and after
+                $beforeCount = @(Get-ChildItem -Path $script:DestRoot -Recurse -File).Count
+
+                # Copy again with -Force
+                Invoke-SpecKitCopy -Manifest $script:Manifest -SourcePath $script:SourceRoot -DestinationPath $script:DestRoot -Force
+
+                $afterCount = @(Get-ChildItem -Path $script:DestRoot -Recurse -File).Count
+
+                $afterCount | Should -Be $beforeCount -Because 'Copy should not delete any files'
+            }
+        }
+
+        Context 'Mixed scenarios' {
+            BeforeAll {
+                $script:SourceRoot = New-MockSpecKitSource
+                $script:DestRoot = Join-Path $TestDrive 'us5-mixed-dest'
+
+                # Create a partially populated destination (some files exist, some don't)
+                New-Item -ItemType Directory -Path (Join-Path $script:DestRoot '.claude') -Force | Out-Null
+                $existingFile = Join-Path $script:DestRoot 'CLAUDE.md'
+                Set-Content -Path $existingFile -Value '# Existing modified'
+
+                # Build manifest
+                $script:Manifest = Build-FileManifest -SourcePath $script:SourceRoot
+
+                # Copy without -Force
+                $script:MixedResult = Invoke-SpecKitCopy -Manifest $script:Manifest -SourcePath $script:SourceRoot -DestinationPath $script:DestRoot
+            }
+
+            It 'copies new files and skips existing files in same operation' {
+                # CLAUDE.md should be skipped
+                $claudeContent = (Get-Content -Path (Join-Path $script:DestRoot 'CLAUDE.md') -Raw).TrimEnd()
+                $claudeContent | Should -Be '# Existing modified' -Because 'Existing file should be skipped'
+
+                # But other files should be copied
+                $newFile = Join-Path $script:DestRoot '.claude\settings.json'
+                $newFile | Should -Exist -Because 'New files should be copied even when some are skipped'
+            }
+
+            It 'returns both FilesCopied and FilesSkipped counts in mixed scenario' {
+                $script:MixedResult.FilesCopied | Should -BeGreaterThan 0 -Because 'Some new files were copied'
+                $script:MixedResult.FilesSkipped | Should -BeGreaterThan 0 -Because 'Some existing files were skipped'
+            }
+
+            It 'returns ExitCode 2 for partial success in mixed scenario' {
+                $script:MixedResult.ExitCode | Should -Be 2 -Because 'Mixed copy/skip should return partial success code'
+            }
+
+            It 'sum of FilesCopied and FilesSkipped equals total manifest count' {
+                $totalIncluded = @($script:Manifest | Where-Object { $_.Included -eq $true }).Count
+                $total = $script:MixedResult.FilesCopied + $script:MixedResult.FilesSkipped
+                $total | Should -Be $totalIncluded -Because 'All manifest files should be either copied or skipped'
+            }
+        }
+
+        Context 'Preview mode with conflicts' {
+            BeforeAll {
+                $script:SourceRoot = New-MockSpecKitSource
+                $script:DestRoot = Join-Path $TestDrive 'us5-preview-conflict'
+
+                # Create destination with existing files
+                $script:Manifest = Build-FileManifest -SourcePath $script:SourceRoot
+                Invoke-SpecKitCopy -Manifest $script:Manifest -SourcePath $script:SourceRoot -DestinationPath $script:DestRoot
+
+                # Modify a file
+                $testFile = Join-Path $script:DestRoot 'CLAUDE.md'
+                Set-Content -Path $testFile -Value "# Modified"
+                $script:ModifiedContent = (Get-Content -Path $testFile -Raw).TrimEnd()
+
+                # Preview without -Force
+                $script:PreviewNoForce = Invoke-SpecKitCopy -Manifest $script:Manifest -SourcePath $script:SourceRoot -DestinationPath $script:DestRoot -Preview
+
+                # Preview with -Force
+                $script:PreviewWithForce = Invoke-SpecKitCopy -Manifest $script:Manifest -SourcePath $script:SourceRoot -DestinationPath $script:DestRoot -Preview -Force
+            }
+
+            It 'preview mode does not modify existing files regardless of -Force' {
+                $content = (Get-Content -Path (Join-Path $script:DestRoot 'CLAUDE.md') -Raw).TrimEnd()
+                $content | Should -Be $script:ModifiedContent -Because 'Preview should never modify files'
+            }
+
+            It 'preview mode returns FilesCopied=0 and FilesSkipped=0' {
+                $script:PreviewNoForce.FilesCopied | Should -Be 0
+                $script:PreviewNoForce.FilesSkipped | Should -Be 0
+            }
+
+            It 'preview mode returns FilesOverwritten=0' {
+                $script:PreviewWithForce.FilesOverwritten | Should -Be 0
+            }
+
+            It 'preview mode with existing files returns ExitCode=0' {
+                $script:PreviewNoForce.ExitCode | Should -Be 0
+                $script:PreviewWithForce.ExitCode | Should -Be 0
+            }
+        }
     }
 
     #endregion

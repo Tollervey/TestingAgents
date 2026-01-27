@@ -522,14 +522,27 @@ function Invoke-SpecKitCopy {
                 }
             }
 
-            # Copy file
-            try {
-                Copy-Item -Path $srcFile -Destination $destFile -Force -ErrorAction Stop
-                $result.FilesCopied++
-                Write-Verbose "Copied: $($entry.RelativePath)"
-            } catch {
-                $result.Errors += "Failed to copy $($entry.RelativePath): $($_.Exception.Message)"
-                $result.Success = $false
+            # Check for conflict (existing file at destination)
+            $conflict = Test-Path $destFile
+            if ($conflict -and -not $Force) {
+                # Skip existing file without -Force
+                $result.FilesSkipped++
+                Write-Verbose "Skipped (exists): $($entry.RelativePath)"
+            } else {
+                # Copy file (new or overwrite with -Force)
+                try {
+                    Copy-Item -Path $srcFile -Destination $destFile -Force -ErrorAction Stop
+                    if ($conflict) {
+                        $result.FilesOverwritten++
+                        Write-Verbose "Overwritten: $($entry.RelativePath)"
+                    } else {
+                        $result.FilesCopied++
+                        Write-Verbose "Copied: $($entry.RelativePath)"
+                    }
+                } catch {
+                    $result.Errors += "Failed to copy $($entry.RelativePath): $($_.Exception.Message)"
+                    $result.Success = $false
+                }
             }
         }
 
@@ -548,6 +561,10 @@ function Invoke-SpecKitCopy {
             } else {
                 $result.PlaceholderDirectories++
             }
+        }
+        # Set exit code 2 for partial success (files skipped due to conflicts)
+        if ($result.FilesSkipped -gt 0) {
+            $result.ExitCode = 2
         }
     } else {
         Write-Verbose "Preview mode: skipping all filesystem operations"
@@ -755,6 +772,13 @@ if ($MyInvocation.InvocationName -ne '.' -and $MyInvocation.InvocationName -ne '
                     }
                 }
             }
+        }
+
+        # Display skipped files warning if any were skipped
+        if ($copyResult.FilesSkipped -gt 0) {
+            $warningSymbol = [char]0x26A0
+            Write-Host ''
+            Write-Host "  $warningSymbol WARNING: $($copyResult.FilesSkipped) files skipped (already exist). Use -Force to overwrite." -ForegroundColor Yellow
         }
 
         # Summary and next steps

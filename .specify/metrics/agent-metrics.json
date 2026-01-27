@@ -1,37 +1,131 @@
 ﻿{
-    "sessionId":  "668ff77d-ea39-4771-bd14-52cbcb83ecf7",
-    "startTime":  "2026-01-27T22:52:34.0937676+00:00",
+    "sessionId":  "d1ae510e-ee51-4602-9c1a-85f4af102293",
+    "startTime":  "2026-01-27T22:57:03.8382646+00:00",
     "parallelGroups":  {
 
                        },
     "agents":  {
-
+                   "test-engineer":  {
+                                         "count":  1,
+                                         "successes":  1,
+                                         "failures":  0,
+                                         "timeouts":  0,
+                                         "totalTokens":  25000,
+                                         "totalDurationMs":  60000,
+                                         "minDurationMs":  60000,
+                                         "maxDurationMs":  60000,
+                                         "avgTokens":  25000,
+                                         "avgDurationMs":  60000,
+                                         "models":  {
+                                                        "sonnet":  {
+                                                                       "count":  1,
+                                                                       "tokens":  25000
+                                                                   }
+                                                    }
+                                     },
+                   "backend-developer":  {
+                                             "count":  1,
+                                             "successes":  1,
+                                             "failures":  0,
+                                             "timeouts":  0,
+                                             "totalTokens":  15000,
+                                             "totalDurationMs":  30000,
+                                             "minDurationMs":  30000,
+                                             "maxDurationMs":  30000,
+                                             "avgTokens":  15000,
+                                             "avgDurationMs":  30000,
+                                             "models":  {
+                                                            "opus":  {
+                                                                         "count":  1,
+                                                                         "tokens":  15000
+                                                                     }
+                                                        }
+                                         }
                },
     "featureBranch":  "002-speckit-copy-script",
     "completionStatus":  "complete",
     "invocations":  [
-
+                        {
+                            "invocationEndTime":  "2026-01-27T23:03:36.2587590+00:00",
+                            "model":  "sonnet",
+                            "durationMs":  60000,
+                            "timestamp":  "2026-01-27T23:03:36.2587590+00:00",
+                            "category":  "testing",
+                            "groupSize":  1,
+                            "description":  "Write US5 conflict handling Pester tests",
+                            "status":  "completed",
+                            "taskId":  "T027",
+                            "tokens":  25000,
+                            "invocationStartTime":  "2026-01-27T23:02:36.2607590+00:00",
+                            "phase":  "002-speckit-copy-script-phase7",
+                            "agent":  "test-engineer",
+                            "parallelGroupId":  null,
+                            "isParallel":  false
+                        },
+                        {
+                            "invocationEndTime":  "2026-01-27T23:03:37.9125292+00:00",
+                            "model":  "opus",
+                            "durationMs":  30000,
+                            "timestamp":  "2026-01-27T23:03:37.9125292+00:00",
+                            "category":  "implementation",
+                            "groupSize":  1,
+                            "description":  "Implement conflict detection, skip-by-default, and Force overwrite",
+                            "status":  "completed",
+                            "taskId":  "T028-T030",
+                            "tokens":  15000,
+                            "invocationStartTime":  "2026-01-27T23:03:07.9125292+00:00",
+                            "phase":  "002-speckit-copy-script-phase7",
+                            "agent":  "backend-developer",
+                            "parallelGroupId":  null,
+                            "isParallel":  false
+                        }
                     ],
-    "endTime":  "2026-01-27T22:54:31.6484417+00:00",
+    "endTime":  "2026-01-27T23:03:43.4034224+00:00",
     "models":  {
-
+                   "sonnet":  {
+                                  "costPercent":  50.0,
+                                  "weightedTokens":  75000.0,
+                                  "count":  1,
+                                  "costWeight":  3.0,
+                                  "totalTokens":  25000
+                              },
+                   "opus":  {
+                                "costPercent":  50.0,
+                                "weightedTokens":  75000.0,
+                                "count":  1,
+                                "costWeight":  5.0,
+                                "totalTokens":  15000
+                            }
                },
-    "phase":  "phase6-post-copy-guidance",
+    "phase":  "002-speckit-copy-script-phase7",
     "categories":  {
-
+                       "testing":  {
+                                       "totalDurationMs":  60000,
+                                       "avgTokens":  25000,
+                                       "avgDurationMs":  60000,
+                                       "count":  1,
+                                       "totalTokens":  25000
+                                   },
+                       "implementation":  {
+                                              "totalDurationMs":  30000,
+                                              "avgTokens":  15000,
+                                              "avgDurationMs":  30000,
+                                              "count":  1,
+                                              "totalTokens":  15000
+                                          }
                    },
     "schemaVersion":  "2.0.0",
     "totals":  {
-                   "totalDurationMs":  0,
-                   "sequentialInvocations":  0,
+                   "totalDurationMs":  90000,
+                   "sequentialInvocations":  2,
                    "parallelInvocations":  0,
-                   "totalInvocations":  0,
+                   "totalInvocations":  2,
                    "totalTimeouts":  0,
-                   "avgDurationMs":  0,
+                   "avgDurationMs":  45000,
                    "totalFailures":  0,
-                   "avgTokensPerInvocation":  0,
-                   "totalSuccesses":  0,
-                   "totalTokens":  0,
-                   "overallSuccessRate":  0
+                   "avgTokensPerInvocation":  20000,
+                   "totalSuccesses":  2,
+                   "totalTokens":  40000,
+                   "overallSuccessRate":  100
                }
 }

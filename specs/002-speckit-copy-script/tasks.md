@@ -153,13 +153,13 @@
 
 > **TDD REQUIRED: Write tests FIRST, verify they FAIL (RED), then implement until GREEN**
 
-- [ ] T027 [P] [US5] Write Pester tests for conflict handling: without -Force existing files are skipped and count reported, with -Force existing files are overwritten and count reported, custom destination files not in manifest are never deleted in .specify/scripts/powershell/Copy-SpecKit.tests.ps1
+- [x] T027 [P] [US5] Write Pester tests for conflict handling: without -Force existing files are skipped and count reported, with -Force existing files are overwritten and count reported, custom destination files not in manifest are never deleted in .specify/scripts/powershell/Copy-SpecKit.tests.ps1
 
 ### Implementation for User Story 5
 
-- [ ] T028 [US5] Implement conflict detection in copy engine that checks Test-Path for each destination file before copying, tracks conflicts in CopyOperation objects in .specify/scripts/powershell/Copy-SpecKit.ps1
-- [ ] T029 [US5] Implement skip-by-default behavior: conflicting files are listed with warning symbol, skip count is reported, exit code 2 when files skipped (FR-011, FR-018) in .specify/scripts/powershell/Copy-SpecKit.ps1
-- [ ] T030 [US5] Implement -Force overwrite behavior: conflicting files are overwritten, overwrite count reported in summary (FR-012) in .specify/scripts/powershell/Copy-SpecKit.ps1
+- [x] T028 [US5] Implement conflict detection in copy engine that checks Test-Path for each destination file before copying, tracks conflicts in CopyOperation objects in .specify/scripts/powershell/Copy-SpecKit.ps1
+- [x] T029 [US5] Implement skip-by-default behavior: conflicting files are listed with warning symbol, skip count is reported, exit code 2 when files skipped (FR-011, FR-018) in .specify/scripts/powershell/Copy-SpecKit.ps1
+- [x] T030 [US5] Implement -Force overwrite behavior: conflicting files are overwritten, overwrite count reported in summary (FR-012) in .specify/scripts/powershell/Copy-SpecKit.ps1
 
 **Checkpoint**: User Story 5 complete. Force overwrite and skip-by-default behaviors work correctly.
 
