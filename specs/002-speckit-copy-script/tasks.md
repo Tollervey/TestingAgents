@@ -110,13 +110,13 @@
 
 > **TDD REQUIRED: Write tests FIRST, verify they FAIL (RED), then implement until GREEN**
 
-- [ ] T020 [P] [US3] Write Pester tests for domain inclusion: specifying -IncludeDomains umbraco copies umbraco-* agents, specifying multiple domains copies all, unknown domain produces warning and continues in .specify/scripts/powershell/Copy-SpecKit.tests.ps1
+- [x] T020 [P] [US3] Write Pester tests for domain inclusion: specifying -IncludeDomains umbraco copies umbraco-* agents, specifying multiple domains copies all, unknown domain produces warning and continues in .specify/scripts/powershell/Copy-SpecKit.tests.ps1
 
 ### Implementation for User Story 3
 
-- [ ] T021 [US3] Implement domain filtering in Build-FileManifest that marks domain FileEntry objects as Included when their domain matches -IncludeDomains parameter in .specify/scripts/powershell/Copy-SpecKit.ps1
-- [ ] T022 [US3] Implement unknown domain warning that lists available domains and continues with copy (FR-009, FR-010) in .specify/scripts/powershell/Copy-SpecKit.ps1
-- [ ] T023 [US3] Implement "Available domain modules" display section in rich output showing discovered domains with file counts in .specify/scripts/powershell/Copy-SpecKit.ps1
+- [x] T021 [US3] Implement domain filtering in Build-FileManifest that marks domain FileEntry objects as Included when their domain matches -IncludeDomains parameter in .specify/scripts/powershell/Copy-SpecKit.ps1
+- [x] T022 [US3] Implement unknown domain warning that lists available domains and continues with copy (FR-009, FR-010) in .specify/scripts/powershell/Copy-SpecKit.ps1
+- [x] T023 [US3] Implement "Available domain modules" display section in rich output showing discovered domains with file counts in .specify/scripts/powershell/Copy-SpecKit.ps1
 
 **Checkpoint**: User Story 3 complete. Domain modules can be selectively included.
 

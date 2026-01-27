@@ -710,6 +710,118 @@ Describe 'Copy-SpecKit' {
 
     Context 'US3: Domain inclusion' {
         # T020: -IncludeDomains copies domain agents, unknown domain warns
+
+        BeforeAll {
+            $script:SourceRoot = New-MockSpecKitSource
+        }
+
+        It 'copies umbraco domain agent files when -IncludeDomains umbraco is specified' {
+            $dest = Join-Path $TestDrive 'us3-umbraco-dest'
+            $manifest = Build-FileManifest -SourcePath $script:SourceRoot -IncludeDomains 'umbraco'
+            $result = Invoke-SpecKitCopy -Manifest $manifest -SourcePath $script:SourceRoot -DestinationPath $dest
+
+            # Umbraco agents should be copied
+            @('umbraco-architect.md', 'umbraco-backend-developer.md', 'umbraco-frontend-developer.md') | ForEach-Object {
+                $destPath = Join-Path $dest ".claude\agents\$_"
+                $destPath | Should -Exist -Because "Umbraco agent $_ should be copied when domain is included"
+            }
+        }
+
+        It 'does not copy breezsdk files when only umbraco is included' {
+            $dest = Join-Path $TestDrive 'us3-umbraco-only'
+            $manifest = Build-FileManifest -SourcePath $script:SourceRoot -IncludeDomains 'umbraco'
+            Invoke-SpecKitCopy -Manifest $manifest -SourcePath $script:SourceRoot -DestinationPath $dest
+
+            @('breezsdk-architect.md', 'breezsdk-developer.md') | ForEach-Object {
+                $destPath = Join-Path $dest ".claude\agents\$_"
+                $destPath | Should -Not -Exist -Because "Breezsdk agent $_ should be excluded when only umbraco is included"
+            }
+            $destPath = Join-Path $dest '.claude\skills\breezsdk-knowledge.md'
+            $destPath | Should -Not -Exist -Because 'Breezsdk skill should be excluded'
+        }
+
+        It 'copies all domain files when multiple domains are included' {
+            $dest = Join-Path $TestDrive 'us3-multi-domain'
+            $manifest = Build-FileManifest -SourcePath $script:SourceRoot -IncludeDomains @('umbraco', 'breezsdk')
+            $result = Invoke-SpecKitCopy -Manifest $manifest -SourcePath $script:SourceRoot -DestinationPath $dest
+
+            # All umbraco agents
+            @('umbraco-architect.md', 'umbraco-backend-developer.md', 'umbraco-frontend-developer.md') | ForEach-Object {
+                (Join-Path $dest ".claude\agents\$_") | Should -Exist
+            }
+            # All breezsdk agents
+            @('breezsdk-architect.md', 'breezsdk-developer.md') | ForEach-Object {
+                (Join-Path $dest ".claude\agents\$_") | Should -Exist
+            }
+            # Breezsdk skill
+            (Join-Path $dest '.claude\skills\breezsdk-knowledge.md') | Should -Exist
+        }
+
+        It 'still copies all core framework files when domains are included' {
+            $dest = Join-Path $TestDrive 'us3-core-with-domains'
+            $manifest = Build-FileManifest -SourcePath $script:SourceRoot -IncludeDomains 'umbraco'
+            Invoke-SpecKitCopy -Manifest $manifest -SourcePath $script:SourceRoot -DestinationPath $dest
+
+            # Core agents should still be present
+            @('backend-developer.md', 'code-reviewer.md', 'solution-architect.md') | ForEach-Object {
+                (Join-Path $dest ".claude\agents\$_") | Should -Exist -Because "Core agent $_ should always be copied"
+            }
+            # Framework file should still be present
+            (Join-Path $dest 'CLAUDE.md') | Should -Exist
+        }
+
+        It 'Build-FileManifest marks domain entries as Included=true for specified domains' {
+            $manifest = Build-FileManifest -SourcePath $script:SourceRoot -IncludeDomains 'umbraco'
+            $umbracoEntries = $manifest | Where-Object { $_.Domain -eq 'umbraco' }
+            $umbracoEntries | ForEach-Object { $_.Included | Should -BeTrue }
+        }
+
+        It 'Build-FileManifest marks unspecified domains as Included=false' {
+            $manifest = Build-FileManifest -SourcePath $script:SourceRoot -IncludeDomains 'umbraco'
+            $breezEntries = $manifest | Where-Object { $_.Domain -eq 'breezsdk' }
+            $breezEntries | ForEach-Object { $_.Included | Should -BeFalse }
+        }
+
+        It 'CopyResult.DomainsIncluded lists domains that were actually included' {
+            $dest = Join-Path $TestDrive 'us3-domains-included'
+            $manifest = Build-FileManifest -SourcePath $script:SourceRoot -IncludeDomains 'umbraco'
+            $result = Invoke-SpecKitCopy -Manifest $manifest -SourcePath $script:SourceRoot -DestinationPath $dest
+
+            $result.DomainsIncluded | Should -Contain 'umbraco'
+            $result.DomainsIncluded | Should -Not -Contain 'breezsdk'
+        }
+
+        It 'CopyResult.DomainsAvailable lists all discovered domains regardless of inclusion' {
+            $dest = Join-Path $TestDrive 'us3-domains-available'
+            $manifest = Build-FileManifest -SourcePath $script:SourceRoot -IncludeDomains 'umbraco'
+            $result = Invoke-SpecKitCopy -Manifest $manifest -SourcePath $script:SourceRoot -DestinationPath $dest
+
+            $result.DomainsAvailable | Should -Contain 'umbraco'
+            $result.DomainsAvailable | Should -Contain 'breezsdk'
+        }
+
+        It 'produces a warning for unknown domain names and continues' {
+            $dest = Join-Path $TestDrive 'us3-unknown-domain'
+            $manifest = Build-FileManifest -SourcePath $script:SourceRoot -IncludeDomains @('umbraco', 'nonexistent')
+
+            # Unknown domain should not appear in any manifest entry
+            $nonexistentEntries = $manifest | Where-Object { $_.Domain -eq 'nonexistent' }
+            $nonexistentEntries | Should -BeNullOrEmpty
+
+            # Copy should still succeed with the valid domain
+            $result = Invoke-SpecKitCopy -Manifest $manifest -SourcePath $script:SourceRoot -DestinationPath $dest `
+                -RequestedDomains @('umbraco', 'nonexistent')
+
+            $result.Success | Should -BeTrue
+            $result.Warnings | Should -Not -BeNullOrEmpty
+            $result.Warnings | Where-Object { $_ -match 'nonexistent' } | Should -Not -BeNullOrEmpty
+        }
+
+        It 'includes domain skill files when domain is specified via -IncludeDomains' {
+            $manifest = Build-FileManifest -SourcePath $script:SourceRoot -IncludeDomains 'breezsdk'
+            $breezSkills = $manifest | Where-Object { $_.Tier -eq 'DomainSkill' -and $_.Domain -eq 'breezsdk' }
+            $breezSkills | ForEach-Object { $_.Included | Should -BeTrue }
+        }
     }
 
     #endregion

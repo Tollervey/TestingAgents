@@ -438,7 +438,10 @@ function Invoke-SpecKitCopy {
         [switch]$Preview,
 
         [Parameter()]
-        [switch]$Force
+        [switch]$Force,
+
+        [Parameter()]
+        [string[]]$RequestedDomains
     )
 
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
@@ -482,6 +485,17 @@ function Invoke-SpecKitCopy {
     $domainModules = Get-DomainModules -SourcePath $SourcePath
     $result.DomainsAvailable = @($domainModules | ForEach-Object { $_.Name })
     $result.DomainsIncluded = @($Manifest | Where-Object { $_.Included -and $_.Domain } | ForEach-Object { $_.Domain } | Select-Object -Unique)
+
+    # Check for unknown requested domains (FR-009, FR-010)
+    if ($RequestedDomains) {
+        foreach ($requested in $RequestedDomains) {
+            if ($requested -notin $result.DomainsAvailable) {
+                $availableList = $result.DomainsAvailable -join ', '
+                $result.Warnings += "Domain module '$requested' not found in source. Available: $availableList"
+                Write-Verbose "Unknown domain requested: $requested"
+            }
+        }
+    }
 
     # Copy included files (skip in preview mode)
     $includedFiles = @($Manifest | Where-Object { $_.Included -eq $true })
@@ -622,17 +636,30 @@ if ($MyInvocation.InvocationName -ne '.' -and $MyInvocation.InvocationName -ne '
     # Discover and display available domains
     $domainModules = Get-DomainModules -SourcePath $Source
     if ($domainModules.Count -gt 0) {
+        $checkmark = [char]0x2713
+        $arrow = [char]0x2192
         Write-Host ''
         Write-Host 'Available domain modules:' -ForegroundColor White
-        $arrow = [char]0x2192
         foreach ($dm in $domainModules) {
-            Write-Host "  $arrow $($dm.Name) ($($dm.FileCount) files)" -ForegroundColor Cyan
+            if ($IncludeDomains -and ($dm.Name -in $IncludeDomains)) {
+                Write-Host "  $checkmark $($dm.Name) ($($dm.FileCount) files) [included]" -ForegroundColor Green
+            } else {
+                Write-Host "  $arrow $($dm.Name) ($($dm.FileCount) files)" -ForegroundColor Cyan
+            }
         }
     }
 
     # Build manifest and execute copy
     $manifest = Build-FileManifest -SourcePath $Source -IncludeDomains $IncludeDomains
-    $copyResult = Invoke-SpecKitCopy -Manifest $manifest -SourcePath $Source -DestinationPath $Destination -Preview:$Preview -Force:$Force
+    $copyResult = Invoke-SpecKitCopy -Manifest $manifest -SourcePath $Source -DestinationPath $Destination -Preview:$Preview -Force:$Force -RequestedDomains $IncludeDomains
+
+    # Display warnings (e.g., unknown domain names)
+    if ($copyResult.Warnings.Count -gt 0) {
+        $warningSymbol = [char]0x26A0
+        foreach ($warn in $copyResult.Warnings) {
+            Write-Host "  $warningSymbol WARNING: $warn" -ForegroundColor Yellow
+        }
+    }
 
     if (-not $copyResult.Success) {
         foreach ($err in $copyResult.Errors) {
