@@ -51,7 +51,7 @@
     <!-- Mail -->
     <PackageVersion Include="MailKit" Version="4.14.1" />
     <!-- SQLite -->
-    <PackageVersion Include="Microsoft.Data.Sqlite.Core" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.Data.Sqlite.Core" Version="10.0.2" />
     <!-- Health Checks -->
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions" Version="9.0.4" />
     <!-- Testing -->

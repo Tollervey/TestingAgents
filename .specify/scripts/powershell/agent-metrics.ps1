@@ -58,6 +58,72 @@ param(
 
 $MetricsDir = Join-Path $PSScriptRoot "..\..\metrics"
 $MetricsFile = Join-Path $MetricsDir "agent-metrics.json"
+$SettingsFile = Join-Path $MetricsDir "settings.json"
+
+function Get-MetricsSettings {
+    <#
+    .SYNOPSIS
+        Loads metrics settings from settings.json with fallback to defaults
+
+    .DESCRIPTION
+        Reads the settings.json file from the metrics directory.
+        If the file doesn't exist or is invalid, returns default settings.
+
+    .OUTPUTS
+        PSCustomObject with retention, costWeights, and display settings
+    #>
+
+    $defaults = @{
+        schemaVersion = "1.0.0"
+        retention = @{
+            archiveDays = 7
+            autoCleanupEnabled = $true
+        }
+        costWeights = @{
+            haiku = 1.0
+            sonnet = 3.0
+            opus = 5.0
+        }
+        display = @{
+            colorOutput = $true
+            showCostEstimates = $true
+            showParallelMetrics = $true
+        }
+    }
+
+    if (Test-Path $SettingsFile) {
+        try {
+            $settings = Get-Content $SettingsFile -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+
+            # Merge with defaults to ensure all required properties exist
+            $merged = @{
+                schemaVersion = if ($settings.schemaVersion) { $settings.schemaVersion } else { $defaults.schemaVersion }
+                retention = @{
+                    archiveDays = if ($null -ne $settings.retention.archiveDays) { $settings.retention.archiveDays } else { $defaults.retention.archiveDays }
+                    autoCleanupEnabled = if ($null -ne $settings.retention.autoCleanupEnabled) { $settings.retention.autoCleanupEnabled } else { $defaults.retention.autoCleanupEnabled }
+                }
+                costWeights = @{
+                    haiku = if ($null -ne $settings.costWeights.haiku) { $settings.costWeights.haiku } else { $defaults.costWeights.haiku }
+                    sonnet = if ($null -ne $settings.costWeights.sonnet) { $settings.costWeights.sonnet } else { $defaults.costWeights.sonnet }
+                    opus = if ($null -ne $settings.costWeights.opus) { $settings.costWeights.opus } else { $defaults.costWeights.opus }
+                }
+                display = @{
+                    colorOutput = if ($null -ne $settings.display.colorOutput) { $settings.display.colorOutput } else { $defaults.display.colorOutput }
+                    showCostEstimates = if ($null -ne $settings.display.showCostEstimates) { $settings.display.showCostEstimates } else { $defaults.display.showCostEstimates }
+                    showParallelMetrics = if ($null -ne $settings.display.showParallelMetrics) { $settings.display.showParallelMetrics } else { $defaults.display.showParallelMetrics }
+                }
+            }
+
+            return [PSCustomObject]$merged
+        }
+        catch {
+            Write-Warning "Failed to load settings from $SettingsFile. Using defaults. Error: $_"
+            return [PSCustomObject]$defaults
+        }
+    }
+
+    return [PSCustomObject]$defaults
+}
 
 function Initialize-Metrics {
     param([string]$Phase)

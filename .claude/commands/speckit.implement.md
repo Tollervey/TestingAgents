@@ -280,12 +280,11 @@ This command leverages the following Claude Code 2.1.19 capabilities:
    # Run after wave completion
    & Use code-reviewer to verify Wave N code quality
    & Use security-auditor to scan for vulnerabilities
-   
-   # Verify tests pass
-   dotnet test
-   
+
    # Verify build is clean
    dotnet build --warnaserror
+
+   # Tests are run manually by user, not after each phase
    ```
 
    **Context Management Between Waves** (v2.1.6+):
@@ -400,21 +399,7 @@ This command leverages the following Claude Code 2.1.19 capabilities:
    - **DO NOT** suppress errors without explicit user approval
    - **DO NOT** mark phase complete if build fails
 
-   **Step 14b: Test Verification**
-   ```bash
-   # Run all tests
-   dotnet test <solution-file-or-project> --no-build
-   ```
-
-   - **REQUIRED**: No regression in previously passing tests
-   - **REQUIRED**: All new tests written in this phase must pass (TDD GREEN)
-   - **IF TESTS FAIL**:
-     1. Determine if failure is from new code or pre-existing
-     2. Fix test failures before completing
-     3. If pre-existing test failures cannot be fixed, document and get user approval
-   - **DO NOT** mark phase complete if tests regress
-
-   **Step 14c: Generate Exit Report**
+   **Step 14b: Generate Exit Report**
 
    Before marking complete, output this summary:
    ```
@@ -424,26 +409,21 @@ This command leverages the following Claude Code 2.1.19 capabilities:
    - Command: `dotnet build <path>`
    - Result: ✓ PASS (0 errors, N warnings) / ✗ FAIL (N errors)
 
-   ### Test Status
-   - Command: `dotnet test <path>`
-   - Result: ✓ PASS (N passed, 0 failed) / ✗ FAIL (N passed, M failed)
-   - Regression: None / [list any regressions]
-
    ### Pre-existing Issues Fixed
    - [List any pre-existing build/test issues discovered and fixed]
 
    ### Exit Criteria
    - [x] Build passes with 0 errors
-   - [x] Tests pass with no regressions
    - [x] All new implementation compiles
-   - [x] All new tests pass (TDD GREEN)
 
    **Phase Status: COMPLETE** / **Phase Status: BLOCKED - [reason]**
    ```
 
-   **CRITICAL**: If any exit criteria fails, the phase is BLOCKED. You must:
+   **Note**: Tests are run manually by the user, not automatically after each phase. Run tests before final merge.
+
+   **CRITICAL**: If build fails, the phase is BLOCKED. You must:
    1. Fix the issue
    2. Re-run verification
-   3. Only mark complete when ALL criteria pass
+   3. Only mark complete when build passes
 
 Note: This command assumes a complete task breakdown exists in tasks.md. If tasks are incomplete or missing, suggest running `/speckit.tasks` first to regenerate the task list.

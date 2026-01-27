@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "1.0.0",
+  "retention": {
+    "archiveDays": 7,
+    "autoCleanupEnabled": true
+  },
+  "costWeights": {
+    "haiku": 1.0,
+    "sonnet": 3.0,
+    "opus": 5.0
+  },
+  "display": {
+    "colorOutput": true,
+    "showCostEstimates": true,
+    "showParallelMetrics": true
+  }
+}

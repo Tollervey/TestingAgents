@@ -26,9 +26,9 @@
 
 **Purpose**: Create test infrastructure and base configuration
 
-- [ ] T001 Create Pester test file structure in `.specify/scripts/powershell/agent-metrics.tests.ps1`
-- [ ] T002 Create settings.json with default configuration in `.specify/metrics/settings.json`
-- [ ] T003 [P] Add helper function `Get-MetricsSettings` for loading settings in `.specify/scripts/powershell/agent-metrics.ps1`
+- [X] T001 Create Pester test file structure in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T002 Create settings.json with default configuration in `.specify/metrics/settings.json`
+- [X] T003 [P] Add helper function `Get-MetricsSettings` for loading settings in `.specify/scripts/powershell/agent-metrics.ps1`
 
 ---
 
