@@ -211,42 +211,42 @@
 
 > **TDD REQUIRED: Write tests FIRST, verify they FAIL (RED), then implement until GREEN**
 
-- [ ] T058 [P] [US4] Unit tests for `NotificationService` in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Services/NotificationServiceTests.cs`
-- [ ] T059 [P] [US4] Unit tests for `EmailNotificationHandler` in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Services/EmailNotificationHandlerTests.cs`
-- [ ] T060 [P] [US4] Unit tests for `WebhookNotificationHandler` with HMAC signing in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Services/WebhookNotificationHandlerTests.cs`
-- [ ] T061 [P] [US4] Unit tests for `NotificationController` in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Api/NotificationControllerTests.cs`
-- [ ] T062 [P] [US4] Contract tests for `/notifications` endpoints in `tests/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Api/Contract/NotificationContractTests.cs`
+- [X] T058 [P] [US4] Unit tests for `NotificationService` in `src/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Services/Notification/NotificationServiceTests.cs`
+- [X] T059 [P] [US4] Unit tests for `EmailNotificationHandler` in `src/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Services/Notification/EmailNotificationHandlerTests.cs`
+- [X] T060 [P] [US4] Unit tests for `WebhookNotificationHandler` with HMAC signing in `src/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Services/Notification/WebhookNotificationHandlerTests.cs`
+- [X] T061 [P] [US4] Unit tests for `NotificationController` in `src/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Api/NotificationControllerTests.cs`
+- [X] T062 [P] [US4] Contract tests for `/notifications` endpoints in `src/Umbraco.Community.Bitcoin.LightningPayments.CoreTests/Api/Contract/NotificationContractTests.cs`
 
 ### Implementation for User Story 4
 
 #### Backend Services
 
-- [ ] T063 [US4] Create `INotificationService` interface in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Notification/INotificationService.cs`
-- [ ] T064 [US4] Implement `NotificationService` with Polly retry in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Notification/NotificationService.cs`
-- [ ] T065 [P] [US4] Create `INotificationHandler` interface in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Notification/INotificationHandler.cs`
-- [ ] T066 [P] [US4] Implement `EmailNotificationHandler` with MailKit in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Notification/EmailNotificationHandler.cs`
-- [ ] T067 [P] [US4] Implement `WebhookNotificationHandler` with HMAC-SHA256 signing in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Notification/WebhookNotificationHandler.cs`
-- [ ] T068 [US4] Create `WebhookPayloadBuilder` for constructing webhook payloads in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Notification/WebhookPayloadBuilder.cs`
+- [X] T063 [US4] Create `INotificationService` interface in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Notification/INotificationService.cs`
+- [X] T064 [US4] Implement `NotificationService` with Polly retry in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Notification/NotificationService.cs`
+- [X] T065 [P] [US4] Create `INotificationHandler` interface in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Notification/INotificationHandler.cs`
+- [X] T066 [P] [US4] Implement `EmailNotificationHandler` with MailKit in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Notification/EmailNotificationHandler.cs`
+- [X] T067 [P] [US4] Implement `WebhookNotificationHandler` with HMAC-SHA256 signing in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Notification/WebhookNotificationHandler.cs`
+- [X] T068 [US4] Create `WebhookPayloadBuilder` for constructing webhook payloads in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Notification/WebhookPayloadBuilder.cs`
 
 #### Backend API (from management-api.yaml)
 
-- [ ] T069 [US4] Create `NotificationController` with `getNotificationConfig`, `updateNotificationConfig`, `listNotifications`, `retryNotification` endpoints in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Management/NotificationController.cs`
+- [X] T069 [US4] Create `NotificationController` with `getNotificationConfig`, `updateNotificationConfig`, `listNotifications`, `retryNotification` endpoints in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Management/NotificationController.cs`
 
 #### Backend DTOs
 
-- [ ] T070 [P] [US4] Create `NotificationConfig`, `NotificationListResponse`, `NotificationSummary` DTOs in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Management/Dto/NotificationDtos.cs`
+- [X] T070 [P] [US4] Create `NotificationConfig`, `NotificationListResponse`, `NotificationSummary` DTOs in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Api/Management/Dto/NotificationDtos.cs`
 
 #### Webhook Payloads (from webhook-api.yaml)
 
-- [ ] T071 [P] [US4] Create webhook event models (`PaymentConfirmedEvent`, `PaymentFailedEvent`, `RefundCompletedEvent`) in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Notification/WebhookEvents.cs`
+- [X] T071 [P] [US4] Create webhook event models (`PaymentConfirmedEvent`, `PaymentFailedEvent`, `RefundCompletedEvent`) in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Notification/WebhookEvents.cs`
 
 #### Background Processing
 
-- [ ] T072 [US4] Create `NotificationRetryBackgroundService` for processing retry queue in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Notification/NotificationRetryBackgroundService.cs`
+- [X] T072 [US4] Create `NotificationRetryBackgroundService` for processing retry queue in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Services/Notification/NotificationRetryBackgroundService.cs`
 
 #### DI Registration
 
-- [ ] T073 [US4] Register notification services and handlers in DI in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Extensions/LightningPaymentsExtensions.cs`
+- [X] T073 [US4] Register notification services and handlers in DI in `src/Umbraco.Community.Bitcoin.LightningPayments.Core/Extensions/LightningPaymentsExtensions.cs`
 
 **Checkpoint**: User Story 4 complete - Notification system is fully functional and testable independently
 
