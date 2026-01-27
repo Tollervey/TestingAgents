@@ -1,17 +1,7 @@
-# Claude Code Quick Reference - .NET Full Stack
+# Claude Code Quick Reference
 
 > **Full documentation**: See [CLAUDE.md](../CLAUDE.md) for complete governance, conventions, and agent details.
-
-## .NET Commands
-| Command | Description |
-|---------|-------------|
-| `dotnet build` | Build the solution |
-| `dotnet test` | Run all tests |
-| `dotnet run` | Run the application |
-| `dotnet watch run` | Run with hot reload |
-| `dotnet ef migrations add <Name>` | Create migration |
-| `dotnet ef database update` | Apply migrations |
-| `dotnet format` | Format code |
+> **Project-specific commands**: See [CLAUDE.project.md](../CLAUDE.project.md) for build, test, and technology-specific commands.
 
 ## Spec-Kit Workflow (Abbreviated)
 
@@ -38,24 +28,27 @@
 | Agent | Model | Use For |
 |-------|-------|---------|
 | `solution-architect` | Opus | Architecture decisions (read-only) |
-| `backend-developer` | Sonnet | C# implementation |
-| `frontend-developer` | Sonnet | Blazor/UI |
+| `backend-developer` | Sonnet | Backend implementation |
+| `frontend-developer` | Sonnet | UI/frontend development |
 | `test-engineer` | Sonnet | TDD tests (write BEFORE code) |
-| `database-architect` | Sonnet | EF Core, migrations |
+| `database-architect` | Sonnet | Schema design, migrations |
 | `code-reviewer` | Haiku | Quality checks (read-only) |
 | `security-auditor` | Haiku | Security scans (read-only) |
 
 **Invocation**: `Use [agent-name] to [task]`
+
+> **Domain agents**: See `CLAUDE.project.md` for project-specific agent extensions.
 
 ## External Plugins (Quick Lookup)
 
 | Plugin | Use For |
 |--------|---------|
 | `superpowers` | TDD, debugging, worktrees |
-| `dotnet-claude-code-skills` | DDD, EF Core, BDD |
 | `engineering-workflow-plugin` | Code review, git |
 | `dev-agent-skills` | Commits, PRs |
 | `awesome-claude-skills` | Architecture patterns |
+
+> **Technology-specific plugins**: See `CLAUDE.project.md` for project-specific plugin recommendations.
 
 **Install**: `/plugin marketplace add <owner>/<plugin-name>`
 **List**: `/plugins`
@@ -80,7 +73,7 @@
 ```
 
 ## Tips
-- Run `dotnet build` after every change
+- Run your build command after every change
 - Use `/compact` between implementation waves
 - Delegate large tasks to sub-agents (>30k tokens)
 - Create checkpoints before each wave

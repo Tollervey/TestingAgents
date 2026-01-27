@@ -137,12 +137,12 @@
 
 **Purpose**: Final cleanup, cross-file consistency, and comprehensive validation
 
-- [ ] T034 [P] Update `CLAUDE.md` Resources section — Ensure all file references are correct after renames (e.g., `implementation-execution.md` not `dotnet-implementation-execution.md`)
-- [ ] T035 [P] Update any cross-references between files — (1) Grep entire repository for `dotnet-implementation-execution` and update all references to `implementation-execution` (renamed in T013). (2) Verify all internal links (skill references in commands, agent references in hooks, skill references in templates) point to correct filenames after renames. (3) Verify `CLAUDE.md` Resources section references match actual file paths.
-- [ ] T036 [P] Genericize `.claude/commands/speckit.worktree.md` — Replace project-specific name in example with generic project name per FR-014
-- [ ] T039 [P] Separate `QUICK-REFERENCE.md` — Move technology-specific quick reference commands (.NET, npm) to `CLAUDE.project.md` or a clearly marked customizable section. Keep SpecKit workflow reference (command order, phase descriptions) as core content per FR-013.
-- [ ] T037 Run comprehensive validation — Execute all four validation scripts (T002, T019, T024, T029) together. All must pass with zero violations. Additionally verify QUICK-REFERENCE.md contains no hardcoded technology commands in core sections.
-- [ ] T038 Run quickstart.md validation — Execute the verification steps from `specs/001-generic-speckit-reuse/quickstart.md` (Tests 1-4) to confirm end-to-end quality.
+- [x] T034 [P] Update `CLAUDE.md` Resources section — Ensure all file references are correct after renames (e.g., `implementation-execution.md` not `dotnet-implementation-execution.md`)
+- [x] T035 [P] Update any cross-references between files — (1) Grep entire repository for `dotnet-implementation-execution` and update all references to `implementation-execution` (renamed in T013). (2) Verify all internal links (skill references in commands, agent references in hooks, skill references in templates) point to correct filenames after renames. (3) Verify `CLAUDE.md` Resources section references match actual file paths.
+- [x] T036 [P] Genericize `.claude/commands/speckit.worktree.md` — Replace project-specific name in example with generic project name per FR-014
+- [x] T039 [P] Separate `QUICK-REFERENCE.md` — Move technology-specific quick reference commands (.NET, npm) to `CLAUDE.project.md` or a clearly marked customizable section. Keep SpecKit workflow reference (command order, phase descriptions) as core content per FR-013.
+- [x] T037 Run comprehensive validation — Execute all four validation scripts (T002, T019, T024, T029) together. All must pass with zero violations. Additionally verify QUICK-REFERENCE.md contains no hardcoded technology commands in core sections.
+- [x] T038 Run quickstart.md validation — Execute the verification steps from `specs/001-generic-speckit-reuse/quickstart.md` (Tests 1-4) to confirm end-to-end quality.
 
 ---
 

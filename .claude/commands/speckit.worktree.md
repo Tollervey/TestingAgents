@@ -67,11 +67,11 @@ git worktree add -b <new-branch> ../$(basename $(pwd))-<new-branch> <base-branch
 
 **Naming Convention**:
 - Worktree directory: `<repo-name>-<branch-short-name>`
-- Example: `TestingAgents-feature-auth`
+- Example: `my-project-feature-auth`
 
 **Post-Creation Steps**:
 1. Copy `.env` or local configuration if needed
-2. Run `dotnet restore` or `npm install`
+2. Run the project's dependency install command (e.g., `npm install`, `pip install`, etc.)
 3. Report worktree path to user
 
 ### 4. Remove Worktree
@@ -158,7 +158,7 @@ When using parallel sub-agents on independent features:
 | Problem | Solution |
 |---------|----------|
 | "fatal: is already checked out" | Branch already in another worktree - use that one |
-| Missing dependencies | Run `dotnet restore` / `npm install` in new worktree |
+| Missing dependencies | Run your project's dependency install command in new worktree |
 | Configuration mismatch | Copy `.env.local` or user secrets to new worktree |
 | Detached HEAD | Specify branch name explicitly when creating |
 
