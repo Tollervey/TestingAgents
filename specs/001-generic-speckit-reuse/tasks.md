@@ -99,14 +99,14 @@
 
 ### Validation for User Story 3 (Content Scanning)
 
-- [ ] T024 [US3] Write a validation script at `specs/001-generic-speckit-reuse/validate-tech-modularity.ps1` that scans Tier 1 files for hardcoded technology-specific terms (`dotnet`, `.csproj`, `NuGet`, `xunit`, `FluentAssertions`, `Moq`, `EF Core`, `Entity Framework`, `Blazor`, `Razor`) used as requirements (not as customizable examples). Run for RED baseline.
+- [x] T024 [US3] Write a validation script at `specs/001-generic-speckit-reuse/validate-tech-modularity.ps1` that scans Tier 1 files for hardcoded technology-specific terms (`dotnet`, `.csproj`, `NuGet`, `xunit`, `FluentAssertions`, `Moq`, `EF Core`, `Entity Framework`, `Blazor`, `Razor`) used as requirements (not as customizable examples). Run for RED baseline.
 
 ### Implementation for User Story 3
 
-- [ ] T025 [US3] Update `.claude/hooks.json` — Make PostToolUse file extension patterns generic (change `.cs|.razor` to customizable pattern). Replace `dotnet format` with generic format-check. Make build/test detection generic. Make Stop hook file detection generic. Make PreToolUse project file detection generic per plan.md D2/FR-005.
-- [ ] T026 [P] [US3] Update `CLAUDE.project.md` — Add .NET-specific hooks examples, build/test commands, code conventions, and customization instructions so `.NET` developers retain full effectiveness.
-- [ ] T027 [P] [US3] Update `.specify/memory/constitution.md` — Verify enforcement framework uses generic placeholders (`<build-tool>`, `<test-runner>`, `<formatter>`) not hardcoded `dotnet` commands per plan.md D3. (This may already be done in T004; verify and complete if needed.)
-- [ ] T028 [US3] Run `specs/001-generic-speckit-reuse/validate-tech-modularity.ps1` — Verify zero hardcoded technology terms in Tier 1 files (GREEN validation).
+- [x] T025 [US3] Update `.claude/hooks.json` — Make PostToolUse file extension patterns generic (change `.cs|.razor` to customizable pattern). Replace `dotnet format` with generic format-check. Make build/test detection generic. Make Stop hook file detection generic. Make PreToolUse project file detection generic per plan.md D2/FR-005.
+- [x] T026 [P] [US3] Update `CLAUDE.project.md` — Add .NET-specific hooks examples, build/test commands, code conventions, and customization instructions so `.NET` developers retain full effectiveness.
+- [x] T027 [P] [US3] Update `.specify/memory/constitution.md` — Verify enforcement framework uses generic placeholders (`<build-tool>`, `<test-runner>`, `<formatter>`) not hardcoded `dotnet` commands per plan.md D3. (This may already be done in T004; verify and complete if needed.)
+- [x] T028 [US3] Run `specs/001-generic-speckit-reuse/validate-tech-modularity.ps1` — Verify zero hardcoded technology terms in Tier 1 files (GREEN validation).
 
 **Checkpoint**: Technology-specific content is fully modular. Non-.NET projects can adopt the toolkit without editing core files.
 

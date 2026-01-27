@@ -297,11 +297,83 @@ measurements.Should().HaveCount(1); // STABLE
 
 ---
 
+## Constitution Technology Mapping
+
+The core constitution in `.specify/memory/constitution.md` uses technology-agnostic placeholders. Here's how they map to .NET:
+
+| Constitution Placeholder | .NET Implementation |
+|-------------------------|---------------------|
+| `<build-tool>` | `dotnet build` |
+| `<test-runner>` | `dotnet test` |
+| `<formatter>` | `dotnet format` |
+| `<dependency-audit-tool>` | `dotnet list package --vulnerable` |
+| Typed configuration | `IOptions<T>` pattern from `Microsoft.Extensions.Options` |
+| Validation library | FluentValidation or Data Annotations |
+| Structured logging | Serilog or `Microsoft.Extensions.Logging` with structured providers |
+| Health check middleware | `Microsoft.Extensions.Diagnostics.HealthChecks` |
+| Repository pattern | EF Core DbContext with repository interfaces |
+| Dependency injection | Built-in `Microsoft.Extensions.DependencyInjection` |
+
+**Phase Completion Commands**:
+```bash
+# Build verification (blocking)
+dotnet build <solution-file>  # Must exit with code 0
+
+# Test verification (blocking)
+dotnet test <solution-file> --no-build  # Must not regress
+
+# Format check
+dotnet format <solution-file> --verify-no-changes
+```
+
+---
+
 ## .NET-Specific Hooks Configuration
 
-When setting up hooks for a .NET project, add these to `.claude/settings.local.json`:
+The core `.claude/hooks.json` uses technology-agnostic patterns. .NET projects should add project-specific hooks to `.claude/settings.local.json` under the `hooks` key.
 
-### PostToolUse (Edit) - Format Reminder
+### Hooks Customization Guide
+
+**Core vs Project Hooks**:
+- **Core hooks** (`.claude/hooks.json`): Technology-agnostic patterns (generic file extensions, common command blocking)
+- **Project hooks** (`.claude/settings.local.json`): .NET-specific patterns (`.cs`, `.razor`, `dotnet` CLI permissions)
+
+**Key Customizations for .NET**:
+1. The PostToolUse Write|Edit hook in core checks for common web extensions (`ts`, `tsx`, `js`, `jsx`). .NET projects should add detection for `.cs` and `.razor` files.
+2. The core hook permissions block dangerous commands generically. .NET projects should auto-approve safe `dotnet` CLI commands.
+
+### .NET File Extension Patterns
+
+For .NET projects, source file patterns should include:
+- `.cs` — C# source files
+- `.razor` — Razor component files
+- `.csproj` — Project files
+- `.sln` — Solution files
+
+### Build/Test/Format Commands
+
+Add these to `.claude/settings.local.json`:
+
+**Build Command**:
+```bash
+dotnet build <solution-file>
+```
+
+**Test Command**:
+```bash
+dotnet test <solution-file> --no-build
+```
+
+**Format Command**:
+```bash
+dotnet format <solution-file>
+```
+
+### PostToolUse Hook Examples
+
+Add these to `.claude/settings.local.json` under `hooks`:
+
+**Format Reminder After Edit**:
 ```json
 {
   "matcher": "Edit",
@@ -314,10 +386,80 @@ When setting up hooks for a .NET project, add these to `.claude/settings.local.j
 }
 ```
 
-### File Extension Patterns
-For .NET projects, source file patterns should include: `.cs`, `.razor`, `.csproj`, `.sln`
+**Auto-Format .cs Files After Write**:
+```json
+{
+  "matcher": "Write(*.cs)",
+  "hooks": [
+    {
+      "type": "command",
+      "command": "dotnet format <solution-file> --include ${file_path}"
+    }
+  ]
+}
+```
 
-### Build/Test Commands
-- **Build**: `dotnet build <solution-file>`
-- **Test**: `dotnet test <solution-file> --no-build`
-- **Format**: `dotnet format <solution-file>`
+### dotnet CLI Permission Patterns
+
+Add these to `.claude/settings.local.json` under `permissions.allow` for auto-approved dotnet operations:
+
+```json
+"Bash(dotnet build*)",
+"Bash(dotnet test*)",
+"Bash(dotnet format*)",
+"Bash(dotnet run*)",
+"Bash(dotnet watch*)",
+"Bash(dotnet ef migrations*)",
+"Bash(dotnet ef database update*)",
+"Bash(dotnet list package --vulnerable)",
+"Bash(dotnet add package*)",
+"Bash(dotnet remove package*)"
+```
+
+**Do NOT auto-approve**:
+- `dotnet clean` — deletes build artifacts
+- `dotnet ef database drop` — destructive operation
+- `dotnet publish` — production deployment command
+
+### Complete .claude/settings.local.json Example
+
+```json
+{
+  "hooks": [
+    {
+      "matcher": "Edit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "echo '[Reminder] Run dotnet build to check for errors'"
+        }
+      ]
+    },
+    {
+      "matcher": "Write(*.cs)",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "dotnet format --include ${file_path}"
+        }
+      ]
+    }
+  ],
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build*)",
+      "Bash(dotnet test*)",
+      "Bash(dotnet format*)",
+      "Bash(dotnet run*)",
+      "Bash(dotnet watch*)",
+      "Bash(dotnet ef migrations*)",
+      "Bash(dotnet ef database update*)",
+      "Bash(dotnet list package --vulnerable)",
+      "Bash(dotnet add package*)",
+      "Bash(dotnet remove package*)",
+      "WebFetch(domain:sdk-doc-liquid.breez.technology)",
+      "WebFetch(domain:docs.umbraco.com)",
+      "WebFetch(domain:gitbook.com)"
+    ]
+  }
+}

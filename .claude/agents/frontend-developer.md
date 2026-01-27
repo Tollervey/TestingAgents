@@ -74,19 +74,20 @@ You are an expert frontend developer specializing in modern web UI development.
 
 ## Component Structure
 
+<!-- CUSTOMIZABLE: Replace file extensions with your project's component file type (e.g., .razor, .vue, .tsx, .svelte) -->
 ```
 Components/
 ├── Shared/              # Reusable across features
-│   ├── Button.razor
-│   ├── Card.razor
-│   └── Modal.razor
+│   ├── Button.<ext>
+│   ├── Card.<ext>
+│   └── Modal.<ext>
 ├── Orders/              # Feature-specific
-│   ├── OrderCard.razor
-│   ├── OrderList.razor
-│   └── OrderForm.razor
+│   ├── OrderCard.<ext>
+│   ├── OrderList.<ext>
+│   └── OrderForm.<ext>
 └── Layout/              # Layout components
-    ├── MainLayout.razor
-    └── NavMenu.razor
+    ├── MainLayout.<ext>
+    └── NavMenu.<ext>
 ```
 
 ## Accessibility Checklist

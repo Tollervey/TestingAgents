@@ -173,8 +173,8 @@ impede team scaling.
 
 **Enforcement Mechanism**:
 - Constructor injection for all dependencies
-- `IOptions<T>` pattern for configuration
-- No `Activator.CreateInstance` or reflection-based instantiation outside framework code
+- Typed configuration pattern for strongly-typed settings
+- No reflection-based instantiation outside framework code
 
 **Gate Status**:
 - PASS: All dependencies visible in constructor; configuration strongly typed
@@ -487,8 +487,8 @@ Secret management systems provide rotation, auditing, and access control.
 
 **Enforcement Mechanism**:
 - Pre-commit hook scans for secret patterns
-- Configuration uses `IOptions<T>` with environment variable binding
-- Key Vault integration for production secrets
+- Configuration uses typed options pattern with environment variable binding
+- Secret vault integration for production secrets
 
 **Gate Status**:
 - PASS: No secrets in code; vault integration; rotation enabled
@@ -500,7 +500,7 @@ Secret management systems provide rotation, auditing, and access control.
 ### VI.4 Input Validation
 
 **Statement**: All external input MUST be treated as untrusted. Validation occurs at system
-boundaries with fail-safe defaults. Use FluentValidation or Data Annotations. Reject invalid
+boundaries with fail-safe defaults. Use a validation library appropriate to your technology stack. Reject invalid
 input early; never sanitize and proceed.
 
 **Rationale**: Input validation prevents injection attacks, data corruption, and unexpected
@@ -509,7 +509,7 @@ Early rejection provides clear feedback.
 
 **Enforcement Mechanism**:
 - Validation attributes on all DTOs
-- FluentValidation for complex rules
+- Validation library for complex rules
 - API returns 400 with Problem Details for validation failures
 
 **Gate Status**:
@@ -552,7 +552,7 @@ Debug). PII never logged.
 querying. Correlation IDs connect distributed operations. Appropriate levels prevent log noise.
 
 **Enforcement Mechanism**:
-- Serilog with structured logging configured
+- Structured logging library configured
 - Correlation ID middleware adds ID to all requests
 - Log level guidelines documented
 
@@ -573,9 +573,9 @@ dependencies.
 alerting. Dependency checks surface issues before users encounter them.
 
 **Enforcement Mechanism**:
-- `Microsoft.Extensions.Diagnostics.HealthChecks` configured
+- Health check middleware configured
 - Database, cache, and external service checks included
-- Kubernetes probes point to health endpoints
+- Container orchestration probes point to health endpoints
 
 **Gate Status**:
 - PASS: Health endpoints exist; dependencies checked; telemetry configured
