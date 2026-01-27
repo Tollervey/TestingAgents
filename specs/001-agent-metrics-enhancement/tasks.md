@@ -203,12 +203,12 @@
 
 **Purpose**: Final validation, edge cases, and performance verification
 
-- [ ] T070 [P] Verify all 8 actions pass Pester tests in `.specify/scripts/powershell/agent-metrics.tests.ps1`
-- [ ] T071 [P] Verify performance: Report generation <2 seconds with 100+ invocations
-- [ ] T072 [P] Verify edge case handling per FR-010 (missing data gracefully handled)
-- [ ] T073 Run quickstart.md validation scenarios in `specs/001-agent-metrics-enhancement/quickstart.md`
-- [ ] T074 [P] Verify colored console output works correctly on Windows PowerShell
-- [ ] T075 Final code cleanup and inline documentation
+- [X] T070 [P] Verify all 8 actions pass Pester tests in `.specify/scripts/powershell/agent-metrics.tests.ps1`
+- [X] T071 [P] Verify performance: Report generation <2 seconds with 100+ invocations
+- [X] T072 [P] Verify edge case handling per FR-010 (missing data gracefully handled)
+- [X] T073 Run quickstart.md validation scenarios in `specs/001-agent-metrics-enhancement/quickstart.md`
+- [X] T074 [P] Verify colored console output works correctly on Windows PowerShell
+- [X] T075 Final code cleanup and inline documentation
 
 ---
 

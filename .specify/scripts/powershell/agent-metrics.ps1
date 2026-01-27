@@ -882,8 +882,8 @@ function Generate-Report {
 
     Write-Host ""
 
-    # Token Cost Estimate (optional - based on typical API pricing)
-    $estimatedCost = [math]::Round($totals.totalTokens * 0.000003, 2)  # Rough estimate
+    # Token Cost Estimate (display-only, based on ~$3/1M tokens blended average)
+    $estimatedCost = [math]::Round($totals.totalTokens * 0.000003, 2)
     $tokenCount = $totals.totalTokens.ToString('N0')
     $costLine = "  Estimated Token Cost:     ~`${0} ({1} tokens)" -f $estimatedCost, $tokenCount
     Write-Host "───────────────────────────────────────────────────────────────────────────────" -ForegroundColor DarkGray

@@ -1790,4 +1790,270 @@ Describe 'agent-metrics.ps1' {
             }
         }
     }
+
+    Context 'Performance - Report Generation (T071)' {
+        # T071: Verify performance: Report generation <2 seconds with 100+ invocations
+        It 'generates report in under 2 seconds with 100+ invocations' {
+            Setup-TestEnvironment
+            try {
+                # Build session with 120 invocations
+                $session = New-TestSession -Phase "implement" -FeatureBranch "perf-test"
+                $invocations = @()
+                $agents = @("backend-developer", "test-engineer", "code-reviewer", "solution-architect", "frontend-developer", "security-auditor")
+                $models = @("sonnet", "opus", "haiku")
+                $categories = @("implementation", "testing", "review", "planning", "analysis", "other")
+                $statuses = @("completed", "completed", "completed", "completed", "failed")
+
+                for ($i = 0; $i -lt 120; $i++) {
+                    $agent = $agents[$i % $agents.Count]
+                    $model = $models[$i % $models.Count]
+                    $cat = $categories[$i % $categories.Count]
+                    $status = $statuses[$i % $statuses.Count]
+                    $tokens = 10000 + ($i * 500)
+                    $duration = 30000 + ($i * 1000)
+
+                    $inv = @{
+                        timestamp = (Get-Date).AddMinutes(-120 + $i).ToString("o")
+                        agent = $agent
+                        model = $model
+                        taskId = "perf-$i"
+                        status = $status
+                        tokens = $tokens
+                        durationMs = $duration
+                        description = "Perf test invocation $i"
+                        phase = "implement"
+                        category = $cat
+                        invocationStartTime = (Get-Date).AddMinutes(-120 + $i).AddSeconds(-$duration/1000).ToString("o")
+                        invocationEndTime = (Get-Date).AddMinutes(-120 + $i).ToString("o")
+                        isParallel = ($i % 3 -eq 0)
+                        parallelGroupId = if ($i % 3 -eq 0) { "pg-perf-$([math]::Floor($i/3))" } else { $null }
+                        groupSize = if ($i % 3 -eq 0) { 3 } else { 1 }
+                    }
+                    $invocations += $inv
+                }
+                $session.invocations = $invocations
+
+                # Build model aggregates
+                $session.models = [PSCustomObject]@{
+                    sonnet = @{ count = 40; totalTokens = 1200000; costWeight = 3.0; weightedTokens = 3600000; costPercent = 52.9 }
+                    opus = @{ count = 40; totalTokens = 1400000; costWeight = 5.0; weightedTokens = 7000000; costPercent = 41.2 }
+                    haiku = @{ count = 40; totalTokens = 1000000; costWeight = 1.0; weightedTokens = 1000000; costPercent = 5.9 }
+                }
+                $session.categories = [PSCustomObject]@{
+                    implementation = @{ count = 20; totalTokens = 600000; avgTokens = 30000; totalDurationMs = 1200000; avgDurationMs = 60000 }
+                    testing = @{ count = 20; totalTokens = 500000; avgTokens = 25000; totalDurationMs = 1000000; avgDurationMs = 50000 }
+                    review = @{ count = 20; totalTokens = 400000; avgTokens = 20000; totalDurationMs = 800000; avgDurationMs = 40000 }
+                    planning = @{ count = 20; totalTokens = 450000; avgTokens = 22500; totalDurationMs = 900000; avgDurationMs = 45000 }
+                    analysis = @{ count = 20; totalTokens = 350000; avgTokens = 17500; totalDurationMs = 700000; avgDurationMs = 35000 }
+                    other = @{ count = 20; totalTokens = 300000; avgTokens = 15000; totalDurationMs = 600000; avgDurationMs = 30000 }
+                }
+                $session.parallelGroups = [PSCustomObject]@{
+                    "pg-perf-0" = @{ groupId = "pg-perf-0"; invocationCount = 1; concurrencyMetrics = @{ maxConcurrent = 3; efficiency = 75.0; timeReduction = 50.0 } }
+                }
+                $session.totals.totalInvocations = 120
+                $session.totals.totalTokens = 3600000
+                $session.totals.totalSuccesses = 96
+                $session.totals.totalFailures = 24
+                $session.totals.parallelInvocations = 40
+                $session.totals.sequentialInvocations = 80
+                $session | ConvertTo-Json -Depth 10 | Set-Content $script:TestMetricsFile -Encoding UTF8
+
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                # Measure report generation time
+                $sw = [System.Diagnostics.Stopwatch]::StartNew()
+                Generate-Report | Out-Null
+                $sw.Stop()
+
+                $sw.ElapsedMilliseconds | Should BeLessThan 2000
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+    }
+
+    Context 'Edge Case Handling (T072 - FR-010)' {
+        # T072: Verify edge case handling - missing data gracefully handled
+
+        It 'handles Record with zero tokens and zero duration' {
+            Setup-TestEnvironment
+            try {
+                $session = New-TestSession -Phase "implement"
+                $session | ConvertTo-Json -Depth 10 | Set-Content $script:TestMetricsFile -Encoding UTF8
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                Record-AgentMetric -Agent "backend-developer" -Task "edge-001" -CompletionStatus "completed" `
+                    -Tokens 0 -Duration 0 -ModelName "sonnet"
+
+                $result = Get-Content $script:TestMetricsFile -Raw | ConvertFrom-Json
+                $result.invocations.Count | Should Be 1
+                $result.invocations[0].tokens | Should Be 0
+                $result.invocations[0].durationMs | Should Be 0
+                $result.totals.totalTokens | Should Be 0
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+
+        It 'handles Report with empty invocations list' {
+            Setup-TestEnvironment
+            try {
+                $session = New-TestSession -Phase "implement"
+                $session | ConvertTo-Json -Depth 10 | Set-Content $script:TestMetricsFile -Encoding UTF8
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                # Should not throw
+                { Generate-Report | Out-Null } | Should Not Throw
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+
+        It 'handles Report with no agents data' {
+            Setup-TestEnvironment
+            try {
+                $session = New-TestSession -Phase "implement"
+                $session.totals.totalInvocations = 0
+                $session | ConvertTo-Json -Depth 10 | Set-Content $script:TestMetricsFile -Encoding UTF8
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                $output = Generate-Report 6>&1 | Out-String
+
+                $output | Should Match "AGENT METRICS REPORT"
+                $output | Should Match "Total Agent Invocations:\s+0"
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+
+        It 'handles Record with missing description' {
+            Setup-TestEnvironment
+            try {
+                $session = New-TestSession -Phase "implement"
+                $session | ConvertTo-Json -Depth 10 | Set-Content $script:TestMetricsFile -Encoding UTF8
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                Record-AgentMetric -Agent "backend-developer" -Task "edge-002" -CompletionStatus "completed" `
+                    -Tokens 10000 -Duration 30000 -ModelName "sonnet" -Desc ""
+
+                $result = Get-Content $script:TestMetricsFile -Raw | ConvertFrom-Json
+                $result.invocations.Count | Should Be 1
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+
+        It 'handles failed and timeout status correctly' {
+            Setup-TestEnvironment
+            try {
+                $session = New-TestSession -Phase "implement"
+                $session | ConvertTo-Json -Depth 10 | Set-Content $script:TestMetricsFile -Encoding UTF8
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                Record-AgentMetric -Agent "backend-developer" -Task "edge-003" -CompletionStatus "failed" `
+                    -Tokens 5000 -Duration 60000 -ModelName "sonnet"
+                Record-AgentMetric -Agent "backend-developer" -Task "edge-004" -CompletionStatus "timeout" `
+                    -Tokens 8000 -Duration 120000 -ModelName "sonnet"
+
+                $result = Get-Content $script:TestMetricsFile -Raw | ConvertFrom-Json
+                $result.totals.totalFailures | Should Be 1
+                $result.totals.totalTimeouts | Should Be 1
+                $result.totals.totalSuccesses | Should Be 0
+                $result.agents."backend-developer".failures | Should Be 1
+                $result.agents."backend-developer".timeouts | Should Be 1
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+
+        It 'handles Export with no metrics file' {
+            Setup-TestEnvironment
+            try {
+                # No metrics file exists
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                $csvPath = Join-Path $script:TestMetricsDir "empty-export.csv"
+                $output = Export-Metrics -Format "CSV" -OutputPath $csvPath 6>&1 | Out-String
+
+                $output | Should Match "No metrics found"
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+
+        It 'handles Cumulative with no matching branch sessions' {
+            Setup-TestEnvironment
+            try {
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                $output = Generate-CumulativeReport -Branch "nonexistent-branch" 6>&1 | Out-String
+
+                $output | Should Match "No sessions found"
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+
+        It 'handles Trends with empty date range' {
+            Setup-TestEnvironment
+            try {
+                $archiveDir = Join-Path $script:TestMetricsDir "archive"
+                New-Item -ItemType Directory -Path $archiveDir -Force | Out-Null
+
+                # Session outside the 1-day range
+                $session = @{
+                    schemaVersion = "2.0.0"
+                    phase = "implement"
+                    featureBranch = "test-branch"
+                    startTime = (Get-Date).AddDays(-5).ToString("o")
+                    endTime = (Get-Date).AddDays(-5).AddHours(1).ToString("o")
+                    completionStatus = "complete"
+                    sessionId = [guid]::NewGuid().ToString()
+                    invocations = @()
+                    agents = @{}
+                    models = [PSCustomObject]@{}
+                    categories = [PSCustomObject]@{}
+                    parallelGroups = [PSCustomObject]@{}
+                    totals = @{
+                        totalInvocations = 5; totalTokens = 50000; totalSuccesses = 5; totalFailures = 0
+                        totalTimeouts = 0; totalDurationMs = 300000; parallelInvocations = 0; sequentialInvocations = 5
+                        avgTokensPerInvocation = 10000; avgDurationMs = 60000; overallSuccessRate = 100.0
+                    }
+                }
+                $session | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $archiveDir "agent-metrics-20260122-100000.json") -Encoding UTF8
+
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                $output = Generate-TrendsReport -Days 1 6>&1 | Out-String
+
+                $output | Should Match "No sessions found"
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+
+        It 'handles Reset when no metrics file exists' {
+            Setup-TestEnvironment
+            try {
+                # No metrics file
+                $settings = New-TestSettings
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $script:TestSettingsFile -Encoding UTF8
+
+                $output = Reset-Metrics 6>&1 | Out-String
+
+                $output | Should Match "No metrics to reset"
+            } finally {
+                Teardown-TestEnvironment
+            }
+        }
+    }
 }
