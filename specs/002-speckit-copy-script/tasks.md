@@ -39,16 +39,16 @@
 
 > **TDD REQUIRED: Write tests FIRST, verify they FAIL (RED), then implement until GREEN**
 
-- [ ] T003 [P] Write Pester tests for source path validation (valid source, missing directories, missing CLAUDE.md, same source/dest) in .specify/scripts/powershell/Copy-SpecKit.tests.ps1
-- [ ] T004 [P] Write Pester tests for file manifest building (Tier 1 framework files enumerated, Tier 2 core agents enumerated, excluded files not present) in .specify/scripts/powershell/Copy-SpecKit.tests.ps1
-- [ ] T005 [P] Write Pester tests for domain module auto-discovery (detects umbraco and breezsdk prefixes, returns DomainModule objects with correct file lists) in .specify/scripts/powershell/Copy-SpecKit.tests.ps1
+- [x] T003 [P] Write Pester tests for source path validation (valid source, missing directories, missing CLAUDE.md, same source/dest) in .specify/scripts/powershell/Copy-SpecKit.tests.ps1
+- [x] T004 [P] Write Pester tests for file manifest building (Tier 1 framework files enumerated, Tier 2 core agents enumerated, excluded files not present) in .specify/scripts/powershell/Copy-SpecKit.tests.ps1
+- [x] T005 [P] Write Pester tests for domain module auto-discovery (detects umbraco and breezsdk prefixes, returns DomainModule objects with correct file lists) in .specify/scripts/powershell/Copy-SpecKit.tests.ps1
 
 ### Implementation for Foundational
 
-- [ ] T006 Implement source path validation function (Test-SpecKitSource) that checks for .claude/, .specify/, CLAUDE.md and detects same source/dest (FR-014, FR-015) in .specify/scripts/powershell/Copy-SpecKit.ps1
-- [ ] T007 Implement file manifest builder function (Build-FileManifest) that returns FileEntry objects for Tier 1 and Tier 2 files using declarative hashtable with glob patterns (RT-001) in .specify/scripts/powershell/Copy-SpecKit.ps1
-- [ ] T008 Implement domain module auto-discovery function (Get-DomainModules) that scans .claude/agents/ and .claude/skills/ for non-core prefixes and returns DomainModule objects (FR-010, RT-002) in .specify/scripts/powershell/Copy-SpecKit.ps1
-- [ ] T009 Implement rich console output helper functions (Write-Header, Write-Section, Write-FileEntry) using Write-Host -ForegroundColor and Unicode symbols (FR-020, RT-004) in .specify/scripts/powershell/Copy-SpecKit.ps1
+- [x] T006 Implement source path validation function (Test-SpecKitSource) that checks for .claude/, .specify/, CLAUDE.md and detects same source/dest (FR-014, FR-015) in .specify/scripts/powershell/Copy-SpecKit.ps1
+- [x] T007 Implement file manifest builder function (Build-FileManifest) that returns FileEntry objects for Tier 1 and Tier 2 files using declarative hashtable with glob patterns (RT-001) in .specify/scripts/powershell/Copy-SpecKit.ps1
+- [x] T008 Implement domain module auto-discovery function (Get-DomainModules) that scans .claude/agents/ and .claude/skills/ for non-core prefixes and returns DomainModule objects (FR-010, RT-002) in .specify/scripts/powershell/Copy-SpecKit.ps1
+- [x] T009 Implement rich console output helper functions (Write-Header, Write-Section, Write-FileEntry) using Write-Host -ForegroundColor and Unicode symbols (FR-020, RT-004) in .specify/scripts/powershell/Copy-SpecKit.ps1
 
 **Checkpoint**: Foundation ready - all internal functions implemented and tested. User story implementation can now begin.
 

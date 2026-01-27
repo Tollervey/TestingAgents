@@ -1,37 +1,116 @@
 ﻿{
-    "sessionId":  "4dc6e790-4c4c-4faa-9131-78263cd49925",
-    "startTime":  "2026-01-27T21:50:58.5251951+00:00",
+    "sessionId":  "3182107d-2d1d-45c1-819e-d472f526faca",
+    "startTime":  "2026-01-27T21:59:05.3779958+00:00",
     "parallelGroups":  {
 
                        },
     "agents":  {
-
+                   "test-engineer":  {
+                                         "count":  3,
+                                         "successes":  3,
+                                         "failures":  0,
+                                         "timeouts":  0,
+                                         "totalTokens":  82732,
+                                         "totalDurationMs":  205000,
+                                         "minDurationMs":  60000,
+                                         "maxDurationMs":  75000,
+                                         "avgTokens":  27577,
+                                         "avgDurationMs":  68333,
+                                         "models":  {
+                                                        "sonnet":  {
+                                                                       "count":  3,
+                                                                       "tokens":  82732
+                                                                   }
+                                                    }
+                                     }
                },
     "featureBranch":  "002-speckit-copy-script",
     "completionStatus":  "complete",
     "invocations":  [
-
+                        {
+                            "invocationEndTime":  "2026-01-27T22:11:10.1857903+00:00",
+                            "model":  "sonnet",
+                            "durationMs":  60000,
+                            "timestamp":  "2026-01-27T22:11:10.1857903+00:00",
+                            "category":  "testing",
+                            "groupSize":  1,
+                            "description":  "T003: Write source validation tests",
+                            "status":  "completed",
+                            "taskId":  "ad55f61",
+                            "tokens":  25000,
+                            "invocationStartTime":  "2026-01-27T22:10:10.1867900+00:00",
+                            "phase":  "copy-speckit-phase2",
+                            "agent":  "test-engineer",
+                            "parallelGroupId":  null,
+                            "isParallel":  false
+                        },
+                        {
+                            "invocationEndTime":  "2026-01-27T22:11:12.7568830+00:00",
+                            "model":  "sonnet",
+                            "durationMs":  75000,
+                            "timestamp":  "2026-01-27T22:11:12.7568830+00:00",
+                            "category":  "testing",
+                            "groupSize":  1,
+                            "description":  "T004: Write file manifest tests",
+                            "status":  "completed",
+                            "taskId":  "a08edff",
+                            "tokens":  30930,
+                            "invocationStartTime":  "2026-01-27T22:09:57.7604163+00:00",
+                            "phase":  "copy-speckit-phase2",
+                            "agent":  "test-engineer",
+                            "parallelGroupId":  null,
+                            "isParallel":  false
+                        },
+                        {
+                            "invocationEndTime":  "2026-01-27T22:11:15.5566861+00:00",
+                            "model":  "sonnet",
+                            "durationMs":  70000,
+                            "timestamp":  "2026-01-27T22:11:15.5566861+00:00",
+                            "category":  "testing",
+                            "groupSize":  1,
+                            "description":  "T005: Write domain discovery tests",
+                            "status":  "completed",
+                            "taskId":  "a97785b",
+                            "tokens":  26802,
+                            "invocationStartTime":  "2026-01-27T22:10:05.5581914+00:00",
+                            "phase":  "copy-speckit-phase2",
+                            "agent":  "test-engineer",
+                            "parallelGroupId":  null,
+                            "isParallel":  false
+                        }
                     ],
-    "endTime":  "2026-01-27T21:50:58.8460091+00:00",
+    "endTime":  "2026-01-27T22:11:23.0693905+00:00",
     "models":  {
-
+                   "sonnet":  {
+                                  "costPercent":  100,
+                                  "weightedTokens":  248196.0,
+                                  "count":  3,
+                                  "costWeight":  3.0,
+                                  "totalTokens":  82732
+                              }
                },
-    "phase":  "test-fix",
+    "phase":  "copy-speckit-phase2",
     "categories":  {
-
+                       "testing":  {
+                                       "totalDurationMs":  205000,
+                                       "avgTokens":  27577,
+                                       "avgDurationMs":  68333,
+                                       "count":  3,
+                                       "totalTokens":  82732
+                                   }
                    },
     "schemaVersion":  "2.0.0",
     "totals":  {
-                   "totalDurationMs":  0,
-                   "sequentialInvocations":  0,
+                   "totalDurationMs":  205000,
+                   "sequentialInvocations":  3,
                    "parallelInvocations":  0,
-                   "totalInvocations":  0,
+                   "totalInvocations":  3,
                    "totalTimeouts":  0,
-                   "avgDurationMs":  0,
+                   "avgDurationMs":  68333,
                    "totalFailures":  0,
-                   "avgTokensPerInvocation":  0,
-                   "totalSuccesses":  0,
-                   "totalTokens":  0,
-                   "overallSuccessRate":  0
+                   "avgTokensPerInvocation":  27577,
+                   "totalSuccesses":  3,
+                   "totalTokens":  82732,
+                   "overallSuccessRate":  100
                }
 }
