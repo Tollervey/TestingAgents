@@ -27,7 +27,7 @@
     <PackageVersion Include="Polly.Core" Version="8.6.5" />
     <PackageVersion Include="Polly.Extensions" Version="8.6.5" />
     <!-- Observability -->
-    <PackageVersion Include="OpenTelemetry.Api" Version="1.11.2" />
+    <PackageVersion Include="OpenTelemetry.Api" Version="1.15.0" />
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.11.2" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.11.1" />
     <!-- Entity Framework Core -->
